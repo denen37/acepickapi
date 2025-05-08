@@ -34,7 +34,7 @@ app.use('/api/', profiles)
 // consumeJobEvents();
 
 
-db.sync({ force: true }).then(() => {
+db.sync().then(() => {
     app.listen(
         config.PORT || 5000,
         config.HOST || '0.0.0.0',
