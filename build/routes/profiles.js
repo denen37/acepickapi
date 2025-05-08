@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const profiles_1 = require("../controllers/profiles");
+const profiles_2 = require("../controllers/profiles");
+const user_1 = require("../controllers/user");
+const routes = (0, express_1.Router)();
+routes.post('/profiles/professionals', profiles_1.getProfessionals);
+routes.get('/profiles/professionals/:userId', profiles_1.getProfessionalById);
+routes.get('/profiles/get_corporates', profiles_1.getCooperates);
+routes.get('/profiles/me', profiles_1.ProfAccountInfo);
+routes.post('/profiles/update', profiles_2.updateProfile);
+routes.post('/profiles/update-metrics/:userId', profiles_1.metricOperations);
+routes.get('/users/:id', user_1.getUser);
+exports.default = routes;
