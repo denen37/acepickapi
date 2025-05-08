@@ -1,11 +1,12 @@
 import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index, BelongsTo, ForeignKey } from 'sequelize-typescript';
 import { User } from './User';
 import { Profile } from './Profile';
+import { Profession } from './Profession';
 
 
 
 
-@Table({ timestamps: true, tableName: 'corperate' })
+@Table({ timestamps: true, tableName: 'cooperations' })
 export class Cooperation extends Model {
 
     @AllowNull(true)
@@ -53,24 +54,24 @@ export class Cooperation extends Model {
 
 
 
-    @ForeignKey(() => User)
-    @AllowNull(false)
-    @Column(DataType.UUID)
-    userId!: string;
+    // @ForeignKey(() => User)
+    // @AllowNull(false)
+    // @Column(DataType.UUID)
+    // userId!: string;
 
 
 
 
     // @ForeignKey(() => Sector)
-    @AllowNull(false)
-    @Column(DataType.INTEGER)
-    sectorId!: number;
+    // @AllowNull(false)
+    // @Column(DataType.INTEGER)
+    // sectorId!: number;
 
 
 
 
     @AllowNull(false)
-    // @ForeignKey(() => Profession)
+    @ForeignKey(() => Profession)
     @Column(DataType.INTEGER)
     professionId!: number;
 
@@ -83,6 +84,7 @@ export class Cooperation extends Model {
     profileId!: number;
 
 
+
     @BelongsTo(() => Profile, { onDelete: 'CASCADE' })
     profile!: Profile;
 
@@ -90,6 +92,10 @@ export class Cooperation extends Model {
     // sector!: Sector;
 
 
-    @BelongsTo(() => User, { onDelete: 'CASCADE' })
-    user!: User;
+    @BelongsTo(() => Profession, { onDelete: 'CASCADE' })
+    profession!: Profession;
+
+
+    // @BelongsTo(() => User, { onDelete: 'CASCADE' })
+    // user!: User;
 }

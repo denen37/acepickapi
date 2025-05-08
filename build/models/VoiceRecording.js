@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.VoiceRecording = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
 const Profile_1 = require("./Profile");
-const User_1 = require("./User");
 let VoiceRecording = class VoiceRecording extends sequelize_typescript_1.Model {
 };
 exports.VoiceRecording = VoiceRecording;
@@ -27,35 +26,15 @@ __decorate([
     __metadata("design:type", Number)
 ], VoiceRecording.prototype, "duration", void 0);
 __decorate([
-    (0, sequelize_typescript_1.ForeignKey)(() => User_1.User),
-    (0, sequelize_typescript_1.AllowNull)(true),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.UUID),
-    __metadata("design:type", String)
-], VoiceRecording.prototype, "userId", void 0);
-__decorate([
-    (0, sequelize_typescript_1.ForeignKey)(() => User_1.User),
-    (0, sequelize_typescript_1.AllowNull)(true),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.UUID),
-    __metadata("design:type", String)
-], VoiceRecording.prototype, "recieverId", void 0);
-__decorate([
     (0, sequelize_typescript_1.ForeignKey)(() => Profile_1.Profile),
     (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.INTEGER),
     __metadata("design:type", Number)
 ], VoiceRecording.prototype, "profileId", void 0);
 __decorate([
-    (0, sequelize_typescript_1.BelongsTo)(() => User_1.User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE' }),
-    __metadata("design:type", User_1.User)
-], VoiceRecording.prototype, "user", void 0);
-__decorate([
-    (0, sequelize_typescript_1.BelongsTo)(() => User_1.User, { foreignKey: 'recieverId', as: 'reciever', onDelete: 'CASCADE' }),
-    __metadata("design:type", User_1.User)
-], VoiceRecording.prototype, "reciever", void 0);
-__decorate([
     (0, sequelize_typescript_1.BelongsTo)(() => Profile_1.Profile, { onDelete: 'CASCADE' }),
     __metadata("design:type", Profile_1.Profile)
 ], VoiceRecording.prototype, "profile", void 0);
 exports.VoiceRecording = VoiceRecording = __decorate([
-    (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'voicerecord' })
+    (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'voicerecords' })
 ], VoiceRecording);

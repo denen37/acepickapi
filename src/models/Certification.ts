@@ -3,7 +3,7 @@ import { User } from './User';
 
 
 
-@Table({ timestamps: true, tableName: 'certification' })
+@Table({ timestamps: true, tableName: 'certifications' })
 export class Certification extends Model {
     @AllowNull(false)
     @Column(DataType.STRING)

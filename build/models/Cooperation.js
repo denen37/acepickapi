@@ -11,8 +11,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Cooperation = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
-const User_1 = require("./User");
 const Profile_1 = require("./Profile");
+const Profession_1 = require("./Profession");
 let Cooperation = class Cooperation extends sequelize_typescript_1.Model {
 };
 exports.Cooperation = Cooperation;
@@ -52,20 +52,8 @@ __decorate([
     __metadata("design:type", Number)
 ], Cooperation.prototype, "noOfEmployees", void 0);
 __decorate([
-    (0, sequelize_typescript_1.ForeignKey)(() => User_1.User),
     (0, sequelize_typescript_1.AllowNull)(false),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.UUID),
-    __metadata("design:type", String)
-], Cooperation.prototype, "userId", void 0);
-__decorate([
-    (0, sequelize_typescript_1.AllowNull)(false),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.INTEGER),
-    __metadata("design:type", Number)
-], Cooperation.prototype, "sectorId", void 0);
-__decorate([
-    (0, sequelize_typescript_1.AllowNull)(false)
-    // @ForeignKey(() => Profession)
-    ,
+    (0, sequelize_typescript_1.ForeignKey)(() => Profession_1.Profession),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.INTEGER),
     __metadata("design:type", Number)
 ], Cooperation.prototype, "professionId", void 0);
@@ -80,9 +68,9 @@ __decorate([
     __metadata("design:type", Profile_1.Profile)
 ], Cooperation.prototype, "profile", void 0);
 __decorate([
-    (0, sequelize_typescript_1.BelongsTo)(() => User_1.User, { onDelete: 'CASCADE' }),
-    __metadata("design:type", User_1.User)
-], Cooperation.prototype, "user", void 0);
+    (0, sequelize_typescript_1.BelongsTo)(() => Profession_1.Profession, { onDelete: 'CASCADE' }),
+    __metadata("design:type", Profession_1.Profession)
+], Cooperation.prototype, "profession", void 0);
 exports.Cooperation = Cooperation = __decorate([
-    (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'corperate' })
+    (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'cooperations' })
 ], Cooperation);

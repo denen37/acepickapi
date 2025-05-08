@@ -22,7 +22,7 @@ export enum ProfileType {
     CORPERATE = "CORPERATE"
 }
 
-@Table({ timestamps: true, tableName: 'profile' })
+@Table({ timestamps: true, tableName: 'profiles' })
 export class Profile extends Model {
 
     // @AllowNull(true)

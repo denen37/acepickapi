@@ -5,7 +5,7 @@ import { Professional } from './Professional';
 
 
 
-@Table({ timestamps: false, tableName: 'profession' })
+@Table({ timestamps: false, tableName: 'professions' })
 export class Profession extends Model {
     @AllowNull(false)
     @Column(DataType.STRING)

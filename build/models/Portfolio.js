@@ -36,10 +36,9 @@ __decorate([
     __metadata("design:type", String)
 ], Portfolio.prototype, "date", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Default)({}),
-    (0, sequelize_typescript_1.AllowNull)(false),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.JSON),
-    __metadata("design:type", Object)
+    (0, sequelize_typescript_1.AllowNull)(true),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING(500)),
+    __metadata("design:type", String)
 ], Portfolio.prototype, "file", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
@@ -48,5 +47,5 @@ __decorate([
     __metadata("design:type", String)
 ], Portfolio.prototype, "userId", void 0);
 exports.Portfolio = Portfolio = __decorate([
-    (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'portfolio' })
+    (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'portfolios' })
 ], Portfolio);

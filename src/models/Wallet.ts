@@ -8,7 +8,7 @@ import { User } from './Models'
 // }
 
 
-@Table({ timestamps: true, tableName: 'wallet' })
+@Table({ timestamps: true, tableName: 'wallets' })
 export class Wallet extends Model {
     @PrimaryKey
     @AutoIncrement

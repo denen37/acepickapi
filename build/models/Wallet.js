@@ -49,5 +49,5 @@ __decorate([
     __metadata("design:type", String)
 ], Wallet.prototype, "pin", void 0);
 exports.Wallet = Wallet = __decorate([
-    (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'wallet' })
+    (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'wallets' })
 ], Wallet);

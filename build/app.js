@@ -28,7 +28,7 @@ app.use("/api", index_1.default);
 app.use("/api/auth/", auth_1.default);
 app.use('/api/', profiles_1.default);
 // consumeJobEvents();
-db_1.default.sync({ alter: true }).then(() => {
+db_1.default.sync({ force: true }).then(() => {
     app.listen(configSetup_1.default.PORT || 5000, configSetup_1.default.HOST || '0.0.0.0', () => console.log(`Server is running on http://${configSetup_1.default.HOST}:${configSetup_1.default.PORT}`));
 })
     .catch(err => console.error('Error connecting to the database', err));

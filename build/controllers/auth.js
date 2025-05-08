@@ -30,6 +30,7 @@ const Cooperation_1 = require("../models/Cooperation");
 const bvn_1 = require("../services/bvn");
 // yarn add stream-chat
 const stream_chat_1 = require("stream-chat");
+// import { Portfolio } from "../models/Portfolio";
 const Wallet_1 = require("../models/Wallet");
 const Professional_1 = require("../models/Professional");
 const axios_1 = __importDefault(require("axios"));

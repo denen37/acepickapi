@@ -4,7 +4,7 @@ import { User } from './User';
 
 
 
-@Table({ timestamps: true, tableName: 'experience' })
+@Table({ timestamps: true, tableName: 'experiences' })
 export class Experience extends Model {
     @AllowNull(false)
     @Column(DataType.STRING)

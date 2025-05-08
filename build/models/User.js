@@ -57,7 +57,7 @@ let User = class User extends sequelize_typescript_1.Model {
 exports.User = User;
 __decorate([
     sequelize_typescript_1.PrimaryKey,
-    (0, sequelize_typescript_1.Default)(uuid_1.v4),
+    (0, sequelize_typescript_1.Default)((0, uuid_1.v4)()),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.UUID),
     __metadata("design:type", String)
 ], User.prototype, "id", void 0);

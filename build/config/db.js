@@ -47,16 +47,36 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_typescript_1 = require("sequelize-typescript");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
-const Model = __importStar(require("../models/Models"));
+const Models = __importStar(require("../models/Models"));
 const env = process.env.NODE_ENV || "development";
-const sequelize = new sequelize_typescript_1.Sequelize(configSetup_1.default.DB_NAME || 'test', configSetup_1.default.DB_USER || 'root', configSetup_1.default.DB_PASSWORD, {
+// const sequelize = new Sequelize(
+//     config.DB_NAME || 'test',
+//     config.DB_USER || 'root',
+//     config.DB_PASSWORD,
+//     {
+//         host: config.DB_HOST,
+//         dialect: 'mysql',
+//         dialectOptions: {
+//             ssl: false,
+//         },
+//         logging: false,
+//         models: [...Object.values(Model)],
+//     }
+// );
+const sequelize = new sequelize_typescript_1.Sequelize({
+    dialect: 'mssql',
     host: configSetup_1.default.DB_HOST,
-    dialect: 'mysql',
+    port: configSetup_1.default.DB_PORT,
+    username: configSetup_1.default.DB_USER,
+    password: configSetup_1.default.DB_PASSWORD,
+    database: configSetup_1.default.DB_NAME,
+    models: Object.values(Models),
     dialectOptions: {
-        ssl: false,
+        options: {
+            encrypt: true,
+            trustServerCertificate: false,
+        },
     },
-    logging: false,
-    models: [...Object.values(Model)],
 });
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 5000;

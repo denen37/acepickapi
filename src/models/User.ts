@@ -53,7 +53,7 @@ export class User extends Model {
 
 
     @PrimaryKey
-    @Default(uuidv4)
+    @Default(uuidv4())
     @Column(DataType.UUID)
     id!: string;
 

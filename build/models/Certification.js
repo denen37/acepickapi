@@ -37,5 +37,5 @@ __decorate([
     __metadata("design:type", String)
 ], Certification.prototype, "userId", void 0);
 exports.Certification = Certification = __decorate([
-    (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'certification' })
+    (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'certifications' })
 ], Certification);

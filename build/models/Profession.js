@@ -42,5 +42,5 @@ __decorate([
     __metadata("design:type", Array)
 ], Profession.prototype, "professional", void 0);
 exports.Profession = Profession = __decorate([
-    (0, sequelize_typescript_1.Table)({ timestamps: false, tableName: 'profession' })
+    (0, sequelize_typescript_1.Table)({ timestamps: false, tableName: 'professions' })
 ], Profession);

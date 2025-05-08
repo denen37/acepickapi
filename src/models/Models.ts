@@ -15,15 +15,15 @@ import { Sector } from './Sector'
 
 export {
     User,
+    Profile,
     Certification,
-    Cooperation,
     Education,
     Experience,
     LanLog,
     Portfolio,
     Professional,
-    Profile,
     Verify,
+    Cooperation,
     VoiceRecording,
     Wallet,
     Profession,

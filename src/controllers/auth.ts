@@ -22,7 +22,7 @@ import { StreamChat } from 'stream-chat';
 import { Education } from "../models/Education";
 import { Certification } from "../models/Certification";
 import { Experience } from "../models/Experience";
-import { Portfolio } from "../models/Portfolio";
+// import { Portfolio } from "../models/Portfolio";
 import { Wallet } from "../models/Wallet";
 // import { Dispute } from "../models/Dispute";
 // import { CreditType, TransactionType, Transactions } from "../models/Transaction";

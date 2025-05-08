@@ -3,7 +3,7 @@ import { User } from './User';
 
 
 
-@Table({ timestamps: true, tableName: 'portfolio' })
+@Table({ timestamps: true, tableName: 'portfolios' })
 export class Portfolio extends Model {
     @AllowNull(false)
     @Column(DataType.STRING)
@@ -25,10 +25,10 @@ export class Portfolio extends Model {
     @Column(DataType.STRING)
     date!: string;
 
-    @Default({})
-    @AllowNull(false)
-    @Column(DataType.JSON)
-    file!: any;
+
+    @AllowNull(true)
+    @Column(DataType.STRING(500))
+    file!: string;
 
 
     @AllowNull(false)

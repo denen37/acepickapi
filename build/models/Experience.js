@@ -42,5 +42,5 @@ __decorate([
     __metadata("design:type", String)
 ], Experience.prototype, "userId", void 0);
 exports.Experience = Experience = __decorate([
-    (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'experience' })
+    (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'experiences' })
 ], Experience);

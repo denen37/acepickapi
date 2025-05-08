@@ -186,5 +186,5 @@ __decorate([
     __metadata("design:type", Array)
 ], Profile.prototype, "recording", void 0);
 exports.Profile = Profile = __decorate([
-    (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'profile' })
+    (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'profiles' })
 ], Profile);
