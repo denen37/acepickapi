@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "npm run build && node ./build/app.js",
     "build": "tsc --project ./",
-    "start": "./build/app.js",
+    "start": "node ./build/app.js",
     "seed:db": "sequelize db:seed:all"
   },
   "author": "Awar Abraham",
