@@ -14,7 +14,6 @@ const index_1 = __importDefault(require("./routes/index"));
 const auth_1 = __importDefault(require("./routes/auth"));
 const profiles_1 = __importDefault(require("./routes/profiles"));
 require("reflect-metadata");
-// import { consumeJobEvents } from './utils'
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)({ origin: true }));
@@ -28,7 +27,7 @@ app.use("/api", index_1.default);
 app.use("/api/auth/", auth_1.default);
 app.use('/api/', profiles_1.default);
 // consumeJobEvents();
-db_1.default.sync({ force: true }).then(() => {
+db_1.default.sync().then(() => {
     app.listen(configSetup_1.default.PORT || 5000, configSetup_1.default.HOST || '0.0.0.0', () => console.log(`Server is running on http://${configSetup_1.default.HOST}:${configSetup_1.default.PORT}`));
 })
     .catch(err => console.error('Error connecting to the database', err));

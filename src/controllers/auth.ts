@@ -416,20 +416,12 @@ export const login = async (req: Request, res: Response) => {
             include: [{
                 model: User,
                 attributes: ['id', 'email', 'phone', 'fcmToken', 'status'],
-                // include: [{
-                //     model: Wallet
-                // }]
+                include: [{
+                    model: Wallet,
+                    attributes: { exclude: ['pin'] },
+                }]
             }]
         })
-        const walletResponse = await axios.get(`${config.PAYMENT_BASE_URL}/pay-api/view-wallet`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        })
-
-        const wallet = walletResponse.data.data;
-
-        profileUpdated?.setDataValue('wallet', wallet);
 
 
         return successResponse(res, "Successful", { status: true, profile: profileUpdated, token, chatToken })

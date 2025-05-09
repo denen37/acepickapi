@@ -33,7 +33,6 @@ const stream_chat_1 = require("stream-chat");
 // import { Portfolio } from "../models/Portfolio";
 const Wallet_1 = require("../models/Wallet");
 const Professional_1 = require("../models/Professional");
-const axios_1 = __importDefault(require("axios"));
 const jsonwebtoken_2 = require("jsonwebtoken");
 const upload_1 = require("../services/upload");
 // instantiate your stream client using the API key and secret
@@ -355,18 +354,12 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             include: [{
                     model: User_1.User,
                     attributes: ['id', 'email', 'phone', 'fcmToken', 'status'],
-                    // include: [{
-                    //     model: Wallet
-                    // }]
+                    include: [{
+                            model: Wallet_1.Wallet,
+                            attributes: { exclude: ['pin'] },
+                        }]
                 }]
         });
-        const walletResponse = yield axios_1.default.get(`${configSetup_1.default.PAYMENT_BASE_URL}/pay-api/view-wallet`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-        const wallet = walletResponse.data.data;
-        profileUpdated === null || profileUpdated === void 0 ? void 0 : profileUpdated.setDataValue('wallet', wallet);
         return (0, modules_1.successResponse)(res, "Successful", { status: true, profile: profileUpdated, token, chatToken });
     }
     catch (error) {
