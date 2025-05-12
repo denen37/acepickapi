@@ -66,10 +66,16 @@ export const randomId = (length: number) => {
 
 
 export const validateEmail = (email: string) => {
-	return email.match(
-		/^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-	);
+	let emailCleaned = email.trim();
+	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailCleaned);
 };
+
+export const validatePhone = (phone: string) => {
+	const cleaned = phone.replace(/[\s()-]/g, '');
+	const phoneRegex = /^\+?\d{10,15}$/;
+
+	return phoneRegex.test(cleaned);
+}
 
 
 export const getRandom = (length: number) => Math.floor(Math.pow(10, length - 1) + Math.random() * 9 * Math.pow(10, length - 1));

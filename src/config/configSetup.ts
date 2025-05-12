@@ -22,11 +22,11 @@ type Config = {
     PUBLIC_ROUTES: string[] | [];
     REDIS_INSTANCE_URL: string | undefined;
     PAYSTACK_SECRET: string | undefined;
-    RABBITMQ_URL: string | undefined;
+    SMS_API_KEY: string | undefined;
+    SMS_SENDER_ID: string | undefined;
+    OTP_EXPIRY_TIME: number,
     TOKEN_SECRET: string;
-    CLOUDINARY_NAME: string | undefined;
-    CLOUDINARY_API_KEY: string | undefined;
-    CLOUDINARY_API_SECRET: string | undefined;
+    AZURE_STORAGE_CONNECTION_STRING: string | undefined;
 };
 
 const getConfig = (): Config => {
@@ -47,13 +47,13 @@ const getConfig = (): Config => {
         EMAIL_USER: process.env.EMAIL_USER,
         EMAIL_PASS: process.env.EMAIL_PASS,
         EMAIL_HOST: process.env.EMAIL_HOST,
+        OTP_EXPIRY_TIME: Number(process.env.OTP_EXPIRY_TIME || 5),
         TOKEN_SECRET: process.env.TOKEN_SECRET || 'supersecret',
         REDIS_INSTANCE_URL: process.env.REDIS_INSTANCE_URL,
         PAYSTACK_SECRET: process.env.PAYSTACK_SECRET,
-        RABBITMQ_URL: process.env.RABBITMQ_URL,
-        CLOUDINARY_NAME: process.env.CLOUDINARY_NAME,
-        CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
-        CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+        SMS_API_KEY: process.env.SMS_API_KEY,
+        SMS_SENDER_ID: process.env.SMS_SENDER_ID,
+        AZURE_STORAGE_CONNECTION_STRING: process.env.AZURE_STORAGE_CONNECTION_STRING,
         PUBLIC_ROUTES: [
             '/api',
             '/',
@@ -61,11 +61,13 @@ const getConfig = (): Config => {
             '/api/auth/register',
             '/api/auth/verify-otp',
             '/api/auth/verify-token',
+            '/api/auth/upload_avatar',
             '/api/webhook',
             '/api/auth/change-password-forgot',
             '/api/delete-users',
             '/api/auth/send-otp',
             '/api/auth/login',
+            '/api/auth/send-sms',
             '/api/testN',
             '/api/sector',
             '/api/fileupload',
@@ -78,6 +80,7 @@ const getConfig = (): Config => {
             '/api/admin/check-email',
             "/api/admin/register",
             "/api/admin/login",
+
         ],
     };
 };

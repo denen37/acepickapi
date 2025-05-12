@@ -12,6 +12,11 @@ import { Portfolio } from './Portfolio'
 import { Wallet } from './Wallet'
 import { Profession } from './Profession'
 import { Sector } from './Sector'
+import { Director } from './Director'
+import { Job } from './Job'
+import { Review } from './Review'
+import { Dispute } from './Dispute'
+import { Material } from './Material'
 
 export {
     User,
@@ -27,5 +32,10 @@ export {
     VoiceRecording,
     Wallet,
     Profession,
-    Sector
+    Sector,
+    Director,
+    Job,
+    Review,
+    Dispute,
+    Material
 }

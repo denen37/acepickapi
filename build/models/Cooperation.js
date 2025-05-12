@@ -13,6 +13,7 @@ exports.Cooperation = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
 const Profile_1 = require("./Profile");
 const Profession_1 = require("./Profession");
+const Director_1 = require("./Director");
 let Cooperation = class Cooperation extends sequelize_typescript_1.Model {
 };
 exports.Cooperation = Cooperation;
@@ -71,6 +72,10 @@ __decorate([
     (0, sequelize_typescript_1.BelongsTo)(() => Profession_1.Profession, { onDelete: 'CASCADE' }),
     __metadata("design:type", Profession_1.Profession)
 ], Cooperation.prototype, "profession", void 0);
+__decorate([
+    (0, sequelize_typescript_1.HasOne)(() => Director_1.Director),
+    __metadata("design:type", Director_1.Director)
+], Cooperation.prototype, "director", void 0);
 exports.Cooperation = Cooperation = __decorate([
     (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'cooperations' })
 ], Cooperation);

@@ -33,10 +33,15 @@ let Profile = class Profile extends sequelize_typescript_1.Model {
 };
 exports.Profile = Profile;
 __decorate([
-    (0, sequelize_typescript_1.AllowNull)(true),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
+    (0, sequelize_typescript_1.AllowNull)(false),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING(50)),
     __metadata("design:type", String)
-], Profile.prototype, "fullName", void 0);
+], Profile.prototype, "firstName", void 0);
+__decorate([
+    (0, sequelize_typescript_1.AllowNull)(false),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING(50)),
+    __metadata("design:type", String)
+], Profile.prototype, "lastName", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
@@ -140,6 +145,11 @@ __decorate([
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
 ], Profile.prototype, "bvn", void 0);
+__decorate([
+    (0, sequelize_typescript_1.AllowNull)(true),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BOOLEAN),
+    __metadata("design:type", Boolean)
+], Profile.prototype, "bvnVerified", void 0);
 __decorate([
     (0, sequelize_typescript_1.Default)(ProfileType.CLIENT),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(ProfileType.CLIENT, ProfileType.PROFESSIONAL, ProfileType.CORPERATE)),

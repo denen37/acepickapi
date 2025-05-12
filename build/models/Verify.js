@@ -25,28 +25,23 @@ __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
-], Verify.prototype, "serviceId", void 0);
+], Verify.prototype, "contact", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
 ], Verify.prototype, "code", void 0);
 __decorate([
-    (0, sequelize_typescript_1.AllowNull)(true),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
-    __metadata("design:type", String)
-], Verify.prototype, "secret_key", void 0);
-__decorate([
-    (0, sequelize_typescript_1.AllowNull)(true),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
-    __metadata("design:type", String)
-], Verify.prototype, "client", void 0);
-__decorate([
     (0, sequelize_typescript_1.Default)(false),
     (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BOOLEAN),
+    __metadata("design:type", Boolean)
+], Verify.prototype, "verified", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Default)(VerificationType.EMAIL),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(VerificationType.EMAIL, VerificationType.SMS)),
     __metadata("design:type", String)
-], Verify.prototype, "used", void 0);
+], Verify.prototype, "type", void 0);
 exports.Verify = Verify = __decorate([
-    (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'verify' })
+    (0, sequelize_typescript_1.Table)({ updatedAt: false, tableName: 'verify' })
 ], Verify);

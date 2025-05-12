@@ -30,9 +30,14 @@ export class Profile extends Model {
     // firstName!: string;
 
 
-    @AllowNull(true)
-    @Column(DataType.STRING)
-    fullName!: string;
+    @AllowNull(false)
+    @Column(DataType.STRING(50))
+    firstName!: string;
+
+
+    @AllowNull(false)
+    @Column(DataType.STRING(50))
+    lastName!: string;
 
 
     @AllowNull(true)
@@ -163,6 +168,11 @@ export class Profile extends Model {
     @AllowNull(true)
     @Column(DataType.STRING)
     bvn!: string;
+
+
+    @AllowNull(true)
+    @Column(DataType.BOOLEAN)
+    bvnVerified!: boolean;
 
 
 

@@ -8,37 +8,37 @@ export enum VerificationType {
     RESET = 'RESET',
 }
 
-@Table({ timestamps: true, tableName: 'verify' })
+@Table({ updatedAt: false, tableName: 'verify' })
 export class Verify extends Model {
     @AllowNull(false)
     @Column(DataType.STRING)
-    serviceId!: string;
+    contact!: string;
+
 
     @AllowNull(false)
     @Column(DataType.STRING)
     code!: string;
 
 
-    @AllowNull(true)
-    @Column(DataType.STRING)
-    secret_key!: string;
+    // @AllowNull(true)
+    // @Column(DataType.STRING)
+    // secret_key!: string;
 
 
-    @AllowNull(true)
-    @Column(DataType.STRING)
-    client!: string;
+    // @AllowNull(true)
+    // @Column(DataType.STRING)
+    // client!: string;
 
 
     @Default(false)
     @AllowNull(true)
     @Column(DataType.BOOLEAN)
-    used!: string;
+    verified!: boolean;
 
 
 
 
-    // @Default(VerificationType.EMAIL)
-    // @Column(DataType.ENUM(VerificationType.EMAIL, VerificationType.SMS))
-    // status!: VerificationType;
-
+    @Default(VerificationType.EMAIL)
+    @Column(DataType.ENUM(VerificationType.EMAIL, VerificationType.SMS))
+    type!: VerificationType;
 }

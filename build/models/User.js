@@ -51,6 +51,7 @@ var UserRole;
 (function (UserRole) {
     UserRole["PROFESSIONAL"] = "professional";
     UserRole["CLIENT"] = "client";
+    UserRole["CORPERATE"] = "corperate";
 })(UserRole || (exports.UserRole = UserRole = {}));
 let User = class User extends sequelize_typescript_1.Model {
 };
@@ -97,11 +98,6 @@ __decorate([
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(UserRole.PROFESSIONAL, UserRole.CLIENT)),
     __metadata("design:type", String)
 ], User.prototype, "role", void 0);
-__decorate([
-    (0, sequelize_typescript_1.Default)(UserState.STEP_TWO),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(UserState.STEP_ONE, UserState.STEP_TWO, UserState.STEP_THREE, UserState.VERIFIED)),
-    __metadata("design:type", String)
-], User.prototype, "state", void 0);
 __decorate([
     (0, sequelize_typescript_1.HasOne)(() => Wallet_1.Wallet),
     __metadata("design:type", Wallet_1.Wallet)

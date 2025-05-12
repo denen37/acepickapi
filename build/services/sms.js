@@ -13,18 +13,46 @@ exports.sendEmailResend = exports.sendSMS = void 0;
 const axios = require("axios");
 const template_1 = require("../config/template");
 const gmail_1 = require("./gmail");
+// export const sendSMS = async (phone: number, code: string) => {
+//     const response = await axios.post(
+//         `https://www.bulksmsnigeria.com/api/v2/sms`,
+//         {
+//             to: `${phone}`,
+//             from: config.SMS_SENDER_ID,
+//             body: `${code} is your Ace-Pick access code. Do not share this with anyone.`,
+//             api_token: config.SMS_API_KEY,
+//         },
+//         {
+//             headers: {
+//                 'Content-Type': 'application/json',
+//                 "Accept": "application/json",
+//             }
+//         }
+//     );
+//     if (response.status <= 300) {
+//         return {
+//             status: true,
+//             message: response.data,
+//         }
+//     } else {
+//         return {
+//             status: false,
+//             message: response.data,
+//         };
+//     }
+// }
 const sendSMS = (phone, code) => __awaiter(void 0, void 0, void 0, function* () {
-    const response = yield axios.post(`https://termii.com/api/sms/send`, {
-        "to": `${phone}`,
-        "from": "N-Alert",
-        "sms": `${code} is your Ace-Pick access code. Do not share this with anyone.`,
-        "type": "plain",
-        "channel": "dnd",
-        // "api_key": "TL2ofq7ayT0gl1h8r1xEXXCGW6C9VYORpdJjRuJ2xBsFxTGO1mEM6qP8FORHPO",
-        "api_key": "TLzqURHkmkKBqbeuZwMJeKsCCqcHrhcLaOXUrLBBxmzBtJturGSHEyJOYIzxuK"
+    const response = yield axios.post(`https://v3.api.termii.com/api/sms/send`, {
+        to: `${phone}`,
+        from: "Acepick net",
+        sms: `${code} is your Ace-Pick access code. Do not share this with anyone.`,
+        type: 'plain',
+        api_key: "TLzqURHkmkKBqbeuZwMJeKsCCqcHrhcLaOXUrLBBxmzBtJturGSHEyJOYIzxuK",
+        channel: 'dnd'
     }, {
         headers: {
-            'Content-Type': ['application/json', 'application/json']
+            'Content-Type': 'application/json',
+            "Accept": "application/json",
         }
     });
     if (response.status <= 300) {

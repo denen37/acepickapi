@@ -44,6 +44,7 @@ export enum UserState {
 export enum UserRole {
     PROFESSIONAL = 'professional',
     CLIENT = 'client',
+    CORPERATE = 'corperate'
 }
 
 
@@ -95,9 +96,9 @@ export class User extends Model {
 
 
 
-    @Default(UserState.STEP_TWO)
-    @Column(DataType.ENUM(UserState.STEP_ONE, UserState.STEP_TWO, UserState.STEP_THREE, UserState.VERIFIED))
-    state!: UserState;
+    // @Default(UserState.STEP_TWO)
+    // @Column(DataType.ENUM(UserState.STEP_ONE, UserState.STEP_TWO, UserState.STEP_THREE, UserState.VERIFIED))
+    // state!: UserState;
 
 
     // @ForeignKey(() => Wallet)

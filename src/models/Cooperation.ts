@@ -2,6 +2,7 @@ import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNu
 import { User } from './User';
 import { Profile } from './Profile';
 import { Profession } from './Profession';
+import { Director } from './Director';
 
 
 
@@ -53,23 +54,6 @@ export class Cooperation extends Model {
 
 
 
-
-    // @ForeignKey(() => User)
-    // @AllowNull(false)
-    // @Column(DataType.UUID)
-    // userId!: string;
-
-
-
-
-    // @ForeignKey(() => Sector)
-    // @AllowNull(false)
-    // @Column(DataType.INTEGER)
-    // sectorId!: number;
-
-
-
-
     @AllowNull(false)
     @ForeignKey(() => Profession)
     @Column(DataType.INTEGER)
@@ -88,14 +72,11 @@ export class Cooperation extends Model {
     @BelongsTo(() => Profile, { onDelete: 'CASCADE' })
     profile!: Profile;
 
-    // @BelongsTo(() => Sector, { onDelete: 'CASCADE' })
-    // sector!: Sector;
-
 
     @BelongsTo(() => Profession, { onDelete: 'CASCADE' })
     profession!: Profession;
 
 
-    // @BelongsTo(() => User, { onDelete: 'CASCADE' })
-    // user!: User;
+    @HasOne(() => Director)
+    director!: Director;
 }

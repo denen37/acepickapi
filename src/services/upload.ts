@@ -10,64 +10,71 @@ const path = require('path')
 
 
 // cloudinary configuration
-cloudinary.config({
-  cloud_name: config.CLOUDINARY_NAME,
-  api_key: config.CLOUDINARY_API_KEY,
-  api_secret: config.CLOUDINARY_API_SECRET
-});
+// cloudinary.config({
+//   cloud_name: config.CLOUDINARY_NAME,
+//   api_key: config.CLOUDINARY_API_KEY,
+//   api_secret: config.CLOUDINARY_API_SECRET
+// });
 
 
-const pathExistsOrCreate = (dirPath: string): string => {
-  let filepath: string = path.resolve(__dirname, dirPath)
-  if (!fs.existsSync(filepath)) {
-    fs.mkdirSync(filepath, { recursive: true });
-    console.log(`Directory created: ${filepath}`);
-  }
+// const pathExistsOrCreate = (dirPath: string): string => {
+//   let filepath: string = path.resolve(__dirname, dirPath)
+//   if (!fs.existsSync(filepath)) {
+//     fs.mkdirSync(filepath, { recursive: true });
+//     console.log(`Directory created: ${filepath}`);
+//   }
 
-  return filepath;
-};
-
-
-
-const imageStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, pathExistsOrCreate('../../public/uploads'))
-  },
-  filename: (req, file, cb) => {
-    let filename = Date.now() + "--" + file.originalname;
-    cb(null, filename.replace(/\s+/g, ''))
-  }
-});
+//   return filepath;
+// };
 
 
 
+// const imageStorage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, pathExistsOrCreate('../../public/uploads'))
+//   },
+//   filename: (req, file, cb) => {
+//     let filename = Date.now() + "--" + file.originalname;
+//     cb(null, filename.replace(/\s+/g, ''))
+//   }
+// });
+
+
+
+
+// export const uploads = multer({
+//   storage: imageStorage,
+// })
+
+const storage = multer.memoryStorage();
 
 export const uploads = multer({
-  storage: imageStorage,
-})
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+});
 
 
 
-export const upload_cloud = async (path: string) => {
-  const result = await cloudinary.uploader.upload(path, { resource_type: 'auto' })
-  // console.log(result.secure_url)
+// export const upload_cloud = async (path: string) => {
+//   const result = await cloudinary.uploader.upload(path, { resource_type: 'auto' })
+//   // console.log(result.secure_url)
 
-  const url = cloudinary.url(result.public_id, {
-    transformation: [
-      {
-        fetch_format: 'auto',
-        quality: 'auto'
-      }, {
-        crop: 'auto',
-        gravity: 'auto',
-        width: 600,
-        height: 600,
-      }
-    ]
-  })
+//   const url = cloudinary.url(result.public_id, {
+//     transformation: [
+//       {
+//         fetch_format: 'auto',
+//         quality: 'auto'
+//       }, {
+//         crop: 'auto',
+//         gravity: 'auto',
+//         width: 600,
+//         height: 600,
+//       }
+//     ]
+//   })
 
-  console.log(url);
+//   console.log(url);
 
-  return url
-}
+//   return url
+// }
 

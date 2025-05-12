@@ -1,0 +1,14 @@
+2025-05-10 13:50:40	POST - /api/auth/upload_avatar
+2025-05-10 14:12:08	POST - /api/auth/upload_avatar
+2025-05-10 14:19:54	POST - /api/auth/register
+2025-05-10 14:20:23	POST - /api/auth/register
+2025-05-10 14:24:35	POST - /api/auth/send-otp
+2025-05-10 16:22:14	POST - /api/auth/send-otp
+2025-05-10 16:42:50	POST - /api/auth/send-sms
+2025-05-10 16:48:28	POST - /api/auth/send-sms
+2025-05-10 16:51:59	POST - /api/auth/send-sms
+2025-05-10 17:42:27	POST - /api/auth/send-sms
+2025-05-10 17:45:44	POST - /api/auth/register
+2025-05-10 17:46:27	POST - /api/auth/send-otp
+2025-05-10 17:47:13	POST - /api/auth/send-otp
+2025-05-10 17:48:32	POST - /api/auth/send-otp

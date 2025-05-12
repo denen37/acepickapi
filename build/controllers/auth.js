@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.updateFcmToken = exports.swithAccount = exports.corperateReg = exports.registerStepThree = exports.registerStepTwo = exports.upload_avatar = exports.deleteUsers = exports.login = exports.passwordChange = exports.register = exports.verifyOtp = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
+exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.updateFcmToken = exports.swithAccount = exports.corperateReg = exports.deleteUsers = exports.login = exports.passwordChange = exports.registerCorperate = exports.register = exports.verifyOtp = exports.sendSMSTest = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
 const modules_1 = require("../utils/modules");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
 const Verify_1 = require("../models/Verify");
@@ -34,7 +34,13 @@ const stream_chat_1 = require("stream-chat");
 const Wallet_1 = require("../models/Wallet");
 const Professional_1 = require("../models/Professional");
 const jsonwebtoken_2 = require("jsonwebtoken");
-const upload_1 = require("../services/upload");
+const bcryptjs_2 = __importDefault(require("bcryptjs"));
+const messages_1 = require("../utils/messages");
+const gmail_1 = require("../services/gmail");
+const Director_1 = require("../models/Director");
+const Profession_1 = require("../models/Profession");
+const Sector_1 = require("../models/Sector");
+const Review_1 = require("../models/Review");
 // instantiate your stream client using the API key and secret
 // the secret is only used server side and gives you full access to the API
 const serverClient = stream_chat_1.StreamChat.getInstance('zzfb7h72xhc5', '5pfxakc5zasma3hw9awd2qsqgk2fxyr4a5qb3au4kkdt27d7ttnca7vnusfuztud');
@@ -83,243 +89,196 @@ exports.updateProfile = updateProfile;
 // }
 const sendOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, phone, type } = req.body;
-    const serviceId = (0, modules_1.randomId)(12);
     const codeEmail = String(Math.floor(1000 + Math.random() * 9000));
     const codeSms = String(Math.floor(1000 + Math.random() * 9000));
-    if (type == Verify_1.VerificationType.BOTH) {
-        yield Verify_1.Verify.create({
-            serviceId,
-            code: codeSms,
-            client: phone
-        });
-        yield Verify_1.Verify.create({
-            serviceId,
-            code: codeEmail,
-            client: email
-        });
-        const smsResult = yield (0, sms_1.sendSMS)(phone, codeSms.toString());
-        const emailResult = yield (0, sms_1.sendEmailResend)(email, "Email Verification", `Dear User,<br><br>
-  
-    Thank you for choosing our service. To complete your registration and ensure the security of your account, please use the verification code below<br><br>
-    
-    Verification Code: ${codeEmail}<br><br>
-    
-    Please enter this code on our website/app to proceed with your registration process. If you did not initiate this action, please ignore this email.<br><br>`);
-        if (smsResult.status && (emailResult === null || emailResult === void 0 ? void 0 : emailResult.status))
-            return (0, modules_1.successResponse)(res, "Successful", Object.assign(Object.assign({}, smsResult), { serviceId }));
-        return (0, modules_1.errorResponse)(res, "Failed", emailResult);
+    let emailSendStatus;
+    let smsSendStatus;
+    try {
+        if (type === Verify_1.VerificationType.EMAIL || type === Verify_1.VerificationType.BOTH) {
+            const verifyEmailRecord = yield Verify_1.Verify.create({
+                contact: email,
+                code: codeEmail,
+                type: Verify_1.VerificationType.EMAIL,
+            });
+            const verifyEmailMsg = (0, messages_1.sendOTPEmail)(codeEmail);
+            const messageId = yield (0, gmail_1.sendEmail)(email, verifyEmailMsg.title, verifyEmailMsg.body, 'User');
+            emailSendStatus = Boolean(messageId);
+        }
+        if (type === Verify_1.VerificationType.SMS || type === Verify_1.VerificationType.BOTH) {
+            const verifySmsRecord = yield Verify_1.Verify.create({
+                contact: phone,
+                code: codeSms,
+                type: Verify_1.VerificationType.SMS
+            });
+            const smsResult = yield (0, sms_1.sendSMS)(phone, codeSms.toString());
+            smsSendStatus = smsResult.status;
+        }
+        return (0, modules_1.successResponse)(res, 'OTP sent successfully', { emailSendStatus, smsSendStatus });
     }
-    else if (type == Verify_1.VerificationType.SMS) {
-        yield Verify_1.Verify.create({
-            serviceId,
-            code: codeSms,
-            client: phone
-        });
-        const smsResult = yield (0, sms_1.sendSMS)(phone, codeSms.toString());
-        if (smsResult.status)
-            return (0, modules_1.successResponse)(res, "Successful", Object.assign(Object.assign({}, smsResult), { serviceId }));
-        return (0, modules_1.errorResponse)(res, "Failed", smsResult);
-    }
-    else if (type == Verify_1.VerificationType.EMAIL) {
-        yield Verify_1.Verify.create({
-            serviceId,
-            code: codeEmail,
-            client: email
-        });
-        const emailResult = yield (0, sms_1.sendEmailResend)(email, "Email Verification", `Dear User,<br><br>
-  
-    Thank you for choosing our service. To complete your registration and ensure the security of your account, please use the verification code below<br><br>
-    
-    Verification Code: ${codeEmail}<br><br>
-    
-    Please enter this code on our website/app to proceed with your registration process. If you did not initiate this action, please ignore this email.<br><br>
-    
-`);
-        if (emailResult === null || emailResult === void 0 ? void 0 : emailResult.status)
-            return (0, modules_1.successResponse)(res, "Successful", Object.assign(Object.assign({}, emailResult), { serviceId }));
-        return (0, modules_1.errorResponse)(res, "Failed", emailResult);
-    }
-    else {
-        // const secret_key = createRandomRef(12, "ace_pick")
-        yield Verify_1.Verify.create({
-            serviceId,
-            code: codeEmail,
-            client: email
-        });
-        const emailResult = yield (0, sms_1.sendEmailResend)(email, "Email Verification", `Dear User,<br><br>
-  
-    Thank you for choosing our service. To complete your registration and ensure the security of your account, please use the verification code below<br><br>
-    
-    Verification Code: ${codeEmail}<br><br>
-    
-    Please enter this code on our website/app to proceed with your registration process. If you did not initiate this action, please ignore this email.<br><br>
-    
- `);
-        if (emailResult === null || emailResult === void 0 ? void 0 : emailResult.status)
-            return (0, modules_1.successResponse)(res, "Successful", Object.assign(Object.assign({}, emailResult), { emailServiceId: serviceId }));
-        return (0, modules_1.errorResponse)(res, "Failed", emailResult);
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, error.message, error);
     }
 });
 exports.sendOtp = sendOtp;
+const sendSMSTest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { phone } = req.body;
+    try {
+        const status = yield (0, sms_1.sendSMS)(phone, '123456');
+        return (0, modules_1.successResponse)(res, 'OTP sent successfully', { smsSendStatus: status });
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error);
+    }
+});
+exports.sendSMSTest = sendSMSTest;
 const verifyOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { emailServiceId, smsServiceId, smsCode, emailCode, type } = req.body;
-    if (type === Verify_1.VerificationType.EMAIL) {
-        const verifyEmail = yield Verify_1.Verify.findOne({
-            where: {
-                serviceId: emailServiceId
-            }
-        });
-        if (verifyEmail) {
-            if (verifyEmail.code === emailCode) {
-                const verifyEmailResult = yield Verify_1.Verify.findOne({ where: { id: verifyEmail.id } });
-                yield (verifyEmailResult === null || verifyEmailResult === void 0 ? void 0 : verifyEmailResult.destroy());
-                return (0, modules_1.successResponse)(res, "Successful", {
-                    message: "successful",
-                    status: true
-                });
-            }
-            else {
-                (0, modules_1.errorResponse)(res, "Failed", {
-                    message: "Invalid Email Code",
-                    status: false
-                });
-            }
-        }
-        else {
-            (0, modules_1.errorResponse)(res, "Failed", {
-                message: `Email Code Already Used`,
-                status: false
+    const { smsCode, emailCode } = req.body;
+    try {
+        if (emailCode) {
+            const verifyEmail = yield Verify_1.Verify.findOne({
+                where: {
+                    code: emailCode.code,
+                    contact: emailCode.email,
+                }
             });
+            if (!verifyEmail)
+                return (0, modules_1.errorResponse)(res, 'Invalid Email Code', null);
+            if (verifyEmail.verified)
+                return (0, modules_1.errorResponse)(res, 'Email Code already verified');
+            if (verifyEmail.createdAt < new Date(Date.now() - configSetup_1.default.OTP_EXPIRY_TIME * 60 * 1000))
+                return (0, modules_1.errorResponse)(res, 'Email Code expired', null);
+            yield verifyEmail.update({ verified: true });
+            yield verifyEmail.save();
         }
+        if (smsCode) {
+            const verifySms = yield Verify_1.Verify.findOne({
+                where: {
+                    code: smsCode.code,
+                    contact: smsCode.phone,
+                }
+            });
+            if (!verifySms)
+                return (0, modules_1.errorResponse)(res, 'Invalid SMS Code', null);
+            if (verifySms.verified)
+                return (0, modules_1.errorResponse)(res, 'SMS Code already verified');
+            if (verifySms.createdAt < new Date(Date.now() - configSetup_1.default.OTP_EXPIRY_TIME * 60 * 1000))
+                return (0, modules_1.errorResponse)(res, 'SMS Code expired', null);
+            yield verifySms.update({ verified: true });
+            yield verifySms.save();
+        }
+        return (0, modules_1.successResponse)(res, 'success', 'Both codes verified successfully');
     }
-    else if (type === Verify_1.VerificationType.SMS) {
-        const verifySms = yield Verify_1.Verify.findOne({
-            where: {
-                serviceId: smsServiceId
-            }
-        });
-        //smsCode
-        if (verifySms) {
-            if (verifySms.code === smsCode) {
-                const verifySmsResult = yield Verify_1.Verify.findOne({ where: { id: verifySms.id } });
-                yield (verifySmsResult === null || verifySmsResult === void 0 ? void 0 : verifySmsResult.destroy());
-                return (0, modules_1.successResponse)(res, "Successful", {
-                    message: "successful",
-                    status: true
-                });
-            }
-            else {
-                (0, modules_1.errorResponse)(res, "Failed", {
-                    message: `Invalid SMS Code`,
-                    status: false
-                });
-            }
-        }
-        else {
-            (0, modules_1.errorResponse)(res, "Failed", {
-                message: `SMS Code Already Used`,
-                status: false
-            });
-        }
-    }
-    else {
-        const verifySms = yield Verify_1.Verify.findOne({
-            where: {
-                serviceId: smsServiceId
-            }
-        });
-        const verifyEmail = yield Verify_1.Verify.findOne({
-            where: {
-                serviceId: emailServiceId
-            }
-        });
-        if (verifySms && verifyEmail) {
-            if (verifySms.code === smsCode && verifyEmail.code === emailCode) {
-                const verifySmsResult = yield Verify_1.Verify.findOne({ where: { id: verifySms.id } });
-                yield (verifySmsResult === null || verifySmsResult === void 0 ? void 0 : verifySmsResult.destroy());
-                const verifyEmailResult = yield Verify_1.Verify.findOne({ where: { id: verifyEmail.id } });
-                yield (verifyEmailResult === null || verifyEmailResult === void 0 ? void 0 : verifyEmailResult.destroy());
-                return (0, modules_1.successResponse)(res, "Successful", {
-                    message: "email and sms verification successful",
-                    status: true
-                });
-            }
-            else {
-                (0, modules_1.errorResponse)(res, "Failed", {
-                    message: `Invalid ${!verifySms ? "SmS" : "Email"} Code`,
-                    status: false
-                });
-            }
-        }
-        else {
-            (0, modules_1.errorResponse)(res, "Failed", {
-                message: `${!verifySms ? "SmS" : "Email"} Code Already Used`,
-                status: false
-            });
-        }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error.message);
     }
 });
 exports.verifyOtp = verifyOtp;
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, phone, password, role } = req.body;
-    (0, bcryptjs_1.hash)(password, modules_1.saltRounds, function (err, hashedPassword) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const userEmail = yield User_1.User.findOne({ where: { email } });
-            const userPhone = yield User_1.User.findOne({ where: { phone } });
-            if (!(0, modules_1.validateEmail)(email))
-                return (0, modules_1.successResponseFalse)(res, "Failed", { status: false, message: "Enter a valid email" });
-            if (userPhone || userEmail) {
-                if ((userEmail === null || userEmail === void 0 ? void 0 : userEmail.state) === User_1.UserState.VERIFIED || (userPhone === null || userPhone === void 0 ? void 0 : userPhone.state) === User_1.UserState.VERIFIED) {
-                    if (userPhone)
-                        return (0, modules_1.successResponseFalse)(res, "Failed", { status: false, message: "Phone already exist", state: userPhone.state });
-                    if (userEmail)
-                        return (0, modules_1.successResponseFalse)(res, "Failed", { status: false, message: "Email already exist", state: userEmail.state });
-                }
-                yield (userEmail === null || userEmail === void 0 ? void 0 : userEmail.destroy());
-            }
-            const user = yield User_1.User.create({
-                email, phone, password: hashedPassword, role
-            });
-            const emailServiceId = (0, modules_1.randomId)(12);
-            const codeEmail = String(Math.floor(1000 + Math.random() * 9000));
-            yield Verify_1.Verify.create({
-                serviceId: emailServiceId,
-                code: codeEmail,
-                client: email,
-                secret_key: (0, modules_1.createRandomRef)(12, "ace_pick"),
-            });
-            try {
-                const emailResult = yield (0, sms_1.sendEmailResend)(user.email, "Email Verification", `Dear User,<br><br>
-      
-                Thank you for choosing our service. To complete your registration and ensure the security of your account, please use the verification code below<br><br>
-                
-                Verification Code: ${codeEmail}<br><br>
-                
-                Please enter this code on our website/app to proceed with your registration process. If you did not initiate this action, please ignore this email.<br><br>
-                
-            `);
-            }
-            catch (error) {
-                return (0, modules_1.errorResponse)(res, "An Error Occurred", error);
-            }
-            let token = (0, jsonwebtoken_1.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
-            const chatToken = serverClient.createToken(`${String(user.id)}`);
-            const profile = yield Profile_1.Profile.findOne({ where: { userId: user.id } });
-            try {
-            }
-            catch (error) {
-                return (0, modules_1.errorResponse)(res, "An Error Occurred", error);
-            }
-            return (0, modules_1.successResponse)(res, "Successful", {
-                status: true,
-                message: {
-                    email, phone, token, emailServiceId, chatToken
-                }
-            });
+    const { email, phone, password, confirmPassword, role, firstName, lastName, lga, bvn, state, address, avatar } = req.body;
+    if (!email || !phone || !password || !confirmPassword || !role || !firstName || !lastName || !lga || !bvn || !state || !address || !avatar)
+        return (0, modules_1.handleResponse)(res, 404, false, "All fields are required");
+    if (password !== confirmPassword)
+        return (0, modules_1.handleResponse)(res, 404, false, "Password do not match");
+    try {
+        if (!(0, modules_1.validateEmail)(email))
+            return (0, modules_1.handleResponse)(res, 404, false, "Enter a valid email");
+        if (!(0, modules_1.validatePhone)(phone))
+            return (0, modules_1.handleResponse)(res, 404, false, "Enter a valid phone number");
+        const verifiedEmail = yield Verify_1.Verify.findOne({
+            where: { contact: email, verified: true }
         });
-    });
+        if (!verifiedEmail)
+            return (0, modules_1.handleResponse)(res, 404, false, "Email not verified");
+        // const verifiedPhone = await Verify.findOne({
+        //     where: { contact: phone, verified: true }
+        // })
+        // if (!verifiedPhone) return handleResponse(res, 404, false, "Phone not verified");
+        const hashedPassword = yield bcryptjs_2.default.hash(password, 10);
+        const user = yield User_1.User.create({
+            email,
+            phone,
+            password: hashedPassword,
+            role,
+        });
+        const profile = yield Profile_1.Profile.create({
+            userId: user.id,
+            firstName,
+            lastName,
+            lga,
+            state,
+            address,
+            role,
+            avatar,
+            bvn
+        });
+        const wallet = yield Wallet_1.Wallet.create({
+            userId: user.id,
+            balance: 0,
+        });
+        user.setDataValue('profile', profile);
+        user.setDataValue('wallet', wallet);
+        let token = (0, jsonwebtoken_1.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
+        let regEmail = (0, messages_1.registerEmail)(user);
+        let messageId = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, 'User');
+        let emailSendStatus = Boolean(messageId);
+        return (0, modules_1.successResponse)(res, "success", { user, token, emailSendStatus });
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', { message: error.message, error });
+    }
 });
 exports.register = register;
+const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email, phone, password, confirmPassword, role = 'corporate', firstName, lastName, corperate } = req.body;
+    if (!email || !phone || !password || !confirmPassword || !role || !firstName || !lastName || !corperate)
+        return (0, modules_1.handleResponse)(res, 404, false, "All fields are required");
+    if (password !== confirmPassword)
+        return (0, modules_1.handleResponse)(res, 404, false, "Password do not match");
+    if (!(0, modules_1.validateEmail)(email))
+        return (0, modules_1.handleResponse)(res, 404, false, "Enter a valid email");
+    if (!(0, modules_1.validatePhone)(phone))
+        return (0, modules_1.handleResponse)(res, 404, false, "Enter a valid phone number");
+    const verifiedEmail = yield Verify_1.Verify.findOne({
+        where: { contact: email, verified: true }
+    });
+    if (!verifiedEmail)
+        return (0, modules_1.handleResponse)(res, 404, false, "Email not verified");
+    // const verifiedPhone = await Verify.findOne({
+    //     where: { contact: phone, verified: true }
+    // })
+    // if (!verifiedPhone) return handleResponse(res, 404, false, "Phone not verified");
+    const hashedPassword = yield bcryptjs_2.default.hash(password, 10);
+    const user = yield User_1.User.create({
+        email,
+        phone,
+        password: hashedPassword,
+        role,
+    });
+    const profile = yield Profile_1.Profile.create({
+        userId: user.id,
+        firstName,
+        lastName
+    }, {
+        include: [{
+                model: Cooperation_1.Cooperation,
+                include: [{
+                        model: Director_1.Director
+                    }]
+            }]
+    });
+    const wallet = yield Wallet_1.Wallet.create({
+        userId: user.id,
+        balance: 0,
+    });
+    user.setDataValue('profile', profile);
+    user.setDataValue('wallet', wallet);
+    let token = (0, jsonwebtoken_1.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
+    let regEmail = (0, messages_1.registerEmail)(user);
+    let messageId = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, 'User');
+    let emailSendStatus = Boolean(messageId);
+    return (0, modules_1.successResponse)(res, "success", { user, token, emailSendStatus });
+});
+exports.registerCorperate = registerCorperate;
 const passwordChange = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { password, confirmPassword } = req.body;
     const { id } = req.user;
@@ -337,7 +296,7 @@ const passwordChange = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.passwordChange = passwordChange;
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    let { email, password, type, fcmToken } = req.body;
+    let { email, password, fcmToken } = req.body;
     try {
         const user = yield User_1.User.findOne({ where: { email } });
         if (!user)
@@ -346,21 +305,62 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         if (!match)
             return (0, modules_1.handleResponse)(res, 404, false, "Invalid Credentials");
         let token = (0, jsonwebtoken_1.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
-        const chatToken = serverClient.createToken(`${String(user.id)}`);
+        // const chatToken = serverClient.createToken(`${String(user.id)}`);
         const profile = yield Profile_1.Profile.findOne({ where: { userId: user.id } });
         yield (profile === null || profile === void 0 ? void 0 : profile.update({ fcmToken }));
-        const profileUpdated = yield Profile_1.Profile.findOne({
-            where: { userId: user.id },
-            include: [{
-                    model: User_1.User,
-                    attributes: ['id', 'email', 'phone', 'fcmToken', 'status'],
-                    include: [{
-                            model: Wallet_1.Wallet,
-                            attributes: { exclude: ['pin'] },
-                        }]
-                }]
-        });
-        return (0, modules_1.successResponse)(res, "Successful", { status: true, profile: profileUpdated, token, chatToken });
+        let userData;
+        if (user.role == User_1.UserRole.CLIENT) {
+            userData = yield User_1.User.findOne({
+                where: { id: user.id },
+                attributes: { exclude: ['password'] },
+                include: [{
+                        model: Wallet_1.Wallet,
+                        attributes: { exclude: ['password'] },
+                    }, {
+                        model: Profile_1.Profile,
+                    }]
+            });
+        }
+        else if (user.role == User_1.UserRole.PROFESSIONAL) {
+            userData = yield User_1.User.findOne({
+                where: { id: user.id },
+                attributes: { exclude: ['password'] },
+                include: [{
+                        model: Wallet_1.Wallet,
+                        attributes: { exclude: ['password'] },
+                    }, {
+                        model: Profile_1.Profile,
+                        include: [{
+                                model: Professional_1.Professional,
+                                include: [{
+                                        model: Profession_1.Profession,
+                                        include: [Sector_1.Sector]
+                                    }]
+                            }]
+                    }, {
+                        model: Review_1.Review
+                    }]
+            });
+        }
+        else {
+            userData = yield User_1.User.findOne({
+                where: { id: user.id },
+                attributes: { exclude: ['password'] },
+                include: [{
+                        model: Wallet_1.Wallet,
+                        attributes: { exclude: ['password'] },
+                    }, {
+                        model: Profile_1.Profile,
+                        include: [{
+                                model: Cooperation_1.Cooperation,
+                                include: [Director_1.Director]
+                            }]
+                    }, {
+                        model: Review_1.Review
+                    }]
+            });
+        }
+        return (0, modules_1.successResponse)(res, "Successful", { status: true, user: userData, token });
     }
     catch (error) {
         return (0, modules_1.errorResponse)(res, 'error', error.message);
@@ -461,53 +461,26 @@ const deleteUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.deleteUsers = deleteUsers;
-const upload_avatar = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    let filePath = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
-    if (!filePath) {
-        return (0, modules_1.successResponseFalse)(res, "No file uploaded");
-    }
-    const url = yield (0, upload_1.upload_cloud)(filePath);
-    return (0, modules_1.successResponse)(res, "Successful", { url });
-});
-exports.upload_avatar = upload_avatar;
-const registerStepTwo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    let { fullName, lga, state, address, type, avatar } = req.body;
-    let { id } = req.user;
-    const user = yield User_1.User.findOne({ where: { id } });
-    const profile = yield Profile_1.Profile.findOne({ where: { userId: id } });
-    if (profile)
-        return (0, modules_1.errorResponse)(res, "Failed", { status: false, message: "Profile Already Exist" });
-    const profileCreate = yield Profile_1.Profile.create({ fullName, lga, state, address, type, userId: id, avatar /*: convertHttpToHttps(avatar)*/ });
-    const wallet = yield Wallet_1.Wallet.create({ userId: id, balance: 0 });
-    yield (0, sms_1.sendEmailResend)(user.email, "Welcome to Acepick", `Welcome on board ${profileCreate.fullName},<br><br> we are pleased to have you on Acepick, please validate your account by providing your BVN to get accessible to all features on Acepick.<br><br> Thanks.`);
-    yield (user === null || user === void 0 ? void 0 : user.update({ state: Profile_1.ProfileType.CLIENT ? User_1.UserState.VERIFIED : User_1.UserState.STEP_THREE }));
-    (0, modules_1.successResponse)(res, "Successful", { status: true, message: profileCreate });
-});
-exports.registerStepTwo = registerStepTwo;
-const registerStepThree = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    let { intro, regNum, experience, professionId, chargeFrom } = req.body;
-    try {
-        let { id } = req.user;
-        const user = yield User_1.User.findOne({ where: { id } });
-        const professional = yield Professional_1.Professional.findOne({ where: { userId: id } });
-        if (professional)
-            return (0, modules_1.errorResponse)(res, "Failed", { status: false, message: "Professional Already Exist" });
-        const profile = yield Profile_1.Profile.findOne({ where: { userId: id } });
-        const professionalCreate = yield Professional_1.Professional.create({
-            profileId: profile === null || profile === void 0 ? void 0 : profile.id, intro, regNum, yearsOfExp: experience, chargeFrom,
-            file: { images: [] }, userId: id, professionId
-        });
-        // const wallet = await Wallet.create({ userId: user?.id, type: WalletType.PROFESSIONAL })
-        yield (profile === null || profile === void 0 ? void 0 : profile.update({ type: Profile_1.ProfileType.PROFESSIONAL, corperate: false, switch: true }));
-        yield (user === null || user === void 0 ? void 0 : user.update({ state: User_1.UserState.VERIFIED }));
-        (0, modules_1.successResponse)(res, "Successful", professionalCreate);
-    }
-    catch (error) {
-        return (0, modules_1.errorResponse)(res, "Failed", { message: "Error creating professional", error });
-    }
-});
-exports.registerStepThree = registerStepThree;
+// export const registerStepThree = async (req: Request, res: Response) => {
+//     let { intro, regNum, experience, professionId, chargeFrom } = req.body;
+//     try {
+//         let { id } = req.user;
+//         const user = await User.findOne({ where: { id } });
+//         const professional = await Professional.findOne({ where: { userId: id } });
+//         if (professional) return errorResponse(res, "Failed", { status: false, message: "Professional Already Exist" })
+//         const profile = await Profile.findOne({ where: { userId: id } });
+//         const professionalCreate = await Professional.create({
+//             profileId: profile?.id, intro, regNum, yearsOfExp: experience, chargeFrom,
+//             file: { images: [] }, userId: id, professionId
+//         })
+//         // const wallet = await Wallet.create({ userId: user?.id, type: WalletType.PROFESSIONAL })
+//         await profile?.update({ type: ProfileType.PROFESSIONAL, corperate: false, switch: true })
+//         await user?.update({ state: UserState.VERIFIED })
+//         successResponse(res, "Successful", professionalCreate)
+//     } catch (error) {
+//         return errorResponse(res, "Failed", { message: "Error creating professional", error })
+//     }
+// }
 const corperateReg = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { nameOfOrg, phone, address, state, lga, postalCode, regNum, noOfEmployees } = req.body;
     let { id } = req.user;
@@ -555,25 +528,19 @@ const updateFcmToken = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.updateFcmToken = updateFcmToken;
 const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { password, code, emailServiceId } = req.body;
-    const verify = yield Verify_1.Verify.findOne({
-        where: {
-            code,
-            serviceId: emailServiceId,
-            used: false
-        }
-    });
-    if (!verify)
-        return (0, modules_1.errorResponse)(res, "Failed", { status: false, message: "Invalid Code" });
-    (0, bcryptjs_1.hash)(password, modules_1.saltRounds, function (err, hashedPassword) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const user = yield User_1.User.findOne({ where: { email: verify.client } });
-            user === null || user === void 0 ? void 0 : user.update({ password: hashedPassword });
-            // let token = sign({ id: user!.id, email: user!.email }, config.TOKEN_SECRET);
-            yield verify.destroy();
-            return (0, modules_1.successResponse)(res, "Password Changed Successfully");
+    const { email, password } = req.body;
+    try {
+        (0, bcryptjs_1.hash)(password, modules_1.saltRounds, function (err, hashedPassword) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const user = yield User_1.User.findOne({ where: { email: email } });
+                user === null || user === void 0 ? void 0 : user.update({ password: hashedPassword });
+                return (0, modules_1.successResponse)(res, "Password Changed Successfully");
+            });
         });
-    });
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, "Failed", { status: false, message: "Error changing password" });
+    }
 });
 exports.changePassword = changePassword;
 // export const accountInfo = async (req: Request, res: Response) => {

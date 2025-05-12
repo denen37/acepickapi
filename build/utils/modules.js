@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteKey = exports.createRandomRef = exports.getRandom = exports.validateEmail = exports.randomId = exports.errorResponse = exports.successResponseFalse = exports.successResponse = exports.convertHttpToHttps = exports.handleResponse = exports.removeEnd = exports.saltRounds = void 0;
+exports.deleteKey = exports.createRandomRef = exports.getRandom = exports.validatePhone = exports.validateEmail = exports.randomId = exports.errorResponse = exports.successResponseFalse = exports.successResponse = exports.convertHttpToHttps = exports.handleResponse = exports.removeEnd = exports.saltRounds = void 0;
 exports.calculateDifferenceBetweenMinMax = calculateDifferenceBetweenMinMax;
 exports.getDistanceFromLatLonInKm = getDistanceFromLatLonInKm;
 exports.isGreaterByOne = isGreaterByOne;
@@ -63,9 +63,16 @@ const randomId = (length) => {
 };
 exports.randomId = randomId;
 const validateEmail = (email) => {
-    return email.match(/^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
+    let emailCleaned = email.trim();
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailCleaned);
 };
 exports.validateEmail = validateEmail;
+const validatePhone = (phone) => {
+    const cleaned = phone.replace(/[\s()-]/g, '');
+    const phoneRegex = /^\+?\d{10,15}$/;
+    return phoneRegex.test(cleaned);
+};
+exports.validatePhone = validatePhone;
 const getRandom = (length) => Math.floor(Math.pow(10, length - 1) + Math.random() * 9 * Math.pow(10, length - 1));
 exports.getRandom = getRandom;
 const createRandomRef = (length, initial) => {

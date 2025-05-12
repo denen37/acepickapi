@@ -1,4 +1,4 @@
-import { convertHttpToHttps, createRandomRef, deleteKey, errorResponse, handleResponse, randomId, saltRounds, successResponse, successResponseFalse, validateEmail } from "../utils/modules";
+import { convertHttpToHttps, createRandomRef, deleteKey, errorResponse, handleResponse, randomId, saltRounds, successResponse, successResponseFalse, validateEmail, validatePhone } from "../utils/modules";
 import config from "../config/configSetup"
 import { Request, Response } from 'express';
 import { VerificationType, Verify } from "../models/Verify";
@@ -34,7 +34,15 @@ import { sendExpoNotification } from "../services/expo";
 import { Professional } from "../models/Professional";
 import axios from "axios";
 import { verify } from "jsonwebtoken";
-import { upload_cloud } from "../services/upload";
+import bcrypt from "bcryptjs";
+import { basename } from "path";
+import { registerEmail, sendOTPEmail } from "../utils/messages";
+import { sendEmail } from "../services/gmail";
+import { Director } from "../models/Director";
+import { Profession } from "../models/Profession";
+import { Sector } from "../models/Sector";
+import { Review } from "../models/Review";
+import { resolve } from "path/win32";
 
 
 // instantiate your stream client using the API key and secret
@@ -105,198 +113,117 @@ export const updateProfile = async (req: Request, res: Response) => {
 
 export const sendOtp = async (req: Request, res: Response) => {
     const { email, phone, type } = req.body;
-    const serviceId = randomId(12);
     const codeEmail = String(Math.floor(1000 + Math.random() * 9000));
     const codeSms = String(Math.floor(1000 + Math.random() * 9000));
+    let emailSendStatus;
+    let smsSendStatus;
 
-    if (type == VerificationType.BOTH) {
-        await Verify.create({
-            serviceId,
-            code: codeSms,
-            client: phone
-        })
-        await Verify.create({
-            serviceId,
-            code: codeEmail,
-            client: email
-        })
-        const smsResult = await sendSMS(phone, codeSms.toString());
-        const emailResult = await sendEmailResend(email, "Email Verification",
-            `Dear User,<br><br>
-  
-    Thank you for choosing our service. To complete your registration and ensure the security of your account, please use the verification code below<br><br>
-    
-    Verification Code: ${codeEmail}<br><br>
-    
-    Please enter this code on our website/app to proceed with your registration process. If you did not initiate this action, please ignore this email.<br><br>`
+    try {
+        if (type === VerificationType.EMAIL || type === VerificationType.BOTH) {
+            const verifyEmailRecord = await Verify.create({
+                contact: email,
+                code: codeEmail,
+                type: VerificationType.EMAIL,
+            })
 
-        );
-        if (smsResult.status && emailResult?.status) return successResponse(res, "Successful", { ...smsResult, serviceId })
-        return errorResponse(res, "Failed", emailResult)
-    } else if (type == VerificationType.SMS) {
-        await Verify.create({
-            serviceId,
-            code: codeSms,
-            client: phone
-        })
-        const smsResult = await sendSMS(phone, codeSms.toString());
-        if (smsResult.status) return successResponse(res, "Successful", { ...smsResult, serviceId })
-        return errorResponse(res, "Failed", smsResult)
-    } else if (type == VerificationType.EMAIL) {
-        await Verify.create({
-            serviceId,
-            code: codeEmail,
-            client: email
-        })
-        const emailResult = await sendEmailResend(email, "Email Verification",
-            `Dear User,<br><br>
-  
-    Thank you for choosing our service. To complete your registration and ensure the security of your account, please use the verification code below<br><br>
-    
-    Verification Code: ${codeEmail}<br><br>
-    
-    Please enter this code on our website/app to proceed with your registration process. If you did not initiate this action, please ignore this email.<br><br>
-    
-`
-        );
-        if (emailResult?.status) return successResponse(res, "Successful", { ...emailResult, serviceId })
-        return errorResponse(res, "Failed", emailResult)
+            const verifyEmailMsg = sendOTPEmail(codeEmail);
+
+            const messageId = await sendEmail(
+                email,
+                verifyEmailMsg.title,
+                verifyEmailMsg.body,
+                'User'
+            )
+
+            emailSendStatus = Boolean(messageId);
+        }
+
+
+        if (type === VerificationType.SMS || type === VerificationType.BOTH) {
+            const verifySmsRecord = await Verify.create({
+                contact: phone,
+                code: codeSms,
+                type: VerificationType.SMS
+            })
+
+            const smsResult = await sendSMS(phone, codeSms.toString());
+
+            smsSendStatus = smsResult.status
+        }
+
+
+        return successResponse(res, 'OTP sent successfully', { emailSendStatus, smsSendStatus })
+    } catch (error: any) {
+        return errorResponse(res, error.message, error)
     }
-
-    else {
-        // const secret_key = createRandomRef(12, "ace_pick")
-        await Verify.create({
-            serviceId,
-            code: codeEmail,
-            client: email
-        })
-        const emailResult = await sendEmailResend(email, "Email Verification",
-            `Dear User,<br><br>
-  
-    Thank you for choosing our service. To complete your registration and ensure the security of your account, please use the verification code below<br><br>
-    
-    Verification Code: ${codeEmail}<br><br>
-    
-    Please enter this code on our website/app to proceed with your registration process. If you did not initiate this action, please ignore this email.<br><br>
-    
- `
-        );
-        if (emailResult?.status) return successResponse(res, "Successful", { ...emailResult, emailServiceId: serviceId })
-        return errorResponse(res, "Failed", emailResult)
-
-    }
-
 };
 
+export const sendSMSTest = async (req: Request, res: Response) => {
+    const { phone } = req.body;
 
+    try {
+        const status = await sendSMS(phone, '123456')
 
+        return successResponse(res, 'OTP sent successfully', { smsSendStatus: status })
+    } catch (error) {
+        return errorResponse(res, 'error', error)
+    }
+}
 
 
 
 export const verifyOtp = async (req: Request, res: Response) => {
-    const { emailServiceId, smsServiceId, smsCode, emailCode, type } = req.body;
-    if (type === VerificationType.EMAIL) {
+    const { smsCode, emailCode }:
+        { smsCode: { phone: string, code: string } | null, emailCode: { email: string, code: string } | null }
+        = req.body;
 
-        const verifyEmail = await Verify.findOne({
-            where: {
-                serviceId: emailServiceId
-            }
-        })
+    try {
+        if (emailCode) {
 
-        if (verifyEmail) {
-            if (verifyEmail.code === emailCode) {
-
-                const verifyEmailResult = await Verify.findOne({ where: { id: verifyEmail.id } })
-                await verifyEmailResult?.destroy()
-                return successResponse(res, "Successful", {
-                    message: "successful",
-                    status: true
-                })
-
-            } else {
-
-                errorResponse(res, "Failed", {
-                    message: "Invalid Email Code",
-                    status: false
-                })
-            }
-        } else {
-            errorResponse(res, "Failed", {
-                message: `Email Code Already Used`,
-                status: false
+            const verifyEmail = await Verify.findOne({
+                where: {
+                    code: emailCode.code,
+                    contact: emailCode.email,
+                }
             })
+
+            if (!verifyEmail) return errorResponse(res, 'Invalid Email Code', null);
+
+            if (verifyEmail.verified) return errorResponse(res, 'Email Code already verified');
+
+            if (verifyEmail.createdAt < new Date(Date.now() - config.OTP_EXPIRY_TIME * 60 * 1000))
+                return errorResponse(res, 'Email Code expired', null);
+
+            await verifyEmail.update({ verified: true })
+
+            await verifyEmail.save();
         }
-    } else if (type === VerificationType.SMS) {
 
-        const verifySms = await Verify.findOne({
-            where: {
-                serviceId: smsServiceId
-            }
-        })
 
-        //smsCode
-
-        if (verifySms) {
-            if (verifySms.code === smsCode) {
-                const verifySmsResult = await Verify.findOne({ where: { id: verifySms.id } })
-                await verifySmsResult?.destroy()
-                return successResponse(res, "Successful", {
-                    message: "successful",
-                    status: true
-                })
-
-            } else {
-
-                errorResponse(res, "Failed", {
-                    message: `Invalid SMS Code`,
-                    status: false
-                })
-            }
-        } else {
-            errorResponse(res, "Failed", {
-                message: `SMS Code Already Used`,
-                status: false
+        if (smsCode) {
+            const verifySms = await Verify.findOne({
+                where: {
+                    code: smsCode.code,
+                    contact: smsCode.phone,
+                }
             })
+
+            if (!verifySms) return errorResponse(res, 'Invalid SMS Code', null);
+
+            if (verifySms.verified) return errorResponse(res, 'SMS Code already verified');
+
+            if (verifySms.createdAt < new Date(Date.now() - config.OTP_EXPIRY_TIME * 60 * 1000))
+                return errorResponse(res, 'SMS Code expired', null);
+
+            await verifySms.update({ verified: true })
+
+            await verifySms.save();
         }
-    }
 
-    else {
-        const verifySms = await Verify.findOne({
-            where: {
-                serviceId: smsServiceId
-            }
-        })
+        return successResponse(res, 'success', 'Both codes verified successfully');
+    } catch (error: any) {
+        return errorResponse(res, 'error', error.message);
 
-        const verifyEmail = await Verify.findOne({
-            where: {
-                serviceId: emailServiceId
-            }
-        })
-
-        if (verifySms && verifyEmail) {
-            if (verifySms.code === smsCode && verifyEmail.code === emailCode) {
-
-                const verifySmsResult = await Verify.findOne({ where: { id: verifySms.id } })
-                await verifySmsResult?.destroy()
-                const verifyEmailResult = await Verify.findOne({ where: { id: verifyEmail.id } })
-                await verifyEmailResult?.destroy()
-                return successResponse(res, "Successful", {
-                    message: "email and sms verification successful",
-                    status: true
-                })
-
-            } else {
-                errorResponse(res, "Failed", {
-                    message: `Invalid ${!verifySms ? "SmS" : "Email"} Code`,
-                    status: false
-                })
-            }
-        } else {
-            errorResponse(res, "Failed", {
-                message: `${!verifySms ? "SmS" : "Email"} Code Already Used`,
-                status: false
-            })
-        }
     }
 }
 
@@ -304,72 +231,153 @@ export const verifyOtp = async (req: Request, res: Response) => {
 
 
 export const register = async (req: Request, res: Response): Promise<any> => {
-    const { email, phone, password, role } = req.body;
-    hash(password, saltRounds, async function (err, hashedPassword) {
-        const userEmail = await User.findOne({ where: { email } })
-        const userPhone = await User.findOne({ where: { phone } })
-        if (!validateEmail(email)) return successResponseFalse(res, "Failed", { status: false, message: "Enter a valid email" })
+    const { email, phone, password, confirmPassword, role, firstName, lastName, lga, bvn, state, address, avatar } = req.body;
 
-        if (userPhone || userEmail) {
-            if (userEmail?.state === UserState.VERIFIED || userPhone?.state === UserState.VERIFIED) {
-                if (userPhone) return successResponseFalse(res, "Failed", { status: false, message: "Phone already exist", state: userPhone.state })
-                if (userEmail) return successResponseFalse(res, "Failed", { status: false, message: "Email already exist", state: userEmail.state })
-            }
+    if (!email || !phone || !password || !confirmPassword || !role || !firstName || !lastName || !lga || !bvn || !state || !address || !avatar)
+        return handleResponse(res, 404, false, "All fields are required");
 
-            await userEmail?.destroy();
-        }
+    if (password !== confirmPassword) return handleResponse(res, 404, false, "Password do not match");
+
+    try {
+        if (!validateEmail(email)) return handleResponse(res, 404, false, "Enter a valid email");
+
+        if (!validatePhone(phone)) return handleResponse(res, 404, false, "Enter a valid phone number");
+
+        const verifiedEmail = await Verify.findOne({
+            where: { contact: email, verified: true }
+        });
+
+        if (!verifiedEmail) return handleResponse(res, 404, false, "Email not verified");
+
+        // const verifiedPhone = await Verify.findOne({
+        //     where: { contact: phone, verified: true }
+        // })
+
+        // if (!verifiedPhone) return handleResponse(res, 404, false, "Phone not verified");
+
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         const user = await User.create({
-            email, phone, password: hashedPassword, role
+            email,
+            phone,
+            password: hashedPassword,
+            role,
         })
 
-
-        const emailServiceId = randomId(12);
-        const codeEmail = String(Math.floor(1000 + Math.random() * 9000));
-        await Verify.create({
-            serviceId: emailServiceId,
-            code: codeEmail,
-            client: email,
-            secret_key: createRandomRef(12, "ace_pick",),
+        const profile = await Profile.create({
+            userId: user.id,
+            firstName,
+            lastName,
+            lga,
+            state,
+            address,
+            role,
+            avatar,
+            bvn
         })
 
-        try {
-            const emailResult = await sendEmailResend(user!.email, "Email Verification",
-                `Dear User,<br><br>
-      
-                Thank you for choosing our service. To complete your registration and ensure the security of your account, please use the verification code below<br><br>
-                
-                Verification Code: ${codeEmail}<br><br>
-                
-                Please enter this code on our website/app to proceed with your registration process. If you did not initiate this action, please ignore this email.<br><br>
-                
-            `
-            );
-        } catch (error) {
-            return errorResponse(res, "An Error Occurred", error)
-        }
+        const wallet = await Wallet.create({
+            userId: user.id,
+            balance: 0,
+        })
+
+        user.setDataValue('profile', profile);
+        user.setDataValue('wallet', wallet);
 
         let token = sign({ id: user.id, email: user.email, role: user.role }, config.TOKEN_SECRET);
-        const chatToken = serverClient.createToken(`${String(user.id)}`);
-        const profile = await Profile.findOne({ where: { userId: user.id } })
 
-        try {
+        let regEmail = registerEmail(user);
 
-        } catch (error) {
-            return errorResponse(res, "An Error Occurred", error)
-        }
+        let messageId = await sendEmail(
+            email,
+            regEmail.title,
+            regEmail.body,
+            'User'
+        )
 
-        return successResponse(res, "Successful", {
-            status: true,
-            message: {
-                email, phone, token, emailServiceId, chatToken
-            }
-        })
-    });
+        let emailSendStatus = Boolean(messageId);
+
+
+
+        return successResponse(res, "success", { user, token, emailSendStatus });
+    } catch (error: any) {
+        return errorResponse(res, 'error', { message: error.message, error });
+    }
 }
 
+export const registerCorperate = async (req: Request, res: Response): Promise<any> => {
+    const { email, phone, password, confirmPassword, role = 'corporate', firstName, lastName, corperate } = req.body;
 
 
+    if (!email || !phone || !password || !confirmPassword || !role || !firstName || !lastName || !corperate)
+        return handleResponse(res, 404, false, "All fields are required");
+
+    if (password !== confirmPassword) return handleResponse(res, 404, false, "Password do not match");
+
+    if (!validateEmail(email)) return handleResponse(res, 404, false, "Enter a valid email");
+
+    if (!validatePhone(phone)) return handleResponse(res, 404, false, "Enter a valid phone number");
+
+    const verifiedEmail = await Verify.findOne({
+        where: { contact: email, verified: true }
+    });
+
+    if (!verifiedEmail) return handleResponse(res, 404, false, "Email not verified");
+
+    // const verifiedPhone = await Verify.findOne({
+    //     where: { contact: phone, verified: true }
+    // })
+
+    // if (!verifiedPhone) return handleResponse(res, 404, false, "Phone not verified");
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+        email,
+        phone,
+        password: hashedPassword,
+        role,
+    })
+
+    const profile = await Profile.create({
+        userId: user.id,
+        firstName,
+        lastName
+    }, {
+        include: [{
+            model: Cooperation,
+            include: [{
+                model: Director
+            }]
+        }]
+    })
+
+    const wallet = await Wallet.create({
+        userId: user.id,
+        balance: 0,
+    })
+
+
+    user.setDataValue('profile', profile);
+    user.setDataValue('wallet', wallet);
+
+    let token = sign({ id: user.id, email: user.email, role: user.role }, config.TOKEN_SECRET);
+
+    let regEmail = registerEmail(user);
+
+    let messageId = await sendEmail(
+        email,
+        regEmail.title,
+        regEmail.body,
+        'User'
+    )
+
+    let emailSendStatus = Boolean(messageId);
+
+
+
+    return successResponse(res, "success", { user, token, emailSendStatus });
+}
 
 
 
@@ -391,7 +399,7 @@ export const passwordChange = async (req: Request, res: Response) => {
 
 
 export const login = async (req: Request, res: Response) => {
-    let { email, password, type, fcmToken } = req.body;
+    let { email, password, fcmToken } = req.body;
 
     try {
         const user = await User.findOne({ where: { email } })
@@ -404,31 +412,72 @@ export const login = async (req: Request, res: Response) => {
 
         let token = sign({ id: user.id, email: user.email, role: user.role }, config.TOKEN_SECRET);
 
-        const chatToken = serverClient.createToken(`${String(user.id)}`);
+        // const chatToken = serverClient.createToken(`${String(user.id)}`);
 
         const profile = await Profile.findOne({ where: { userId: user.id } })
 
         await profile?.update({ fcmToken })
 
+        let userData: any;
 
-        const profileUpdated = await Profile.findOne({
-            where: { userId: user.id },
-            include: [{
-                model: User,
-                attributes: ['id', 'email', 'phone', 'fcmToken', 'status'],
+        if (user.role == UserRole.CLIENT) {
+            userData = await User.findOne({
+                where: { id: user.id },
+                attributes: { exclude: ['password'] },
                 include: [{
                     model: Wallet,
-                    attributes: { exclude: ['pin'] },
+                    attributes: { exclude: ['password'] },
+                }, {
+                    model: Profile,
                 }]
-            }]
-        })
+            })
+        } else if (user.role == UserRole.PROFESSIONAL) {
+            userData = await User.findOne({
+                where: { id: user.id },
+                attributes: { exclude: ['password'] },
+                include: [{
+                    model: Wallet,
+                    attributes: { exclude: ['password'] },
+                }, {
+                    model: Profile,
+                    include: [{
+                        model: Professional,
+                        include: [{
+                            model: Profession,
+                            include: [Sector]
+                        }]
+                    }]
+                }, {
+                    model: Review
+                }]
+            })
+        } else {
+            userData = await User.findOne({
+                where: { id: user.id },
+                attributes: { exclude: ['password'] },
+                include: [{
+                    model: Wallet,
+                    attributes: { exclude: ['password'] },
+                }, {
+                    model: Profile,
+                    include: [{
+                        model: Cooperation,
+                        include: [Director]
+                    }]
+                }, {
+                    model: Review
+                }]
+            })
+        }
 
 
-        return successResponse(res, "Successful", { status: true, profile: profileUpdated, token, chatToken })
+        return successResponse(res, "Successful", { status: true, user: userData, token })
 
     } catch (error: any) {
         return errorResponse(res, 'error', error.message);
     }
+
+
 
     // profile?.fcmToken == null ? null : sendExpoNotification(profileUpdated!.fcmToken, "hello world");
 
@@ -548,73 +597,37 @@ export const deleteUsers = async (req: Request, res: Response) => {
 
 
 
-export const upload_avatar = async (req: Request, res: Response) => {
-    let filePath = req.file?.path;
-
-    if (!filePath) {
-        return successResponseFalse(res, "No file uploaded")
-    }
-
-    const url = await upload_cloud(filePath);
-
-    return successResponse(res, "Successful", { url })
-}
+// export const registerStepThree = async (req: Request, res: Response) => {
+//     let { intro, regNum, experience, professionId, chargeFrom } = req.body;
 
 
-export const registerStepTwo = async (req: Request, res: Response) => {
-    let { fullName, lga, state, address, type, avatar } = req.body;
+//     try {
+//         let { id } = req.user;
 
-    let { id } = req.user;
+//         const user = await User.findOne({ where: { id } });
 
-    const user = await User.findOne({ where: { id } });
+//         const professional = await Professional.findOne({ where: { userId: id } });
 
-    const profile = await Profile.findOne({ where: { userId: id } });
+//         if (professional) return errorResponse(res, "Failed", { status: false, message: "Professional Already Exist" })
 
-    if (profile) return errorResponse(res, "Failed", { status: false, message: "Profile Already Exist" })
+//         const profile = await Profile.findOne({ where: { userId: id } });
 
-    const profileCreate = await Profile.create({ fullName, lga, state, address, type, userId: id, avatar/*: convertHttpToHttps(avatar)*/ })
+//         const professionalCreate = await Professional.create({
+//             profileId: profile?.id, intro, regNum, yearsOfExp: experience, chargeFrom,
+//             file: { images: [] }, userId: id, professionId
+//         })
 
-    const wallet = await Wallet.create({ userId: id, balance: 0 })
+//         // const wallet = await Wallet.create({ userId: user?.id, type: WalletType.PROFESSIONAL })
 
-    await sendEmailResend(user!.email, "Welcome to Acepick", `Welcome on board ${profileCreate!.fullName},<br><br> we are pleased to have you on Acepick, please validate your account by providing your BVN to get accessible to all features on Acepick.<br><br> Thanks.`);
+//         await profile?.update({ type: ProfileType.PROFESSIONAL, corperate: false, switch: true })
 
-    await user?.update({ state: ProfileType.CLIENT ? UserState.VERIFIED : UserState.STEP_THREE })
+//         await user?.update({ state: UserState.VERIFIED })
 
-    successResponse(res, "Successful", { status: true, message: profileCreate })
-}
-
-
-export const registerStepThree = async (req: Request, res: Response) => {
-    let { intro, regNum, experience, professionId, chargeFrom } = req.body;
-
-
-    try {
-        let { id } = req.user;
-
-        const user = await User.findOne({ where: { id } });
-
-        const professional = await Professional.findOne({ where: { userId: id } });
-
-        if (professional) return errorResponse(res, "Failed", { status: false, message: "Professional Already Exist" })
-
-        const profile = await Profile.findOne({ where: { userId: id } });
-
-        const professionalCreate = await Professional.create({
-            profileId: profile?.id, intro, regNum, yearsOfExp: experience, chargeFrom,
-            file: { images: [] }, userId: id, professionId
-        })
-
-        // const wallet = await Wallet.create({ userId: user?.id, type: WalletType.PROFESSIONAL })
-
-        await profile?.update({ type: ProfileType.PROFESSIONAL, corperate: false, switch: true })
-
-        await user?.update({ state: UserState.VERIFIED })
-
-        successResponse(res, "Successful", professionalCreate)
-    } catch (error) {
-        return errorResponse(res, "Failed", { message: "Error creating professional", error })
-    }
-}
+//         successResponse(res, "Successful", professionalCreate)
+//     } catch (error) {
+//         return errorResponse(res, "Failed", { message: "Error creating professional", error })
+//     }
+// }
 
 
 
@@ -674,29 +687,20 @@ export const updateFcmToken = async (req: Request, res: Response) => {
 
 
 export const changePassword = async (req: Request, res: Response) => {
-    const { password, code, emailServiceId } = req.body;
-    const verify = await Verify.findOne(
-        {
-            where: {
-                code,
-                serviceId: emailServiceId,
-                used: false
-            }
-        }
-    )
-    if (!verify) return errorResponse(res, "Failed", { status: false, message: "Invalid Code" })
-    hash(password, saltRounds, async function (err, hashedPassword) {
+    const { email, password } = req.body;
 
-        const user = await User.findOne({ where: { email: verify.client } });
+    try {
+        hash(password, saltRounds, async function (err, hashedPassword) {
 
-        user?.update({ password: hashedPassword })
+            const user = await User.findOne({ where: { email: email } });
 
-        // let token = sign({ id: user!.id, email: user!.email }, config.TOKEN_SECRET);
+            user?.update({ password: hashedPassword })
 
-        await verify.destroy()
-
-        return successResponse(res, "Password Changed Successfully")
-    });
+            return successResponse(res, "Password Changed Successfully")
+        });
+    } catch (error) {
+        return errorResponse(res, "Failed", { status: false, message: "Error changing password" })
+    }
 };
 
 
