@@ -26,4 +26,5 @@ routes.post("/verify-bvn2", auth_1.verifyMyBvn);
 routes.get("/delete-users", auth_1.deleteUsers);
 routes.post('/verify-token', auth_1.authorize);
 routes.post('/send-sms', auth_1.sendSMSTest);
+routes.post('/send-email', auth_1.sendEmailTest);
 exports.default = routes;

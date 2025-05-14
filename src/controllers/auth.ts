@@ -161,13 +161,33 @@ export const sendOtp = async (req: Request, res: Response) => {
 export const sendSMSTest = async (req: Request, res: Response) => {
     const { phone } = req.body;
 
-    try {
-        const status = await sendSMS(phone, '123456')
+    // try {
+    const status = await sendSMS(phone, '123456')
 
-        return successResponse(res, 'OTP sent successfully', { smsSendStatus: status })
-    } catch (error) {
-        return errorResponse(res, 'error', error)
-    }
+    return successResponse(res, 'OTP sent successfully', { smsSendStatus: status })
+    // } catch (error) {
+    //     return errorResponse(res, 'error', error);
+    // }
+}
+
+export const sendEmailTest = async (req: Request, res: Response) => {
+    const { email } = req.body;
+
+    // try {
+    const verifyEmailMsg = sendOTPEmail('123456');
+
+    const messageId = await sendEmail(
+        email,
+        verifyEmailMsg.title,
+        verifyEmailMsg.body,
+        'User'
+    )
+
+    let emailSendStatus = Boolean(messageId);
+
+    return successResponse(res, 'OTP sent successfully', { emailSendStatus })
+    // } catch (error) {
+    //     return errorResponse(res, 'error', error);
 }
 
 
@@ -177,54 +197,54 @@ export const verifyOtp = async (req: Request, res: Response) => {
         { smsCode: { phone: string, code: string } | null, emailCode: { email: string, code: string } | null }
         = req.body;
 
-    try {
-        if (emailCode) {
+    // try {
+    if (emailCode) {
 
-            const verifyEmail = await Verify.findOne({
-                where: {
-                    code: emailCode.code,
-                    contact: emailCode.email,
-                }
-            })
+        const verifyEmail = await Verify.findOne({
+            where: {
+                code: emailCode.code,
+                contact: emailCode.email,
+            }
+        })
 
-            if (!verifyEmail) return errorResponse(res, 'Invalid Email Code', null);
+        if (!verifyEmail) return errorResponse(res, 'Invalid Email Code', null);
 
-            if (verifyEmail.verified) return errorResponse(res, 'Email Code already verified');
+        if (verifyEmail.verified) return errorResponse(res, 'Email Code already verified');
 
-            if (verifyEmail.createdAt < new Date(Date.now() - config.OTP_EXPIRY_TIME * 60 * 1000))
-                return errorResponse(res, 'Email Code expired', null);
+        if (verifyEmail.createdAt < new Date(Date.now() - config.OTP_EXPIRY_TIME * 60 * 1000))
+            return errorResponse(res, 'Email Code expired', null);
 
-            await verifyEmail.update({ verified: true })
+        await verifyEmail.update({ verified: true })
 
-            await verifyEmail.save();
-        }
-
-
-        if (smsCode) {
-            const verifySms = await Verify.findOne({
-                where: {
-                    code: smsCode.code,
-                    contact: smsCode.phone,
-                }
-            })
-
-            if (!verifySms) return errorResponse(res, 'Invalid SMS Code', null);
-
-            if (verifySms.verified) return errorResponse(res, 'SMS Code already verified');
-
-            if (verifySms.createdAt < new Date(Date.now() - config.OTP_EXPIRY_TIME * 60 * 1000))
-                return errorResponse(res, 'SMS Code expired', null);
-
-            await verifySms.update({ verified: true })
-
-            await verifySms.save();
-        }
-
-        return successResponse(res, 'success', 'Both codes verified successfully');
-    } catch (error: any) {
-        return errorResponse(res, 'error', error.message);
-
+        await verifyEmail.save();
     }
+
+
+    if (smsCode) {
+        const verifySms = await Verify.findOne({
+            where: {
+                code: smsCode.code,
+                contact: smsCode.phone,
+            }
+        })
+
+        if (!verifySms) return errorResponse(res, 'Invalid SMS Code', null);
+
+        if (verifySms.verified) return errorResponse(res, 'SMS Code already verified');
+
+        if (verifySms.createdAt < new Date(Date.now() - config.OTP_EXPIRY_TIME * 60 * 1000))
+            return errorResponse(res, 'SMS Code expired', null);
+
+        await verifySms.update({ verified: true })
+
+        await verifySms.save();
+    }
+
+    return successResponse(res, 'success', 'Both codes verified successfully');
+    // } catch (error: any) {
+    //     return errorResponse(res, 'error', error.message);
+
+    // }
 }
 
 

@@ -74,6 +74,7 @@ const getConfig = () => {
             '/api/auth/send-otp',
             '/api/auth/login',
             '/api/auth/send-sms',
+            '/api/auth/send-email',
             '/api/testN',
             '/api/sector',
             '/api/fileupload',

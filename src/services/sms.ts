@@ -41,11 +41,11 @@ export const sendSMS = async (phone: number, code: string) => {
         `https://v3.api.termii.com/api/sms/send`,
         {
             to: `${phone}`,
-            from: "Acepick net",
+            from: config.SMS_SENDER_ID,
             sms: `${code} is your Ace-Pick access code. Do not share this with anyone.`,
             type: 'plain',
-            api_key: "TLzqURHkmkKBqbeuZwMJeKsCCqcHrhcLaOXUrLBBxmzBtJturGSHEyJOYIzxuK",
-            channel: 'dnd'
+            api_key: config.SMS_API_KEY,
+            channel: 'generic'
         },
         {
             headers: {

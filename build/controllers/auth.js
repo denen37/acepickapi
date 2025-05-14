@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.updateFcmToken = exports.swithAccount = exports.corperateReg = exports.deleteUsers = exports.login = exports.passwordChange = exports.registerCorperate = exports.register = exports.verifyOtp = exports.sendSMSTest = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
+exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.updateFcmToken = exports.swithAccount = exports.corperateReg = exports.deleteUsers = exports.login = exports.passwordChange = exports.registerCorperate = exports.register = exports.verifyOtp = exports.sendEmailTest = exports.sendSMSTest = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
 const modules_1 = require("../utils/modules");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
 const Verify_1 = require("../models/Verify");
@@ -122,55 +122,64 @@ const sendOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.sendOtp = sendOtp;
 const sendSMSTest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { phone } = req.body;
-    try {
-        const status = yield (0, sms_1.sendSMS)(phone, '123456');
-        return (0, modules_1.successResponse)(res, 'OTP sent successfully', { smsSendStatus: status });
-    }
-    catch (error) {
-        return (0, modules_1.errorResponse)(res, 'error', error);
-    }
+    // try {
+    const status = yield (0, sms_1.sendSMS)(phone, '123456');
+    return (0, modules_1.successResponse)(res, 'OTP sent successfully', { smsSendStatus: status });
+    // } catch (error) {
+    //     return errorResponse(res, 'error', error);
+    // }
 });
 exports.sendSMSTest = sendSMSTest;
+const sendEmailTest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email } = req.body;
+    // try {
+    const verifyEmailMsg = (0, messages_1.sendOTPEmail)('123456');
+    const messageId = yield (0, gmail_1.sendEmail)(email, verifyEmailMsg.title, verifyEmailMsg.body, 'User');
+    let emailSendStatus = Boolean(messageId);
+    return (0, modules_1.successResponse)(res, 'OTP sent successfully', { emailSendStatus });
+    // } catch (error) {
+    //     return errorResponse(res, 'error', error);
+});
+exports.sendEmailTest = sendEmailTest;
 const verifyOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { smsCode, emailCode } = req.body;
-    try {
-        if (emailCode) {
-            const verifyEmail = yield Verify_1.Verify.findOne({
-                where: {
-                    code: emailCode.code,
-                    contact: emailCode.email,
-                }
-            });
-            if (!verifyEmail)
-                return (0, modules_1.errorResponse)(res, 'Invalid Email Code', null);
-            if (verifyEmail.verified)
-                return (0, modules_1.errorResponse)(res, 'Email Code already verified');
-            if (verifyEmail.createdAt < new Date(Date.now() - configSetup_1.default.OTP_EXPIRY_TIME * 60 * 1000))
-                return (0, modules_1.errorResponse)(res, 'Email Code expired', null);
-            yield verifyEmail.update({ verified: true });
-            yield verifyEmail.save();
-        }
-        if (smsCode) {
-            const verifySms = yield Verify_1.Verify.findOne({
-                where: {
-                    code: smsCode.code,
-                    contact: smsCode.phone,
-                }
-            });
-            if (!verifySms)
-                return (0, modules_1.errorResponse)(res, 'Invalid SMS Code', null);
-            if (verifySms.verified)
-                return (0, modules_1.errorResponse)(res, 'SMS Code already verified');
-            if (verifySms.createdAt < new Date(Date.now() - configSetup_1.default.OTP_EXPIRY_TIME * 60 * 1000))
-                return (0, modules_1.errorResponse)(res, 'SMS Code expired', null);
-            yield verifySms.update({ verified: true });
-            yield verifySms.save();
-        }
-        return (0, modules_1.successResponse)(res, 'success', 'Both codes verified successfully');
+    // try {
+    if (emailCode) {
+        const verifyEmail = yield Verify_1.Verify.findOne({
+            where: {
+                code: emailCode.code,
+                contact: emailCode.email,
+            }
+        });
+        if (!verifyEmail)
+            return (0, modules_1.errorResponse)(res, 'Invalid Email Code', null);
+        if (verifyEmail.verified)
+            return (0, modules_1.errorResponse)(res, 'Email Code already verified');
+        if (verifyEmail.createdAt < new Date(Date.now() - configSetup_1.default.OTP_EXPIRY_TIME * 60 * 1000))
+            return (0, modules_1.errorResponse)(res, 'Email Code expired', null);
+        yield verifyEmail.update({ verified: true });
+        yield verifyEmail.save();
     }
-    catch (error) {
-        return (0, modules_1.errorResponse)(res, 'error', error.message);
+    if (smsCode) {
+        const verifySms = yield Verify_1.Verify.findOne({
+            where: {
+                code: smsCode.code,
+                contact: smsCode.phone,
+            }
+        });
+        if (!verifySms)
+            return (0, modules_1.errorResponse)(res, 'Invalid SMS Code', null);
+        if (verifySms.verified)
+            return (0, modules_1.errorResponse)(res, 'SMS Code already verified');
+        if (verifySms.createdAt < new Date(Date.now() - configSetup_1.default.OTP_EXPIRY_TIME * 60 * 1000))
+            return (0, modules_1.errorResponse)(res, 'SMS Code expired', null);
+        yield verifySms.update({ verified: true });
+        yield verifySms.save();
     }
+    return (0, modules_1.successResponse)(res, 'success', 'Both codes verified successfully');
+    // } catch (error: any) {
+    //     return errorResponse(res, 'error', error.message);
+    // }
 });
 exports.verifyOtp = verifyOtp;
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

@@ -8,9 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendEmailResend = exports.sendSMS = void 0;
 const axios = require("axios");
+// import { Resend } from 'resend';
+const configSetup_1 = __importDefault(require("../config/configSetup"));
 const template_1 = require("../config/template");
 const gmail_1 = require("./gmail");
 // export const sendSMS = async (phone: number, code: string) => {
@@ -44,11 +49,11 @@ const gmail_1 = require("./gmail");
 const sendSMS = (phone, code) => __awaiter(void 0, void 0, void 0, function* () {
     const response = yield axios.post(`https://v3.api.termii.com/api/sms/send`, {
         to: `${phone}`,
-        from: "Acepick net",
+        from: configSetup_1.default.SMS_SENDER_ID,
         sms: `${code} is your Ace-Pick access code. Do not share this with anyone.`,
         type: 'plain',
-        api_key: "TLzqURHkmkKBqbeuZwMJeKsCCqcHrhcLaOXUrLBBxmzBtJturGSHEyJOYIzxuK",
-        channel: 'dnd'
+        api_key: configSetup_1.default.SMS_API_KEY,
+        channel: 'generic'
     }, {
         headers: {
             'Content-Type': 'application/json',

@@ -8,6 +8,7 @@ import {
     passwordChange,
     register,
     registerCorperate,
+    sendEmailTest,
     sendOtp,
     sendSMSTest,
     swithAccount,
@@ -43,6 +44,7 @@ routes.post("/verify-bvn2", verifyMyBvn);
 routes.get("/delete-users", deleteUsers)
 routes.post('/verify-token', authorize)
 routes.post('/send-sms', sendSMSTest)
+routes.post('/send-email', sendEmailTest)
 
 
 export default routes;
