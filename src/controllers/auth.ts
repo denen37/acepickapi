@@ -2,7 +2,7 @@ import { convertHttpToHttps, createRandomRef, deleteKey, errorResponse, handleRe
 import config from "../config/configSetup"
 import { Request, Response } from 'express';
 import { VerificationType, Verify } from "../models/Verify";
-import { sendEmailResend, sendSMS } from "../services/sms";
+import { sendSMS } from "../services/sms";
 import { UserState, UserStatus, User, UserRole } from "../models/User";
 import { compare, hash } from "bcryptjs";
 import { sign } from "jsonwebtoken";
@@ -301,6 +301,9 @@ export const register = async (req: Request, res: Response): Promise<any> => {
             balance: 0,
         })
 
+        user.password = null;
+        wallet.pin = null;
+
         user.setDataValue('profile', profile);
         user.setDataValue('wallet', wallet);
 
@@ -377,7 +380,9 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
         balance: 0,
     })
 
-
+    user.password = null
+    wallet.pin = null
+    
     user.setDataValue('profile', profile);
     user.setDataValue('wallet', wallet);
 
@@ -426,7 +431,7 @@ export const login = async (req: Request, res: Response) => {
 
         if (!user) return handleResponse(res, 404, false, "User does not exist")
 
-        const match = await compare(password, user.password)
+        const match = await compare(password, user.password || '')
 
         if (!match) return handleResponse(res, 404, false, "Invalid Credentials")
 

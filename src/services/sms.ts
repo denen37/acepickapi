@@ -143,25 +143,25 @@ export const sendSMS = async (phone: number, code: string) => {
 //     console.log(error);
 //   }
 
-export const sendEmailResend = async (email: String, subject: String, template: string, username?: string) => {
-    try {
-        const response = await sendEmail(email, subject, null, templateData(template, username))
+// export const sendEmailResend = async (email: string, subject: string, template: string, username?: string) => {
+//     try {
+//         const response = await sendEmail(email, subject, '', templateData(template, username))
 
-        if (response.messageId)
-            return {
-                status: response.success,
-                message: response.message,
-            }
+//         if (response.messageId)
+//             return {
+//                 status: response.success,
+//                 message: response.message,
+//             }
 
-        return {
-            status: response.success,
-            message: response.message
-        }
-    } catch (error) {
-        console.log(error);
-        return {
-            error: "Failed to send email"
-        }
-    }
-}
+//         return {
+//             status: response.success,
+//             message: response.message
+//         }
+//     } catch (error) {
+//         console.log(error);
+//         return {
+//             error: "Failed to send email"
+//         }
+//     }
+// }
 

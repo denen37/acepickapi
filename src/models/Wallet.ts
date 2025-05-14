@@ -40,5 +40,5 @@ export class Wallet extends Model {
 
     @AllowNull(true)
     @Column(DataType.STRING)
-    pin!: string;
+    pin!: string | null;
 }

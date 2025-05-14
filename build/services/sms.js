@@ -137,7 +137,7 @@ exports.sendSMS = sendSMS;
 //   }
 const sendEmailResend = (email, subject, template, username) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const response = yield (0, gmail_1.sendEmail)(email, subject, null, (0, template_1.templateData)(template, username));
+        const response = yield (0, gmail_1.sendEmail)(email, subject, '', (0, template_1.templateData)(template, username));
         if (response.messageId)
             return {
                 status: response.success,

@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 import config from '../config/configSetup'
+import { templateData } from '../config/template';
 
 
 
@@ -16,13 +17,13 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-export async function sendEmail(to: String, subject: String, text: String | null, html: String | null) {
+export async function sendEmail(to: string, subject: string, text: string, username: string | undefined) {
     const mailOptions = {
         from: process.env.EMAIL_USER,
         to: to,
         subject: subject,
-        text: text,
-        html: html
+        text: '',
+        html: templateData(text, username)
     };
 
     try {

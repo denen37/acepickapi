@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendEmail = sendEmail;
 const nodemailer = require('nodemailer');
 const configSetup_1 = __importDefault(require("../config/configSetup"));
+const template_1 = require("../config/template");
 const transporter = nodemailer.createTransport({
     service: configSetup_1.default.EMAIL_SERVICE,
     port: configSetup_1.default.EMAIL_PORT,
@@ -27,14 +28,14 @@ const transporter = nodemailer.createTransport({
         rejectUnauthorized: false
     }
 });
-function sendEmail(to, subject, text, html) {
+function sendEmail(to, subject, text, username) {
     return __awaiter(this, void 0, void 0, function* () {
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: to,
             subject: subject,
-            text: text,
-            html: html
+            text: '',
+            html: (0, template_1.templateData)(text, username)
         };
         try {
             const info = yield transporter.sendMail(mailOptions);
