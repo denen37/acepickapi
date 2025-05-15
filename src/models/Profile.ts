@@ -45,7 +45,7 @@ export class Profile extends Model {
     fcmToken!: string;
 
 
-    @AllowNull(false)
+    @AllowNull(true)
     @Column(DataType.STRING)
     avatar!: string;
 
@@ -63,17 +63,17 @@ export class Profile extends Model {
     notified!: boolean;
 
 
-    @AllowNull(false)
+    @AllowNull(true)
     @Column(DataType.STRING)
     lga!: string;
 
 
-    @AllowNull(false)
+    @AllowNull(true)
     @Column(DataType.STRING)
     state!: string;
 
 
-    @AllowNull(false)
+    @AllowNull(true)
     @Column(DataType.STRING)
     address!: string;
 

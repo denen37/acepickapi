@@ -198,10 +198,11 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
         if (!verifiedEmail)
             return (0, modules_1.handleResponse)(res, 404, false, "Email not verified");
-        // const verifiedPhone = await Verify.findOne({
-        //     where: { contact: phone, verified: true }
-        // })
-        // if (!verifiedPhone) return handleResponse(res, 404, false, "Phone not verified");
+        const verifiedPhone = yield Verify_1.Verify.findOne({
+            where: { contact: phone, verified: true }
+        });
+        if (!verifiedPhone)
+            return (0, modules_1.handleResponse)(res, 404, false, "Phone not verified");
         const hashedPassword = yield bcryptjs_2.default.hash(password, 10);
         const user = yield User_1.User.create({
             email,
@@ -224,6 +225,8 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             userId: user.id,
             balance: 0,
         });
+        user.password = null;
+        wallet.pin = null;
         user.setDataValue('profile', profile);
         user.setDataValue('wallet', wallet);
         let token = (0, jsonwebtoken_1.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
@@ -238,8 +241,8 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.register = register;
 const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, phone, password, confirmPassword, role = 'corporate', firstName, lastName, corperate } = req.body;
-    if (!email || !phone || !password || !confirmPassword || !role || !firstName || !lastName || !corperate)
+    const { email, phone, password, confirmPassword, role = 'corperate', firstName, lastName, cooperation } = req.body;
+    if (!email || !phone || !password || !confirmPassword || !role || !firstName || !lastName || !cooperation)
         return (0, modules_1.handleResponse)(res, 404, false, "All fields are required");
     if (password !== confirmPassword)
         return (0, modules_1.handleResponse)(res, 404, false, "Password do not match");
@@ -252,10 +255,11 @@ const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, functi
     });
     if (!verifiedEmail)
         return (0, modules_1.handleResponse)(res, 404, false, "Email not verified");
-    // const verifiedPhone = await Verify.findOne({
-    //     where: { contact: phone, verified: true }
-    // })
-    // if (!verifiedPhone) return handleResponse(res, 404, false, "Phone not verified");
+    const verifiedPhone = yield Verify_1.Verify.findOne({
+        where: { contact: phone, verified: true }
+    });
+    if (!verifiedPhone)
+        return (0, modules_1.handleResponse)(res, 404, false, "Phone not verified");
     const hashedPassword = yield bcryptjs_2.default.hash(password, 10);
     const user = yield User_1.User.create({
         email,
@@ -264,21 +268,39 @@ const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, functi
         role,
     });
     const profile = yield Profile_1.Profile.create({
+        avatar: cooperation.avatar,
         userId: user.id,
         firstName,
         lastName
-    }, {
-        include: [{
-                model: Cooperation_1.Cooperation,
-                include: [{
-                        model: Director_1.Director
-                    }]
-            }]
+    });
+    const newCooperation = yield Cooperation_1.Cooperation.create({
+        avatar: cooperation.avatar,
+        nameOfOrg: cooperation.nameOfOrg,
+        phone: cooperation.phone,
+        address: cooperation.address,
+        state: cooperation.state,
+        lga: cooperation.lga,
+        regNum: cooperation.regNum,
+        noOfEmployees: cooperation.noOfEmployees,
+        profileId: profile.id
+    });
+    const newDirector = yield Director_1.Director.create({
+        firstName: cooperation.director.firstName,
+        lastName: cooperation.director.lastName,
+        email: cooperation.director.email,
+        phone: cooperation.director.phone,
+        address: cooperation.director.address,
+        state: cooperation.director.state,
+        lga: cooperation.director.lga,
+        bvn: cooperation.director.bvn,
+        cooperateId: newCooperation.id
     });
     const wallet = yield Wallet_1.Wallet.create({
         userId: user.id,
         balance: 0,
     });
+    user.password = null;
+    wallet.pin = null;
     user.setDataValue('profile', profile);
     user.setDataValue('wallet', wallet);
     let token = (0, jsonwebtoken_1.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
@@ -310,7 +332,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const user = yield User_1.User.findOne({ where: { email } });
         if (!user)
             return (0, modules_1.handleResponse)(res, 404, false, "User does not exist");
-        const match = yield (0, bcryptjs_1.compare)(password, user.password);
+        const match = yield (0, bcryptjs_1.compare)(password, user.password || '');
         if (!match)
             return (0, modules_1.handleResponse)(res, 404, false, "Invalid Credentials");
         let token = (0, jsonwebtoken_1.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);

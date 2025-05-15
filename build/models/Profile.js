@@ -48,7 +48,7 @@ __decorate([
     __metadata("design:type", String)
 ], Profile.prototype, "fcmToken", void 0);
 __decorate([
-    (0, sequelize_typescript_1.AllowNull)(false),
+    (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
 ], Profile.prototype, "avatar", void 0);
@@ -65,17 +65,17 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Profile.prototype, "notified", void 0);
 __decorate([
-    (0, sequelize_typescript_1.AllowNull)(false),
+    (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
 ], Profile.prototype, "lga", void 0);
 __decorate([
-    (0, sequelize_typescript_1.AllowNull)(false),
+    (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
 ], Profile.prototype, "state", void 0);
 __decorate([
-    (0, sequelize_typescript_1.AllowNull)(false),
+    (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
 ], Profile.prototype, "address", void 0);

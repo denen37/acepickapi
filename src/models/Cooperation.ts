@@ -54,7 +54,7 @@ export class Cooperation extends Model {
 
 
 
-    @AllowNull(false)
+    @AllowNull(true)
     @ForeignKey(() => Profession)
     @Column(DataType.INTEGER)
     professionId!: number;

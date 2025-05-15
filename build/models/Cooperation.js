@@ -53,7 +53,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Cooperation.prototype, "noOfEmployees", void 0);
 __decorate([
-    (0, sequelize_typescript_1.AllowNull)(false),
+    (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.ForeignKey)(() => Profession_1.Profession),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.INTEGER),
     __metadata("design:type", Number)

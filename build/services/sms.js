@@ -12,12 +12,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendEmailResend = exports.sendSMS = void 0;
+exports.sendSMS = void 0;
 const axios = require("axios");
 // import { Resend } from 'resend';
 const configSetup_1 = __importDefault(require("../config/configSetup"));
-const template_1 = require("../config/template");
-const gmail_1 = require("./gmail");
 // export const sendSMS = async (phone: number, code: string) => {
 //     const response = await axios.post(
 //         `https://www.bulksmsnigeria.com/api/v2/sms`,
@@ -135,24 +133,22 @@ exports.sendSMS = sendSMS;
 //   } catch (error) {
 //     console.log(error);
 //   }
-const sendEmailResend = (email, subject, template, username) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const response = yield (0, gmail_1.sendEmail)(email, subject, '', (0, template_1.templateData)(template, username));
-        if (response.messageId)
-            return {
-                status: response.success,
-                message: response.message,
-            };
-        return {
-            status: response.success,
-            message: response.message
-        };
-    }
-    catch (error) {
-        console.log(error);
-        return {
-            error: "Failed to send email"
-        };
-    }
-});
-exports.sendEmailResend = sendEmailResend;
+// export const sendEmailResend = async (email: string, subject: string, template: string, username?: string) => {
+//     try {
+//         const response = await sendEmail(email, subject, '', templateData(template, username))
+//         if (response.messageId)
+//             return {
+//                 status: response.success,
+//                 message: response.message,
+//             }
+//         return {
+//             status: response.success,
+//             message: response.message
+//         }
+//     } catch (error) {
+//         console.log(error);
+//         return {
+//             error: "Failed to send email"
+//         }
+//     }
+// }

@@ -70,7 +70,7 @@ __decorate([
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
-    __metadata("design:type", String)
+    __metadata("design:type", Object)
 ], User.prototype, "password", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(true),
@@ -90,12 +90,12 @@ __decorate([
 ], User.prototype, "phone", void 0);
 __decorate([
     (0, sequelize_typescript_1.Default)(UserStatus.ACTIVE),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.SUSPENDED)),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(...Object.values(UserStatus))),
     __metadata("design:type", String)
 ], User.prototype, "status", void 0);
 __decorate([
     (0, sequelize_typescript_1.Default)(UserRole.CLIENT),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(UserRole.PROFESSIONAL, UserRole.CLIENT)),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(...Object.values(UserRole))),
     __metadata("design:type", String)
 ], User.prototype, "role", void 0);
 __decorate([

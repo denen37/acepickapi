@@ -8,3 +8,14 @@
 2025-05-14 22:00:00	POST - /api/auth/login
 2025-05-14 22:03:30	POST - /api/auth/send-otp
 2025-05-14 22:08:50	POST - /api/auth/verify-otp
+2025-05-14 22:17:22	POST - /api/auth/upload_avatar
+2025-05-14 22:39:20	POST - /api/auth/register-corperate
+2025-05-14 23:04:14	POST - /api/auth/register-corperate
+2025-05-14 23:19:01	POST - /api/auth/register-corperate
+2025-05-14 23:25:24	POST - /api/auth/register-corperate
+2025-05-14 23:27:52	POST - /api/auth/register-corperate
+2025-05-14 23:42:14	POST - /api/auth/register-corperate
+2025-05-15 08:54:58	POST - /api/auth/register-corperate
+2025-05-15 09:14:08	POST - /api/auth/register-corperate
+2025-05-15 10:58:58	POST - /api/auth/register-corperate
+2025-05-15 18:08:30	POST - /api/auth/register-corperate

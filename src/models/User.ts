@@ -86,12 +86,12 @@ export class User extends Model {
 
 
     @Default(UserStatus.ACTIVE)
-    @Column(DataType.ENUM(UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.SUSPENDED))
+    @Column(DataType.ENUM(...Object.values(UserStatus)))
     status!: UserStatus;
 
 
     @Default(UserRole.CLIENT)
-    @Column(DataType.ENUM(UserRole.PROFESSIONAL, UserRole.CLIENT))
+    @Column(DataType.ENUM(...Object.values(UserRole)))
     role!: UserRole;
 
 

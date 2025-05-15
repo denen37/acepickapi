@@ -14,6 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "@azure/storage-blob": "^12.27.0",
+    "acepickapi": "file:",
     "amqplib": "^0.10.5",
     "axios": "^1.8.2",
     "bcryptjs": "^3.0.2",

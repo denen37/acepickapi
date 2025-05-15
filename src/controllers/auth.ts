@@ -269,11 +269,11 @@ export const register = async (req: Request, res: Response): Promise<any> => {
 
         if (!verifiedEmail) return handleResponse(res, 404, false, "Email not verified");
 
-        // const verifiedPhone = await Verify.findOne({
-        //     where: { contact: phone, verified: true }
-        // })
+        const verifiedPhone = await Verify.findOne({
+            where: { contact: phone, verified: true }
+        })
 
-        // if (!verifiedPhone) return handleResponse(res, 404, false, "Phone not verified");
+        if (!verifiedPhone) return handleResponse(res, 404, false, "Phone not verified");
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -329,10 +329,10 @@ export const register = async (req: Request, res: Response): Promise<any> => {
 }
 
 export const registerCorperate = async (req: Request, res: Response): Promise<any> => {
-    const { email, phone, password, confirmPassword, role = 'corporate', firstName, lastName, corperate } = req.body;
+    const { email, phone, password, confirmPassword, role = 'corperate', firstName, lastName, cooperation } = req.body;
 
 
-    if (!email || !phone || !password || !confirmPassword || !role || !firstName || !lastName || !corperate)
+    if (!email || !phone || !password || !confirmPassword || !role || !firstName || !lastName || !cooperation)
         return handleResponse(res, 404, false, "All fields are required");
 
     if (password !== confirmPassword) return handleResponse(res, 404, false, "Password do not match");
@@ -347,11 +347,11 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
 
     if (!verifiedEmail) return handleResponse(res, 404, false, "Email not verified");
 
-    // const verifiedPhone = await Verify.findOne({
-    //     where: { contact: phone, verified: true }
-    // })
+    const verifiedPhone = await Verify.findOne({
+        where: { contact: phone, verified: true }
+    })
 
-    // if (!verifiedPhone) return handleResponse(res, 404, false, "Phone not verified");
+    if (!verifiedPhone) return handleResponse(res, 404, false, "Phone not verified");
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -363,16 +363,34 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
     })
 
     const profile = await Profile.create({
+        avatar: cooperation.avatar,
         userId: user.id,
         firstName,
         lastName
-    }, {
-        include: [{
-            model: Cooperation,
-            include: [{
-                model: Director
-            }]
-        }]
+    })
+
+    const newCooperation = await Cooperation.create({
+        avatar: cooperation.avatar,
+        nameOfOrg: cooperation.nameOfOrg,
+        phone: cooperation.phone,
+        address: cooperation.address,
+        state: cooperation.state,
+        lga: cooperation.lga,
+        regNum: cooperation.regNum,
+        noOfEmployees: cooperation.noOfEmployees,
+        profileId: profile.id
+    })
+
+    const newDirector = await Director.create({
+            firstName: cooperation.director.firstName,
+            lastName:cooperation.director.lastName,
+            email:cooperation.director.email,
+            phone:cooperation.director.phone,
+            address:cooperation.director.address,
+            state:cooperation.director.state,
+            lga: cooperation.director.lga,
+            bvn:cooperation.director.bvn,
+            cooperateId: newCooperation.id
     })
 
     const wallet = await Wallet.create({
