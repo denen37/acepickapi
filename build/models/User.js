@@ -18,7 +18,7 @@ const Wallet_1 = require("./Wallet");
 const LanLog_1 = require("./LanLog");
 // import { Profession } from './Profession';
 // import { Jobs } from './Jobs';
-// import { Review } from './Review';
+const Review_1 = require("./Review");
 const Education_1 = require("./Education");
 const Experience_1 = require("./Experience");
 // import { Certificate } from 'crypto';
@@ -63,6 +63,7 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "id", void 0);
 __decorate([
+    (0, sequelize_typescript_1.Index)({ name: 'email-index', type: 'UNIQUE', unique: true }),
     (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
@@ -74,16 +75,11 @@ __decorate([
 ], User.prototype, "password", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(true),
-    (0, sequelize_typescript_1.Default)(false),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BOOLEAN),
-    __metadata("design:type", String)
-], User.prototype, "setPin", void 0);
-__decorate([
-    (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
 ], User.prototype, "fcmToken", void 0);
 __decorate([
+    (0, sequelize_typescript_1.Index)({ name: 'phone-index', type: 'UNIQUE', unique: true }),
     (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
@@ -116,6 +112,10 @@ __decorate([
     (0, sequelize_typescript_1.HasOne)(() => LanLog_1.LanLog),
     __metadata("design:type", LanLog_1.LanLog)
 ], User.prototype, "location", void 0);
+__decorate([
+    (0, sequelize_typescript_1.HasMany)(() => Review_1.Review),
+    __metadata("design:type", Array)
+], User.prototype, "review", void 0);
 __decorate([
     (0, sequelize_typescript_1.HasMany)(() => Education_1.Education, { onDelete: 'CASCADE' }),
     __metadata("design:type", Array)

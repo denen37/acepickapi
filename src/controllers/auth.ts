@@ -341,85 +341,89 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
 
     if (!validatePhone(phone)) return handleResponse(res, 404, false, "Enter a valid phone number");
 
-    const verifiedEmail = await Verify.findOne({
-        where: { contact: email, verified: true }
-    });
-
-    if (!verifiedEmail) return handleResponse(res, 404, false, "Email not verified");
-
-    const verifiedPhone = await Verify.findOne({
-        where: { contact: phone, verified: true }
-    })
-
-    if (!verifiedPhone) return handleResponse(res, 404, false, "Phone not verified");
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await User.create({
-        email,
-        phone,
-        password: hashedPassword,
-        role,
-    })
-
-    const profile = await Profile.create({
-        avatar: cooperation.avatar,
-        userId: user.id,
-        firstName,
-        lastName
-    })
-
-    const newCooperation = await Cooperation.create({
-        avatar: cooperation.avatar,
-        nameOfOrg: cooperation.nameOfOrg,
-        phone: cooperation.phone,
-        address: cooperation.address,
-        state: cooperation.state,
-        lga: cooperation.lga,
-        regNum: cooperation.regNum,
-        noOfEmployees: cooperation.noOfEmployees,
-        profileId: profile.id
-    })
-
-    const newDirector = await Director.create({
-            firstName: cooperation.director.firstName,
-            lastName:cooperation.director.lastName,
-            email:cooperation.director.email,
-            phone:cooperation.director.phone,
-            address:cooperation.director.address,
-            state:cooperation.director.state,
-            lga: cooperation.director.lga,
-            bvn:cooperation.director.bvn,
-            cooperateId: newCooperation.id
-    })
-
-    const wallet = await Wallet.create({
-        userId: user.id,
-        balance: 0,
-    })
-
-    user.password = null
-    wallet.pin = null
+    try {
+        const verifiedEmail = await Verify.findOne({
+            where: { contact: email, verified: true }
+        });
     
-    user.setDataValue('profile', profile);
-    user.setDataValue('wallet', wallet);
-
-    let token = sign({ id: user.id, email: user.email, role: user.role }, config.TOKEN_SECRET);
-
-    let regEmail = registerEmail(user);
-
-    let messageId = await sendEmail(
-        email,
-        regEmail.title,
-        regEmail.body,
-        'User'
-    )
-
-    let emailSendStatus = Boolean(messageId);
-
-
-
-    return successResponse(res, "success", { user, token, emailSendStatus });
+        if (!verifiedEmail) return handleResponse(res, 404, false, "Email not verified");
+    
+        const verifiedPhone = await Verify.findOne({
+            where: { contact: phone, verified: true }
+        })
+    
+        if (!verifiedPhone) return handleResponse(res, 404, false, "Phone not verified");
+    
+        const hashedPassword = await bcrypt.hash(password, 10);
+    
+        const user = await User.create({
+            email,
+            phone,
+            password: hashedPassword,
+            role,
+        })
+    
+        const profile = await Profile.create({
+            avatar: cooperation.avatar,
+            userId: user.id,
+            firstName,
+            lastName
+        })
+    
+        const newCooperation = await Cooperation.create({
+            avatar: cooperation.avatar,
+            nameOfOrg: cooperation.nameOfOrg,
+            phone: cooperation.phone,
+            address: cooperation.address,
+            state: cooperation.state,
+            lga: cooperation.lga,
+            regNum: cooperation.regNum,
+            noOfEmployees: cooperation.noOfEmployees,
+            profileId: profile.id
+        })
+    
+        const newDirector = await Director.create({
+                firstName: cooperation.director.firstName,
+                lastName:cooperation.director.lastName,
+                email:cooperation.director.email,
+                phone:cooperation.director.phone,
+                address:cooperation.director.address,
+                state:cooperation.director.state,
+                lga: cooperation.director.lga,
+                bvn:cooperation.director.bvn,
+                cooperateId: newCooperation.id
+        })
+    
+        const wallet = await Wallet.create({
+            userId: user.id,
+            balance: 0,
+        })
+    
+        user.password = null
+        wallet.pin = null
+        
+        user.setDataValue('profile', profile);
+        user.setDataValue('wallet', wallet);
+    
+        let token = sign({ id: user.id, email: user.email, role: user.role }, config.TOKEN_SECRET);
+    
+        let regEmail = registerEmail(user);
+    
+        let messageId = await sendEmail(
+            email,
+            regEmail.title,
+            regEmail.body,
+            'User'
+        )
+    
+        let emailSendStatus = Boolean(messageId);
+    
+    
+    
+        return successResponse(res, "success", { user, token, emailSendStatus });
+    } catch (error) {
+        return errorResponse(res, 'error', error)
+    }
 }
 
 
@@ -508,7 +512,7 @@ export const login = async (req: Request, res: Response) => {
                         include: [Director]
                     }]
                 }, {
-                    model: Review
+                    model: Review,
                 }]
             })
         }

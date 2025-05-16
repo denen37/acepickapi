@@ -151,11 +151,6 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Profile.prototype, "bvnVerified", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Default)(ProfileType.CLIENT),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(ProfileType.CLIENT, ProfileType.PROFESSIONAL, ProfileType.CORPERATE)),
-    __metadata("design:type", String)
-], Profile.prototype, "type", void 0);
-__decorate([
     (0, sequelize_typescript_1.Default)(false),
     (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BOOLEAN),

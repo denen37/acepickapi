@@ -176,9 +176,9 @@ export class Profile extends Model {
 
 
 
-    @Default(ProfileType.CLIENT)
-    @Column(DataType.ENUM(ProfileType.CLIENT, ProfileType.PROFESSIONAL, ProfileType.CORPERATE))
-    type!: ProfileType;
+    // @Default(ProfileType.CLIENT)
+    // @Column(DataType.ENUM(ProfileType.CLIENT, ProfileType.PROFESSIONAL, ProfileType.CORPERATE))
+    // type!: ProfileType;
 
 
 

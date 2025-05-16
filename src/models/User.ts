@@ -6,7 +6,7 @@ import { Wallet } from './Wallet';
 import { LanLog } from './LanLog';
 // import { Profession } from './Profession';
 // import { Jobs } from './Jobs';
-// import { Review } from './Review';
+import { Review } from './Review';
 import { Education } from './Education';
 import { Experience } from './Experience';
 // import { Certificate } from 'crypto';
@@ -58,7 +58,7 @@ export class User extends Model {
     @Column(DataType.UUID)
     id!: string;
 
-    // @Index({ name: 'email-index', type: 'UNIQUE', unique: true })
+    @Index({ name: 'email-index', type: 'UNIQUE', unique: true })
     @AllowNull(false)
     @Column(DataType.STRING)
     email!: string;
@@ -69,17 +69,11 @@ export class User extends Model {
 
 
     @AllowNull(true)
-    @Default(false)
-    @Column(DataType.BOOLEAN)
-    setPin!: string;
-
-
-    @AllowNull(true)
     @Column(DataType.STRING)
     fcmToken!: string;
 
 
-    // @Index({ name: 'phone-index', type: 'UNIQUE', unique: true })
+    @Index({ name: 'phone-index', type: 'UNIQUE', unique: true })
     @AllowNull(false)
     @Column(DataType.STRING)
     phone!: string;
@@ -94,17 +88,6 @@ export class User extends Model {
     @Column(DataType.ENUM(...Object.values(UserRole)))
     role!: UserRole;
 
-
-
-    // @Default(UserState.STEP_TWO)
-    // @Column(DataType.ENUM(UserState.STEP_ONE, UserState.STEP_TWO, UserState.STEP_THREE, UserState.VERIFIED))
-    // state!: UserState;
-
-
-    // @ForeignKey(() => Wallet)
-    // @AllowNull(true)
-    // @Column(DataType.INTEGER)
-    // walletId!: number;
 
 
     @HasOne(() => Wallet)
@@ -144,8 +127,8 @@ export class User extends Model {
     // job!: Jobs[];
 
 
-    // @HasMany(() => Review, { onDelete: 'CASCADE' })
-    // review!: Review[];
+    @HasMany(() => Review)
+    review!: Review[];
 
 
 
