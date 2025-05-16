@@ -183,10 +183,10 @@ export class Profile extends Model {
 
 
 
-    @Default(false)
-    @AllowNull(true)
-    @Column(DataType.BOOLEAN)
-    corperate!: boolean;
+    // @Default(false)
+    // @AllowNull(true)
+    // @Column(DataType.BOOLEAN)
+    // corperate!: boolean;
 
 
 
