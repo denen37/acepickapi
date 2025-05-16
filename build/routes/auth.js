@@ -10,7 +10,7 @@ const routes = (0, express_1.Router)();
 API CALL START
 *************************************************************************/
 // INDEX ROUTE TO SHOW API IS WORKING FINE.
-routes.get('/switch', auth_1.swithAccount);
+// routes.get('/switch', swithAccount);
 routes.post('/update-profile', auth_1.updateProfile);
 routes.post('/register', auth_1.register);
 routes.post('/register-corperate', auth_1.registerCorperate);

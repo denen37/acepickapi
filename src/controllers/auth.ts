@@ -699,22 +699,22 @@ export const corperateReg = async (req: Request, res: Response) => {
 
 
 
-export const swithAccount = async (req: Request, res: Response) => {
-    let { id } = req.user;
-    let { type } = req.query;
-    const profile = await Profile.findOne({ where: { userId: id } });
-    if (type == ProfileType.CLIENT) {
-        await profile?.update({ type: ProfileType.CLIENT })
-        return successResponse(res, "Successful")
-    } else {
-        if (profile?.corperate == null) {
-            return successResponseFalse(res, "Completed Proffesional account setup")
-        } else {
-            await profile?.update({ type: ProfileType.PROFESSIONAL })
-            return successResponse(res, "Successful")
-        }
-    }
-}
+// export const swithAccount = async (req: Request, res: Response) => {
+//     let { id } = req.user;
+//     let { type } = req.query;
+//     const profile = await Profile.findOne({ where: { userId: id } });
+//     if (type == ProfileType.CLIENT) {
+//         await profile?.update({ type: ProfileType.CLIENT })
+//         return successResponse(res, "Successful")
+//     } else {
+//         if (profile?.corperate == null) {
+//             return successResponseFalse(res, "Completed Proffesional account setup")
+//         } else {
+//             await profile?.update({ type: ProfileType.PROFESSIONAL })
+//             return successResponse(res, "Successful")
+//         }
+//     }
+// }
 
 
 

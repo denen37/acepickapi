@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.updateFcmToken = exports.swithAccount = exports.corperateReg = exports.deleteUsers = exports.login = exports.passwordChange = exports.registerCorperate = exports.register = exports.verifyOtp = exports.sendEmailTest = exports.sendSMSTest = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
+exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.updateFcmToken = exports.corperateReg = exports.deleteUsers = exports.login = exports.passwordChange = exports.registerCorperate = exports.register = exports.verifyOtp = exports.sendEmailTest = exports.sendSMSTest = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
 const modules_1 = require("../utils/modules");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
 const Verify_1 = require("../models/Verify");
@@ -536,25 +536,22 @@ const corperateReg = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     // successResponse(res, "Successful", coorperateCreate)
 });
 exports.corperateReg = corperateReg;
-const swithAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    let { id } = req.user;
-    let { type } = req.query;
-    const profile = yield Profile_1.Profile.findOne({ where: { userId: id } });
-    if (type == Profile_1.ProfileType.CLIENT) {
-        yield (profile === null || profile === void 0 ? void 0 : profile.update({ type: Profile_1.ProfileType.CLIENT }));
-        return (0, modules_1.successResponse)(res, "Successful");
-    }
-    else {
-        if ((profile === null || profile === void 0 ? void 0 : profile.corperate) == null) {
-            return (0, modules_1.successResponseFalse)(res, "Completed Proffesional account setup");
-        }
-        else {
-            yield (profile === null || profile === void 0 ? void 0 : profile.update({ type: Profile_1.ProfileType.PROFESSIONAL }));
-            return (0, modules_1.successResponse)(res, "Successful");
-        }
-    }
-});
-exports.swithAccount = swithAccount;
+// export const swithAccount = async (req: Request, res: Response) => {
+//     let { id } = req.user;
+//     let { type } = req.query;
+//     const profile = await Profile.findOne({ where: { userId: id } });
+//     if (type == ProfileType.CLIENT) {
+//         await profile?.update({ type: ProfileType.CLIENT })
+//         return successResponse(res, "Successful")
+//     } else {
+//         if (profile?.corperate == null) {
+//             return successResponseFalse(res, "Completed Proffesional account setup")
+//         } else {
+//             await profile?.update({ type: ProfileType.PROFESSIONAL })
+//             return successResponse(res, "Successful")
+//         }
+//     }
+// }
 const updateFcmToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { token } = req.body;
     let { id } = req.user;

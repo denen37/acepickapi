@@ -11,7 +11,7 @@ import {
     sendEmailTest,
     sendOtp,
     sendSMSTest,
-    swithAccount,
+    // swithAccount,
     updateFcmToken,
     updateProfile,
     verifyMyBvn,
@@ -28,7 +28,7 @@ API CALL START
 *************************************************************************/
 
 // INDEX ROUTE TO SHOW API IS WORKING FINE.
-routes.get('/switch', swithAccount);
+// routes.get('/switch', swithAccount);
 routes.post('/update-profile', updateProfile);
 routes.post('/register', register);
 routes.post('/register-corperate', registerCorperate);

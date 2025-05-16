@@ -155,12 +155,6 @@ __decorate([
     (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BOOLEAN),
     __metadata("design:type", Boolean)
-], Profile.prototype, "corperate", void 0);
-__decorate([
-    (0, sequelize_typescript_1.Default)(false),
-    (0, sequelize_typescript_1.AllowNull)(true),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BOOLEAN),
-    __metadata("design:type", Boolean)
 ], Profile.prototype, "switch", void 0);
 __decorate([
     (0, sequelize_typescript_1.Default)(false),
