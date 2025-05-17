@@ -19,11 +19,6 @@ const LanLog_1 = require("./LanLog");
 // import { Profession } from './Profession';
 // import { Jobs } from './Jobs';
 const Review_1 = require("./Review");
-const Education_1 = require("./Education");
-const Experience_1 = require("./Experience");
-// import { Certificate } from 'crypto';
-const Portfolio_1 = require("./Portfolio");
-const Certification_1 = require("./Certification");
 // import { Dispute } from './Dispute';
 // import Sequelize from 'sequelize/types/sequelize';
 // import { Professional } from './Professional';
@@ -116,22 +111,6 @@ __decorate([
     (0, sequelize_typescript_1.HasMany)(() => Review_1.Review),
     __metadata("design:type", Array)
 ], User.prototype, "review", void 0);
-__decorate([
-    (0, sequelize_typescript_1.HasMany)(() => Education_1.Education, { onDelete: 'CASCADE' }),
-    __metadata("design:type", Array)
-], User.prototype, "education", void 0);
-__decorate([
-    (0, sequelize_typescript_1.HasMany)(() => Experience_1.Experience, { onDelete: 'CASCADE' }),
-    __metadata("design:type", Array)
-], User.prototype, "experience", void 0);
-__decorate([
-    (0, sequelize_typescript_1.HasMany)(() => Certification_1.Certification, { onDelete: 'CASCADE' }),
-    __metadata("design:type", Array)
-], User.prototype, "certification", void 0);
-__decorate([
-    (0, sequelize_typescript_1.HasMany)(() => Portfolio_1.Portfolio, { onDelete: 'CASCADE' }),
-    __metadata("design:type", Array)
-], User.prototype, "portfolio", void 0);
 exports.User = User = __decorate([
     (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'users' })
 ], User);

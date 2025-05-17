@@ -36,7 +36,7 @@ import axios from "axios";
 import { verify } from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { basename } from "path";
-import { registerEmail, sendOTPEmail } from "../utils/messages";
+import { forgotPasswordEmail, registerEmail, sendOTPEmail } from "../utils/messages";
 import { sendEmail } from "../services/gmail";
 import { Director } from "../models/Director";
 import { Profession } from "../models/Profession";
@@ -108,11 +108,16 @@ export const updateProfile = async (req: Request, res: Response) => {
 //     return successResponse(res, "Updated Successfully", updated)
 // }
 
+export enum OTPReason {
+    VERIFICATION = 'verification',
+    FORGOT_PASSWORD = 'forgot_password'
+}
+
 
 
 
 export const sendOtp = async (req: Request, res: Response) => {
-    const { email, phone, type } = req.body;
+    const { email, phone, type, reason = OTPReason.VERIFICATION} = req.body;
     const codeEmail = String(Math.floor(1000 + Math.random() * 9000));
     const codeSms = String(Math.floor(1000 + Math.random() * 9000));
     let emailSendStatus;
@@ -126,14 +131,27 @@ export const sendOtp = async (req: Request, res: Response) => {
                 type: VerificationType.EMAIL,
             })
 
-            const verifyEmailMsg = sendOTPEmail(codeEmail);
+            let messageId;
 
-            const messageId = await sendEmail(
+            if (reason === OTPReason.VERIFICATION) {
+                const verifyEmailMsg = sendOTPEmail(codeEmail);
+
+            messageId = await sendEmail(
                 email,
                 verifyEmailMsg.title,
                 verifyEmailMsg.body,
                 'User'
-            )
+            );
+            } else if( reason === OTPReason.FORGOT_PASSWORD){
+                const msg = forgotPasswordEmail(codeEmail);
+
+            messageId = await sendEmail(
+                email,
+                msg.title,
+                msg.body,
+                'User'
+            );
+            }
 
             emailSendStatus = Boolean(messageId);
         }

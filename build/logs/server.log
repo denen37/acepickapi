@@ -22,3 +22,5 @@
 2025-05-15 19:02:33	POST - /api/auth/register-corperate
 2025-05-15 19:06:51	POST - /api/auth/login
 2025-05-15 19:17:06	POST - /api/auth/login
+2025-05-17 10:21:37	POST - /api/auth/send-otp
+2025-05-17 10:23:13	POST - /api/auth/send-otp

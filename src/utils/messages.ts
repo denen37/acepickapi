@@ -42,3 +42,23 @@ export const sendOTPEmail = (code: string): Message => {
              please ignore this email.<br><br>`
     }
 }
+
+export const forgotPasswordEmail = (code: string): Message => {
+    return {
+        title: "Reset Password",
+        body: `Dear User,<br><br>
+
+            We have received a request to reset your password. 
+            If you did not make this request, please ignore this email.
+             Otherwise, please use the verification code below to reset your password.
+             <br><br>
+
+             Verification Code: ${code}
+            <br><br>
+
+            Please enter this code on our website/app to
+             proceed with the password reset process. 
+             If you did not initiate this action, 
+             please ignore this email.<br><br>`
+    }
+}

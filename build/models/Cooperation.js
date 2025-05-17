@@ -18,27 +18,27 @@ let Cooperation = class Cooperation extends sequelize_typescript_1.Model {
 };
 exports.Cooperation = Cooperation;
 __decorate([
-    (0, sequelize_typescript_1.AllowNull)(true),
+    (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
 ], Cooperation.prototype, "nameOfOrg", void 0);
 __decorate([
-    (0, sequelize_typescript_1.AllowNull)(true),
+    (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
 ], Cooperation.prototype, "phone", void 0);
 __decorate([
-    (0, sequelize_typescript_1.AllowNull)(true),
+    (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
 ], Cooperation.prototype, "address", void 0);
 __decorate([
-    (0, sequelize_typescript_1.AllowNull)(true),
+    (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
 ], Cooperation.prototype, "state", void 0);
 __decorate([
-    (0, sequelize_typescript_1.AllowNull)(true),
+    (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
 ], Cooperation.prototype, "lga", void 0);

@@ -12,9 +12,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Profile = exports.ProfileType = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
 const User_1 = require("./User");
-const VoiceRecording_1 = require("./VoiceRecording");
-const Professional_1 = require("./Professional");
-const Cooperation_1 = require("./Cooperation");
+// import { Professional } from './Professional';
+const Models_1 = require("./Models");
 // import { Review } from './Review';
 // import { ProfessionalSector } from './ProfessionalSector';
 // import { MarketPlace } from './Market';
@@ -173,17 +172,33 @@ __decorate([
     __metadata("design:type", User_1.User)
 ], Profile.prototype, "user", void 0);
 __decorate([
-    (0, sequelize_typescript_1.HasOne)(() => Professional_1.Professional),
-    __metadata("design:type", Professional_1.Professional)
+    (0, sequelize_typescript_1.HasOne)(() => Models_1.Professional),
+    __metadata("design:type", Models_1.Professional)
 ], Profile.prototype, "professional", void 0);
 __decorate([
-    (0, sequelize_typescript_1.HasOne)(() => Cooperation_1.Cooperation),
-    __metadata("design:type", Cooperation_1.Cooperation)
+    (0, sequelize_typescript_1.HasOne)(() => Models_1.Cooperation),
+    __metadata("design:type", Models_1.Cooperation)
 ], Profile.prototype, "cooperation", void 0);
 __decorate([
-    (0, sequelize_typescript_1.HasMany)(() => VoiceRecording_1.VoiceRecording, { onDelete: 'CASCADE' }),
+    (0, sequelize_typescript_1.HasMany)(() => Models_1.VoiceRecording, { onDelete: 'CASCADE' }),
     __metadata("design:type", Array)
 ], Profile.prototype, "recording", void 0);
+__decorate([
+    (0, sequelize_typescript_1.HasMany)(() => Models_1.Education, { onDelete: 'CASCADE' }),
+    __metadata("design:type", Array)
+], Profile.prototype, "education", void 0);
+__decorate([
+    (0, sequelize_typescript_1.HasMany)(() => Models_1.Experience, { onDelete: 'CASCADE' }),
+    __metadata("design:type", Array)
+], Profile.prototype, "experience", void 0);
+__decorate([
+    (0, sequelize_typescript_1.HasMany)(() => Models_1.Certification, { onDelete: 'CASCADE' }),
+    __metadata("design:type", Array)
+], Profile.prototype, "certification", void 0);
+__decorate([
+    (0, sequelize_typescript_1.HasMany)(() => Models_1.Portfolio, { onDelete: 'CASCADE' }),
+    __metadata("design:type", Array)
+], Profile.prototype, "portfolio", void 0);
 exports.Profile = Profile = __decorate([
     (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'profiles' })
 ], Profile);

@@ -10,25 +10,25 @@ import { Director } from './Director';
 @Table({ timestamps: true, tableName: 'cooperations' })
 export class Cooperation extends Model {
 
-    @AllowNull(true)
+    @AllowNull(false)
     @Column(DataType.STRING)
     nameOfOrg!: string;
 
 
 
-    @AllowNull(true)
+    @AllowNull(false)
     @Column(DataType.STRING)
     phone!: string;
 
 
-    @AllowNull(true)
+    @AllowNull(false)
     @Column(DataType.STRING)
     address!: string;
 
 
 
 
-    @AllowNull(true)
+    @AllowNull(false)
     @Column(DataType.STRING)
     state!: string;
 
@@ -36,7 +36,7 @@ export class Cooperation extends Model {
 
 
 
-    @AllowNull(true)
+    @AllowNull(false)
     @Column(DataType.STRING)
     lga!: string;
 

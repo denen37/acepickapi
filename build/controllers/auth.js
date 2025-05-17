@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.updateFcmToken = exports.corperateReg = exports.deleteUsers = exports.login = exports.passwordChange = exports.registerCorperate = exports.register = exports.verifyOtp = exports.sendEmailTest = exports.sendSMSTest = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
+exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.updateFcmToken = exports.corperateReg = exports.deleteUsers = exports.login = exports.passwordChange = exports.registerCorperate = exports.register = exports.verifyOtp = exports.sendEmailTest = exports.sendSMSTest = exports.sendOtp = exports.OTPReason = exports.updateProfile = exports.authorize = void 0;
 const modules_1 = require("../utils/modules");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
 const Verify_1 = require("../models/Verify");
@@ -87,8 +87,13 @@ exports.updateProfile = updateProfile;
 //     const updated = await Professional.findOne({ where: { userId: id } })
 //     return successResponse(res, "Updated Successfully", updated)
 // }
+var OTPReason;
+(function (OTPReason) {
+    OTPReason["VERIFICATION"] = "verification";
+    OTPReason["FORGOT_PASSWORD"] = "forgot_password";
+})(OTPReason || (exports.OTPReason = OTPReason = {}));
 const sendOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, phone, type } = req.body;
+    const { email, phone, type, reason = OTPReason.VERIFICATION } = req.body;
     const codeEmail = String(Math.floor(1000 + Math.random() * 9000));
     const codeSms = String(Math.floor(1000 + Math.random() * 9000));
     let emailSendStatus;
@@ -100,8 +105,15 @@ const sendOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 code: codeEmail,
                 type: Verify_1.VerificationType.EMAIL,
             });
-            const verifyEmailMsg = (0, messages_1.sendOTPEmail)(codeEmail);
-            const messageId = yield (0, gmail_1.sendEmail)(email, verifyEmailMsg.title, verifyEmailMsg.body, 'User');
+            let messageId;
+            if (reason === OTPReason.VERIFICATION) {
+                const verifyEmailMsg = (0, messages_1.sendOTPEmail)(codeEmail);
+                messageId = yield (0, gmail_1.sendEmail)(email, verifyEmailMsg.title, verifyEmailMsg.body, 'User');
+            }
+            else if (reason === OTPReason.FORGOT_PASSWORD) {
+                const msg = (0, messages_1.forgotPasswordEmail)(codeEmail);
+                messageId = yield (0, gmail_1.sendEmail)(email, msg.title, msg.body, 'User');
+            }
             emailSendStatus = Boolean(messageId);
         }
         if (type === Verify_1.VerificationType.SMS || type === Verify_1.VerificationType.BOTH) {

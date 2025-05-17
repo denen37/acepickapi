@@ -7,11 +7,6 @@ import { LanLog } from './LanLog';
 // import { Profession } from './Profession';
 // import { Jobs } from './Jobs';
 import { Review } from './Review';
-import { Education } from './Education';
-import { Experience } from './Experience';
-// import { Certificate } from 'crypto';
-import { Portfolio } from './Portfolio';
-import { Certification } from './Certification';
 // import { Dispute } from './Dispute';
 // import Sequelize from 'sequelize/types/sequelize';
 
@@ -108,6 +103,10 @@ export class User extends Model {
     location!: LanLog;
 
 
+    @HasMany(() => Review)
+    review!: Review[];
+
+
 
     // @HasOne(() => Profile)
     // profile!: Profile;
@@ -127,27 +126,7 @@ export class User extends Model {
     // job!: Jobs[];
 
 
-    @HasMany(() => Review)
-    review!: Review[];
-
-
-
-    @HasMany(() => Education, { onDelete: 'CASCADE' })
-    education!: Education[];
-
-
-    @HasMany(() => Experience, { onDelete: 'CASCADE' })
-    experience!: Experience[];
-
-
-
-    @HasMany(() => Certification, { onDelete: 'CASCADE' })
-    certification!: Certification[];
-
-
-
-    @HasMany(() => Portfolio, { onDelete: 'CASCADE' })
-    portfolio!: Portfolio[];
+   
 
     // @HasMany(() => Dispute, { onDelete: 'CASCADE' })
     // dispute!: Dispute[];

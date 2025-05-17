@@ -11,7 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Portfolio = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
-const User_1 = require("./User");
+const Profile_1 = require("./Profile");
 let Portfolio = class Portfolio extends sequelize_typescript_1.Model {
 };
 exports.Portfolio = Portfolio;
@@ -27,7 +27,7 @@ __decorate([
 ], Portfolio.prototype, "description", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.INTEGER),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING(50)),
     __metadata("design:type", String)
 ], Portfolio.prototype, "duration", void 0);
 __decorate([
@@ -42,10 +42,10 @@ __decorate([
 ], Portfolio.prototype, "file", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
-    (0, sequelize_typescript_1.ForeignKey)(() => User_1.User),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.UUID),
-    __metadata("design:type", String)
-], Portfolio.prototype, "userId", void 0);
+    (0, sequelize_typescript_1.ForeignKey)(() => Profile_1.Profile),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.INTEGER),
+    __metadata("design:type", Number)
+], Portfolio.prototype, "profileId", void 0);
 exports.Portfolio = Portfolio = __decorate([
     (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'portfolios' })
 ], Portfolio);

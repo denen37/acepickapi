@@ -11,7 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Certification = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
-const User_1 = require("./User");
+const Profile_1 = require("./Profile");
 let Certification = class Certification extends sequelize_typescript_1.Model {
 };
 exports.Certification = Certification;
@@ -32,10 +32,10 @@ __decorate([
 ], Certification.prototype, "date", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
-    (0, sequelize_typescript_1.ForeignKey)(() => User_1.User),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.UUID),
-    __metadata("design:type", String)
-], Certification.prototype, "userId", void 0);
+    (0, sequelize_typescript_1.ForeignKey)(() => Profile_1.Profile),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.INTEGER),
+    __metadata("design:type", Number)
+], Certification.prototype, "profileId", void 0);
 exports.Certification = Certification = __decorate([
     (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'certifications' })
 ], Certification);

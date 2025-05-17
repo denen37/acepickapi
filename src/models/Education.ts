@@ -1,6 +1,7 @@
 import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index, ForeignKey, BelongsTo } from 'sequelize-typescript';
 
 import { User } from './User';
+import { Profile } from './Profile';
 
 
 
@@ -31,8 +32,8 @@ export class Education extends Model {
     // endDate!: string;
 
     @AllowNull(false)
-    @ForeignKey(() => User)
-    @Column(DataType.UUID)
-    userId!: string;
+    @ForeignKey(() => Profile)
+    @Column(DataType.INTEGER)
+    profileId!: number;
 
 }

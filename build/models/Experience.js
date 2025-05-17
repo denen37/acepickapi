@@ -11,7 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Experience = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
-const User_1 = require("./User");
+const Profile_1 = require("./Profile");
 let Experience = class Experience extends sequelize_typescript_1.Model {
 };
 exports.Experience = Experience;
@@ -37,9 +37,9 @@ __decorate([
 ], Experience.prototype, "endDate", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
-    (0, sequelize_typescript_1.ForeignKey)(() => User_1.User),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.UUID),
-    __metadata("design:type", String)
+    (0, sequelize_typescript_1.ForeignKey)(() => Profile_1.Profile),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.INTEGER),
+    __metadata("design:type", Number)
 ], Experience.prototype, "userId", void 0);
 exports.Experience = Experience = __decorate([
     (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'experiences' })
