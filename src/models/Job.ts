@@ -320,7 +320,7 @@ export class Job extends Model {
     @BelongsTo(() => User, { foreignKey: 'userId' })
     client!: User;
 
-    @BelongsTo(() => User, { foreignKey: 'profId' })
+    @BelongsTo(() => User, { foreignKey: 'professionalId' })
     professional!: User;
 
     @HasMany(() => Dispute, { onDelete: 'CASCADE' })

@@ -12,7 +12,7 @@ const logRoutes_1 = require("./middlewares/logRoutes");
 const authorize_1 = require("./middlewares/authorize");
 const index_1 = __importDefault(require("./routes/index"));
 const auth_1 = __importDefault(require("./routes/auth"));
-const profiles_1 = __importDefault(require("./routes/profiles"));
+const general_1 = __importDefault(require("./routes/general"));
 require("reflect-metadata");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
@@ -25,7 +25,7 @@ app.get('/', (req, res) => {
 app.all('*', authorize_1.isAuthorized);
 app.use("/api", index_1.default);
 app.use("/api/auth/", auth_1.default);
-app.use('/api/', profiles_1.default);
+app.use('/api/', general_1.default);
 // consumeJobEvents();
 db_1.default.sync().then(() => {
     app.listen(configSetup_1.default.PORT || 5000, configSetup_1.default.HOST || '0.0.0.0', () => console.log(`Server is running on http://${configSetup_1.default.HOST}:${configSetup_1.default.PORT}`));

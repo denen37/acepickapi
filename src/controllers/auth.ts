@@ -269,9 +269,9 @@ export const verifyOtp = async (req: Request, res: Response) => {
 
 
 export const register = async (req: Request, res: Response): Promise<any> => {
-    const { email, phone, password, confirmPassword, role, firstName, lastName, lga, bvn, state, address, avatar } = req.body;
+    const { email, phone, password, confirmPassword, role, agreed, firstName, lastName, lga, state, address, avatar } = req.body;
 
-    if (!email || !phone || !password || !confirmPassword || !role || !firstName || !lastName || !lga || !bvn || !state || !address || !avatar)
+    if (!email || !phone || !password || !confirmPassword || !role || agreed || !firstName || !lastName || !lga || !state || !address || !avatar)
         return handleResponse(res, 404, false, "All fields are required");
 
     if (password !== confirmPassword) return handleResponse(res, 404, false, "Password do not match");
@@ -300,6 +300,7 @@ export const register = async (req: Request, res: Response): Promise<any> => {
             phone,
             password: hashedPassword,
             role,
+            agreed
         })
 
         const profile = await Profile.create({
@@ -310,8 +311,7 @@ export const register = async (req: Request, res: Response): Promise<any> => {
             state,
             address,
             role,
-            avatar,
-            bvn
+            avatar
         })
 
         const wallet = await Wallet.create({

@@ -195,8 +195,8 @@ const verifyOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.verifyOtp = verifyOtp;
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, phone, password, confirmPassword, role, firstName, lastName, lga, bvn, state, address, avatar } = req.body;
-    if (!email || !phone || !password || !confirmPassword || !role || !firstName || !lastName || !lga || !bvn || !state || !address || !avatar)
+    const { email, phone, password, confirmPassword, role, agreed, firstName, lastName, lga, state, address, avatar } = req.body;
+    if (!email || !phone || !password || !confirmPassword || !role || agreed || !firstName || !lastName || !lga || !state || !address || !avatar)
         return (0, modules_1.handleResponse)(res, 404, false, "All fields are required");
     if (password !== confirmPassword)
         return (0, modules_1.handleResponse)(res, 404, false, "Password do not match");
@@ -221,6 +221,7 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             phone,
             password: hashedPassword,
             role,
+            agreed
         });
         const profile = yield Profile_1.Profile.create({
             userId: user.id,
@@ -230,8 +231,7 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             state,
             address,
             role,
-            avatar,
-            bvn
+            avatar
         });
         const wallet = yield Wallet_1.Wallet.create({
             userId: user.id,

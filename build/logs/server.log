@@ -24,3 +24,13 @@
 2025-05-15 19:17:06	POST - /api/auth/login
 2025-05-17 10:21:37	POST - /api/auth/send-otp
 2025-05-17 10:23:13	POST - /api/auth/send-otp
+2025-05-19 10:56:28	POST - /api/auth/login
+2025-05-19 10:57:23	GET - /api/sectors
+2025-05-19 10:59:27	GET - /api/sectors
+2025-05-19 13:05:14	GET - /api/sectors
+2025-05-19 13:10:07	GET - /api/sectors
+2025-05-19 13:21:15	GET - /api/sectors
+2025-05-19 14:12:25	GET - /api/sectors
+2025-05-19 14:19:55	GET - /api/sectors
+2025-05-19 14:23:07	GET - /api/sectors
+2025-05-19 14:23:41	GET - /api/sectors

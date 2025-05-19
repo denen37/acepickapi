@@ -9,6 +9,7 @@ import { isAuthorized } from './middlewares/authorize';
 import index from './routes/index';
 import auth from './routes/auth';
 import profiles from './routes/profiles';
+import general from './routes/general';
 import "reflect-metadata";
 
 const app = express();
@@ -28,7 +29,7 @@ app.get('/', (req: Request, res: Response) => {
 app.all('*', isAuthorized);
 app.use("/api", index);
 app.use("/api/auth/", auth);
-app.use('/api/', profiles)
+app.use('/api/', general);
 
 // consumeJobEvents();
 
