@@ -2,6 +2,16 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const sector_1 = require("../controllers/sector");
+const professions_1 = require("../controllers/professions");
 const routes = (0, express_1.Router)();
 routes.get("/sectors", sector_1.getSectors);
+routes.get("/sectors/details", sector_1.getSectorsMetrics);
+routes.post("/sectors", sector_1.createSector);
+routes.put("/sectors/:id", sector_1.updateSector);
+routes.delete("/sectors/:id", sector_1.deleteSector);
+routes.get("/professions", professions_1.getProfessions);
+routes.get("/professions/:id", professions_1.getProfessionById);
+routes.post("/professions", professions_1.createProfession);
+routes.put("/professions/:id", professions_1.updateProfession);
+routes.delete("professions/:id", professions_1.deleteProfession);
 exports.default = routes;
