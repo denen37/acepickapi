@@ -1,46 +1,7 @@
 import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index, BelongsTo, ForeignKey, PrimaryKey } from 'sequelize-typescript';
 import { v4 as uuidv4 } from 'uuid';
-import { Profile } from './Profile';
-// import { Profile } from './Profile';
-import { Wallet } from './Wallet';
-import { LanLog } from './LanLog';
-// import { Profession } from './Profession';
-// import { Jobs } from './Jobs';
-import { Review } from './Review';
-// import { Dispute } from './Dispute';
-// import Sequelize from 'sequelize/types/sequelize';
-
-// import { Professional } from './Professional';
-// import { MarketPlace } from './Market';
-// import { ProfessionalSector } from './ProffesionalSector';
-
-
-// export enum UserGender {
-// 	MALE = 'MALE',
-// 	FEMALE = 'FEMALE',
-// 	OTHER = 'OTHER',
-// }
-
-export enum UserStatus {
-    ACTIVE = 'ACTIVE',
-    INACTIVE = 'INACTIVE',
-    SUSPENDED = 'SUSPENDED',
-}
-
-
-
-export enum UserState {
-    STEP_ONE = 'STEP_ONE',
-    STEP_TWO = 'STEP_TWO',
-    STEP_THREE = 'STEP_THREE',
-    VERIFIED = 'VERIFIED',
-}
-
-export enum UserRole {
-    PROFESSIONAL = 'professional',
-    CLIENT = 'client',
-    CORPERATE = 'corperate'
-}
+import { Profile, Wallet, LanLog, Review } from './Models';
+import { UserRole, UserState, UserStatus } from '../enum';
 
 
 
@@ -126,7 +87,7 @@ export class User extends Model {
     // job!: Jobs[];
 
 
-   
+
 
     // @HasMany(() => Dispute, { onDelete: 'CASCADE' })
     // dispute!: Dispute[];
@@ -134,6 +95,4 @@ export class User extends Model {
 
     // @HasMany(() => ProfessionalSector, { onDelete: 'CASCADE' })
     // professionalSector!: ProfessionalSector[];
-
-
 }

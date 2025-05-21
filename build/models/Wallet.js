@@ -9,13 +9,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Wallet = void 0;
+exports.Wallet = exports.WalletStatus = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
 const Models_1 = require("./Models");
-// export enum WalletType {
-//     CLIENT = 'CLIENT',
-//     PROFESSIONAL = 'PROFESSIONAL'
-// }
+var WalletStatus;
+(function (WalletStatus) {
+    WalletStatus["ACTIVE"] = "active";
+    WalletStatus["INACTIVE"] = "inactive";
+    WalletStatus["DISABLED"] = "disabled";
+})(WalletStatus || (exports.WalletStatus = WalletStatus = {}));
 let Wallet = class Wallet extends sequelize_typescript_1.Model {
 };
 exports.Wallet = Wallet;
@@ -36,7 +38,13 @@ __decorate([
     (0, sequelize_typescript_1.Default)(0),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DECIMAL),
     __metadata("design:type", Number)
-], Wallet.prototype, "balance", void 0);
+], Wallet.prototype, "previousBalance", void 0);
+__decorate([
+    (0, sequelize_typescript_1.AllowNull)(false),
+    (0, sequelize_typescript_1.Default)(0),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DECIMAL),
+    __metadata("design:type", Number)
+], Wallet.prototype, "currentBalance", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Default)('NGN'),
@@ -48,6 +56,12 @@ __decorate([
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", Object)
 ], Wallet.prototype, "pin", void 0);
+__decorate([
+    (0, sequelize_typescript_1.AllowNull)(false),
+    (0, sequelize_typescript_1.Default)(WalletStatus.ACTIVE),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(...Object.values(WalletStatus))),
+    __metadata("design:type", String)
+], Wallet.prototype, "status", void 0);
 exports.Wallet = Wallet = __decorate([
     (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'wallets' })
 ], Wallet);

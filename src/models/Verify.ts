@@ -1,12 +1,5 @@
 import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index } from 'sequelize-typescript';
-
-
-export enum VerificationType {
-    EMAIL = 'EMAIL',
-    SMS = 'SMS',
-    BOTH = 'BOTH',
-    RESET = 'RESET',
-}
+import { VerificationType } from '../enum';
 
 @Table({ updatedAt: false, tableName: 'verify' })
 export class Verify extends Model {

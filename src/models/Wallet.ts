@@ -2,10 +2,11 @@ import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNu
 import { User } from './Models'
 
 
-// export enum WalletType {
-//     CLIENT = 'CLIENT',
-//     PROFESSIONAL = 'PROFESSIONAL'
-// }
+export enum WalletStatus {
+    ACTIVE = 'active',
+    INACTIVE = 'inactive',
+    DISABLED = 'disabled'
+}
 
 
 @Table({ timestamps: true, tableName: 'wallets' })
@@ -22,12 +23,16 @@ export class Wallet extends Model {
     @Column(DataType.UUID)
     userId!: number;
 
+    @AllowNull(false)
+    @Default(0)
+    @Column(DataType.DECIMAL)
+    previousBalance!: number;
 
 
     @AllowNull(false)
     @Default(0)
     @Column(DataType.DECIMAL)
-    balance!: number;
+    currentBalance!: number;
 
 
 
@@ -41,4 +46,10 @@ export class Wallet extends Model {
     @AllowNull(true)
     @Column(DataType.STRING)
     pin!: string | null;
+
+
+    @AllowNull(false)
+    @Default(WalletStatus.ACTIVE)
+    @Column(DataType.ENUM(...Object.values(WalletStatus)))
+    status!: WalletStatus;
 }

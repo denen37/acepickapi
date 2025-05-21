@@ -1,48 +1,32 @@
 import { convertHttpToHttps, createRandomRef, deleteKey, errorResponse, handleResponse, randomId, saltRounds, successResponse, successResponseFalse, validateEmail, validatePhone } from "../utils/modules";
 import config from "../config/configSetup"
 import { Request, Response } from 'express';
-import { VerificationType, Verify } from "../models/Verify";
-import { sendSMS } from "../services/sms";
-import { UserState, UserStatus, User, UserRole } from "../models/User";
+import axios from "axios";
+import { basename } from "path";
+import { VerificationType, UserState, UserStatus, UserRole, OTPReason } from "../enum";
+import { User, Director, Professional, Profession, Sector, Review, Wallet, Profile, Cooperation, LanLog, Verify } from "../models/Models"
+import { forgotPasswordEmail, registerEmail, sendOTPEmail } from "../utils/messages";
+import { otpRequestSchema, registerCoporateSchema, registrationSchema, verifyOTPSchema } from "../validation/body";
 import { compare, hash } from "bcryptjs";
+import { verify } from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 import { sign } from "jsonwebtoken";
-import { Profile, ProfileType } from "../models/Profile";
-// import { Professional } from "../models/Professional";
-import { LanLog } from "../models/LanLog";
-// import { Sector } from "../models/Sector";
-// import { Profession } from "../models/Profession";
-import { Cooperation } from "../models/Cooperation";
-// import { Review } from "../models/Review";
+import { sendSMS } from "../services/sms";
+import { sendEmail } from "../services/gmail";
+import { ProfileType } from "../models/Profile";
+import { } from "../models/LanLog";
 import { verifyBvn } from "../services/bvn";
 import { compareTwoStrings } from 'string-similarity';
 
 // yarn add stream-chat
 import { StreamChat } from 'stream-chat';
-// import { JobStatus, Job } from "../models/Job";
-import { Education } from "../models/Education";
-import { Certification } from "../models/Certification";
-import { Experience } from "../models/Experience";
-// import { Portfolio } from "../models/Portfolio";
-import { Wallet } from "../models/Wallet";
-// import { Dispute } from "../models/Dispute";
-// import { CreditType, TransactionType, Transactions } from "../models/Transaction";
+import { } from "../models/Wallet";
 import { Sequelize } from "sequelize-typescript";
 // import { Redis } from "../services/redis";
-// import { ProfessionalSector } from "../models/ProfessionalSector";
 import { Op } from "sequelize";
 import { sendExpoNotification } from "../services/expo";
-import { Professional } from "../models/Professional";
-import axios from "axios";
-import { verify } from "jsonwebtoken";
-import bcrypt from "bcryptjs";
-import { basename } from "path";
-import { forgotPasswordEmail, registerEmail, sendOTPEmail } from "../utils/messages";
-import { sendEmail } from "../services/gmail";
-import { Director } from "../models/Director";
-import { Profession } from "../models/Profession";
-import { Sector } from "../models/Sector";
-import { Review } from "../models/Review";
 import { resolve } from "path/win32";
+
 
 
 // instantiate your stream client using the API key and secret
@@ -108,16 +92,21 @@ export const updateProfile = async (req: Request, res: Response) => {
 //     return successResponse(res, "Updated Successfully", updated)
 // }
 
-export enum OTPReason {
-    VERIFICATION = 'verification',
-    FORGOT_PASSWORD = 'forgot_password'
-}
-
 
 
 
 export const sendOtp = async (req: Request, res: Response) => {
-    const { email, phone, type, reason = OTPReason.VERIFICATION} = req.body;
+    const parsed = otpRequestSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+        return res.status(400).json({
+            error: "Invalid input",
+            issues: parsed.error.format(),
+        });
+    }
+
+    const { email, phone, type, reason } = parsed.data;
+
     const codeEmail = String(Math.floor(1000 + Math.random() * 9000));
     const codeSms = String(Math.floor(1000 + Math.random() * 9000));
     let emailSendStatus;
@@ -136,21 +125,21 @@ export const sendOtp = async (req: Request, res: Response) => {
             if (reason === OTPReason.VERIFICATION) {
                 const verifyEmailMsg = sendOTPEmail(codeEmail);
 
-            messageId = await sendEmail(
-                email,
-                verifyEmailMsg.title,
-                verifyEmailMsg.body,
-                'User'
-            );
-            } else if( reason === OTPReason.FORGOT_PASSWORD){
+                messageId = await sendEmail(
+                    email as string,
+                    verifyEmailMsg.title,
+                    verifyEmailMsg.body,
+                    'User'
+                );
+            } else if (reason === OTPReason.FORGOT_PASSWORD) {
                 const msg = forgotPasswordEmail(codeEmail);
 
-            messageId = await sendEmail(
-                email,
-                msg.title,
-                msg.body,
-                'User'
-            );
+                messageId = await sendEmail(
+                    email as string,
+                    msg.title,
+                    msg.body,
+                    'User'
+                );
             }
 
             emailSendStatus = Boolean(messageId);
@@ -164,7 +153,7 @@ export const sendOtp = async (req: Request, res: Response) => {
                 type: VerificationType.SMS
             })
 
-            const smsResult = await sendSMS(phone, codeSms.toString());
+            const smsResult = await sendSMS(phone as string, codeSms.toString());
 
             smsSendStatus = smsResult.status
         }
@@ -211,70 +200,79 @@ export const sendEmailTest = async (req: Request, res: Response) => {
 
 
 export const verifyOtp = async (req: Request, res: Response) => {
-    const { smsCode, emailCode }:
-        { smsCode: { phone: string, code: string } | null, emailCode: { email: string, code: string } | null }
-        = req.body;
+    const result = verifyOTPSchema.safeParse(req.body);
 
-    // try {
-    if (emailCode) {
-
-        const verifyEmail = await Verify.findOne({
-            where: {
-                code: emailCode.code,
-                contact: emailCode.email,
-            }
-        })
-
-        if (!verifyEmail) return errorResponse(res, 'Invalid Email Code', null);
-
-        if (verifyEmail.verified) return errorResponse(res, 'Email Code already verified');
-
-        if (verifyEmail.createdAt < new Date(Date.now() - config.OTP_EXPIRY_TIME * 60 * 1000))
-            return errorResponse(res, 'Email Code expired', null);
-
-        await verifyEmail.update({ verified: true })
-
-        await verifyEmail.save();
+    if (!result.success) {
+        return res.status(400).json({
+            error: "Invalid input",
+            issues: result.error.format()
+        });
     }
 
+    const { smsCode, emailCode } = result.data;
+    try {
+        if (emailCode) {
 
-    if (smsCode) {
-        const verifySms = await Verify.findOne({
-            where: {
-                code: smsCode.code,
-                contact: smsCode.phone,
-            }
-        })
+            const verifyEmail = await Verify.findOne({
+                where: {
+                    code: emailCode.code,
+                    contact: emailCode.email,
+                }
+            })
 
-        if (!verifySms) return errorResponse(res, 'Invalid SMS Code', null);
+            if (!verifyEmail) return errorResponse(res, 'Invalid Email Code', null);
 
-        if (verifySms.verified) return errorResponse(res, 'SMS Code already verified');
+            if (verifyEmail.verified) return errorResponse(res, 'Email Code already verified');
 
-        if (verifySms.createdAt < new Date(Date.now() - config.OTP_EXPIRY_TIME * 60 * 1000))
-            return errorResponse(res, 'SMS Code expired', null);
+            if (verifyEmail.createdAt < new Date(Date.now() - config.OTP_EXPIRY_TIME * 60 * 1000))
+                return errorResponse(res, 'Email Code expired', null);
 
-        await verifySms.update({ verified: true })
+            await verifyEmail.update({ verified: true })
 
-        await verifySms.save();
+            await verifyEmail.save();
+        }
+
+
+        if (smsCode) {
+            const verifySms = await Verify.findOne({
+                where: {
+                    code: smsCode.code,
+                    contact: smsCode.phone,
+                }
+            })
+
+            if (!verifySms) return errorResponse(res, 'Invalid SMS Code', null);
+
+            if (verifySms.verified) return errorResponse(res, 'SMS Code already verified');
+
+            if (verifySms.createdAt < new Date(Date.now() - config.OTP_EXPIRY_TIME * 60 * 1000))
+                return errorResponse(res, 'SMS Code expired', null);
+
+            await verifySms.update({ verified: true })
+
+            await verifySms.save();
+        }
+
+        return successResponse(res, 'success', 'Both codes verified successfully');
+    } catch (error: any) {
+        return errorResponse(res, 'error', error.message);
+
     }
-
-    return successResponse(res, 'success', 'Both codes verified successfully');
-    // } catch (error: any) {
-    //     return errorResponse(res, 'error', error.message);
-
-    // }
 }
 
 
 
 
 export const register = async (req: Request, res: Response): Promise<any> => {
-    const { email, phone, password, confirmPassword, role, agreed, firstName, lastName, lga, state, address, avatar } = req.body;
+    const result = registrationSchema.safeParse(req.body);
 
-    if (!email || !phone || !password || !confirmPassword || !role || agreed || !firstName || !lastName || !lga || !state || !address || !avatar)
-        return handleResponse(res, 404, false, "All fields are required");
+    if (!result.success)
+        return res.status(400).json({
+            error: "Invalid input",
+            issues: result.error.format()
+        })
 
-    if (password !== confirmPassword) return handleResponse(res, 404, false, "Password do not match");
+    const { email, phone, password, role, agreed, firstName, lastName, lga, state, address, avatar } = result.data
 
     try {
         if (!validateEmail(email)) return handleResponse(res, 404, false, "Enter a valid email");
@@ -347,13 +345,15 @@ export const register = async (req: Request, res: Response): Promise<any> => {
 }
 
 export const registerCorperate = async (req: Request, res: Response): Promise<any> => {
-    const { email, phone, password, confirmPassword, role = 'corperate', firstName, lastName, cooperation } = req.body;
+    const result = registerCoporateSchema.safeParse(req.body)
 
+    if (!result.success)
+        return res.status(400).json({
+            error: "Invalid input",
+            issues: result.error.format()
+        })
 
-    if (!email || !phone || !password || !confirmPassword || !role || !firstName || !lastName || !cooperation)
-        return handleResponse(res, 404, false, "All fields are required");
-
-    if (password !== confirmPassword) return handleResponse(res, 404, false, "Password do not match");
+    const { email, phone, password, confirmPassword, role = 'corperate', firstName, lastName, cooperation } = result.data;
 
     if (!validateEmail(email)) return handleResponse(res, 404, false, "Enter a valid email");
 
@@ -363,31 +363,31 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
         const verifiedEmail = await Verify.findOne({
             where: { contact: email, verified: true }
         });
-    
+
         if (!verifiedEmail) return handleResponse(res, 404, false, "Email not verified");
-    
+
         const verifiedPhone = await Verify.findOne({
             where: { contact: phone, verified: true }
         })
-    
+
         if (!verifiedPhone) return handleResponse(res, 404, false, "Phone not verified");
-    
+
         const hashedPassword = await bcrypt.hash(password, 10);
-    
+
         const user = await User.create({
             email,
             phone,
             password: hashedPassword,
             role,
         })
-    
+
         const profile = await Profile.create({
             avatar: cooperation.avatar,
             userId: user.id,
             firstName,
             lastName
         })
-    
+
         const newCooperation = await Cooperation.create({
             avatar: cooperation.avatar,
             nameOfOrg: cooperation.nameOfOrg,
@@ -399,45 +399,44 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
             noOfEmployees: cooperation.noOfEmployees,
             profileId: profile.id
         })
-    
+
         const newDirector = await Director.create({
-                firstName: cooperation.director.firstName,
-                lastName:cooperation.director.lastName,
-                email:cooperation.director.email,
-                phone:cooperation.director.phone,
-                address:cooperation.director.address,
-                state:cooperation.director.state,
-                lga: cooperation.director.lga,
-                bvn:cooperation.director.bvn,
-                cooperateId: newCooperation.id
+            firstName: cooperation.director.firstName,
+            lastName: cooperation.director.lastName,
+            email: cooperation.director.email,
+            phone: cooperation.director.phone,
+            address: cooperation.director.address,
+            state: cooperation.director.state,
+            lga: cooperation.director.lga,
+            cooperateId: newCooperation.id
         })
-    
+
         const wallet = await Wallet.create({
             userId: user.id,
             balance: 0,
         })
-    
+
         user.password = null
         wallet.pin = null
-        
+
         user.setDataValue('profile', profile);
         user.setDataValue('wallet', wallet);
-    
+
         let token = sign({ id: user.id, email: user.email, role: user.role }, config.TOKEN_SECRET);
-    
+
         let regEmail = registerEmail(user);
-    
+
         let messageId = await sendEmail(
             email,
             regEmail.title,
             regEmail.body,
             'User'
         )
-    
+
         let emailSendStatus = Boolean(messageId);
-    
-    
-    
+
+
+
         return successResponse(res, "success", { user, token, emailSendStatus });
     } catch (error) {
         return errorResponse(res, 'error', error)

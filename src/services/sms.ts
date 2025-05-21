@@ -36,7 +36,7 @@ import { sendEmail } from './gmail';
 // }
 
 
-export const sendSMS = async (phone: number, code: string) => {
+export const sendSMS = async (phone: string, code: string) => {
     const response = await axios.post(
         `https://v3.api.termii.com/api/sms/send`,
         {

@@ -12,35 +12,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.updateFcmToken = exports.corperateReg = exports.deleteUsers = exports.login = exports.passwordChange = exports.registerCorperate = exports.register = exports.verifyOtp = exports.sendEmailTest = exports.sendSMSTest = exports.sendOtp = exports.OTPReason = exports.updateProfile = exports.authorize = void 0;
+exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.updateFcmToken = exports.corperateReg = exports.deleteUsers = exports.login = exports.passwordChange = exports.registerCorperate = exports.register = exports.verifyOtp = exports.sendEmailTest = exports.sendSMSTest = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
 const modules_1 = require("../utils/modules");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
-const Verify_1 = require("../models/Verify");
-const sms_1 = require("../services/sms");
-const User_1 = require("../models/User");
+const enum_1 = require("../enum");
+const Models_1 = require("../models/Models");
+const messages_1 = require("../utils/messages");
+const body_1 = require("../validation/body");
 const bcryptjs_1 = require("bcryptjs");
 const jsonwebtoken_1 = require("jsonwebtoken");
-const Profile_1 = require("../models/Profile");
-// import { Professional } from "../models/Professional";
-const LanLog_1 = require("../models/LanLog");
-// import { Sector } from "../models/Sector";
-// import { Profession } from "../models/Profession";
-const Cooperation_1 = require("../models/Cooperation");
-// import { Review } from "../models/Review";
+const bcryptjs_2 = __importDefault(require("bcryptjs"));
+const jsonwebtoken_2 = require("jsonwebtoken");
+const sms_1 = require("../services/sms");
+const gmail_1 = require("../services/gmail");
 const bvn_1 = require("../services/bvn");
 // yarn add stream-chat
 const stream_chat_1 = require("stream-chat");
-// import { Portfolio } from "../models/Portfolio";
-const Wallet_1 = require("../models/Wallet");
-const Professional_1 = require("../models/Professional");
-const jsonwebtoken_2 = require("jsonwebtoken");
-const bcryptjs_2 = __importDefault(require("bcryptjs"));
-const messages_1 = require("../utils/messages");
-const gmail_1 = require("../services/gmail");
-const Director_1 = require("../models/Director");
-const Profession_1 = require("../models/Profession");
-const Sector_1 = require("../models/Sector");
-const Review_1 = require("../models/Review");
 // instantiate your stream client using the API key and secret
 // the secret is only used server side and gives you full access to the API
 const serverClient = stream_chat_1.StreamChat.getInstance('zzfb7h72xhc5', '5pfxakc5zasma3hw9awd2qsqgk2fxyr4a5qb3au4kkdt27d7ttnca7vnusfuztud');
@@ -54,7 +41,7 @@ const authorize = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         token = token.split(' ')[1];
     if (token === 'null' || !token)
         return (0, modules_1.handleResponse)(res, 401, false, `Unauthorized request`);
-    let verified = (0, jsonwebtoken_2.verify)(token, configSetup_1.default.TOKEN_SECRET);
+    let verified = (0, jsonwebtoken_1.verify)(token, configSetup_1.default.TOKEN_SECRET);
     if (!verified)
         return (0, modules_1.handleResponse)(res, 401, false, `Unauthorized request`);
     return (0, modules_1.handleResponse)(res, 200, true, `Authorized`, verified);
@@ -63,7 +50,7 @@ exports.authorize = authorize;
 const updateProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { postalCode, lga, state, address, avatar } = req.body;
     let { id } = req.user;
-    const profile = yield Profile_1.Profile.findOne({ where: { id } });
+    const profile = yield Models_1.Profile.findOne({ where: { id } });
     if (!(profile === null || profile === void 0 ? void 0 : profile.verified))
         return (0, modules_1.errorResponse)(res, "Verify your bvn");
     yield (profile === null || profile === void 0 ? void 0 : profile.update({
@@ -72,7 +59,7 @@ const updateProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         state: state !== null && state !== void 0 ? state : profile.state,
         address: address !== null && address !== void 0 ? address : profile.address,
     }));
-    const updated = yield Profile_1.Profile.findOne({ where: { id } });
+    const updated = yield Models_1.Profile.findOne({ where: { id } });
     return (0, modules_1.successResponse)(res, "Updated Successfully", updated);
 });
 exports.updateProfile = updateProfile;
@@ -87,40 +74,42 @@ exports.updateProfile = updateProfile;
 //     const updated = await Professional.findOne({ where: { userId: id } })
 //     return successResponse(res, "Updated Successfully", updated)
 // }
-var OTPReason;
-(function (OTPReason) {
-    OTPReason["VERIFICATION"] = "verification";
-    OTPReason["FORGOT_PASSWORD"] = "forgot_password";
-})(OTPReason || (exports.OTPReason = OTPReason = {}));
 const sendOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, phone, type, reason = OTPReason.VERIFICATION } = req.body;
+    const parsed = body_1.otpRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+        return res.status(400).json({
+            error: "Invalid input",
+            issues: parsed.error.format(),
+        });
+    }
+    const { email, phone, type, reason } = parsed.data;
     const codeEmail = String(Math.floor(1000 + Math.random() * 9000));
     const codeSms = String(Math.floor(1000 + Math.random() * 9000));
     let emailSendStatus;
     let smsSendStatus;
     try {
-        if (type === Verify_1.VerificationType.EMAIL || type === Verify_1.VerificationType.BOTH) {
-            const verifyEmailRecord = yield Verify_1.Verify.create({
+        if (type === enum_1.VerificationType.EMAIL || type === enum_1.VerificationType.BOTH) {
+            const verifyEmailRecord = yield Models_1.Verify.create({
                 contact: email,
                 code: codeEmail,
-                type: Verify_1.VerificationType.EMAIL,
+                type: enum_1.VerificationType.EMAIL,
             });
             let messageId;
-            if (reason === OTPReason.VERIFICATION) {
+            if (reason === enum_1.OTPReason.VERIFICATION) {
                 const verifyEmailMsg = (0, messages_1.sendOTPEmail)(codeEmail);
                 messageId = yield (0, gmail_1.sendEmail)(email, verifyEmailMsg.title, verifyEmailMsg.body, 'User');
             }
-            else if (reason === OTPReason.FORGOT_PASSWORD) {
+            else if (reason === enum_1.OTPReason.FORGOT_PASSWORD) {
                 const msg = (0, messages_1.forgotPasswordEmail)(codeEmail);
                 messageId = yield (0, gmail_1.sendEmail)(email, msg.title, msg.body, 'User');
             }
             emailSendStatus = Boolean(messageId);
         }
-        if (type === Verify_1.VerificationType.SMS || type === Verify_1.VerificationType.BOTH) {
-            const verifySmsRecord = yield Verify_1.Verify.create({
+        if (type === enum_1.VerificationType.SMS || type === enum_1.VerificationType.BOTH) {
+            const verifySmsRecord = yield Models_1.Verify.create({
                 contact: phone,
                 code: codeSms,
-                type: Verify_1.VerificationType.SMS
+                type: enum_1.VerificationType.SMS
             });
             const smsResult = yield (0, sms_1.sendSMS)(phone, codeSms.toString());
             smsSendStatus = smsResult.status;
@@ -154,76 +143,86 @@ const sendEmailTest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.sendEmailTest = sendEmailTest;
 const verifyOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { smsCode, emailCode } = req.body;
-    // try {
-    if (emailCode) {
-        const verifyEmail = yield Verify_1.Verify.findOne({
-            where: {
-                code: emailCode.code,
-                contact: emailCode.email,
-            }
+    const result = body_1.verifyOTPSchema.safeParse(req.body);
+    if (!result.success) {
+        return res.status(400).json({
+            error: "Invalid input",
+            issues: result.error.format()
         });
-        if (!verifyEmail)
-            return (0, modules_1.errorResponse)(res, 'Invalid Email Code', null);
-        if (verifyEmail.verified)
-            return (0, modules_1.errorResponse)(res, 'Email Code already verified');
-        if (verifyEmail.createdAt < new Date(Date.now() - configSetup_1.default.OTP_EXPIRY_TIME * 60 * 1000))
-            return (0, modules_1.errorResponse)(res, 'Email Code expired', null);
-        yield verifyEmail.update({ verified: true });
-        yield verifyEmail.save();
     }
-    if (smsCode) {
-        const verifySms = yield Verify_1.Verify.findOne({
-            where: {
-                code: smsCode.code,
-                contact: smsCode.phone,
-            }
-        });
-        if (!verifySms)
-            return (0, modules_1.errorResponse)(res, 'Invalid SMS Code', null);
-        if (verifySms.verified)
-            return (0, modules_1.errorResponse)(res, 'SMS Code already verified');
-        if (verifySms.createdAt < new Date(Date.now() - configSetup_1.default.OTP_EXPIRY_TIME * 60 * 1000))
-            return (0, modules_1.errorResponse)(res, 'SMS Code expired', null);
-        yield verifySms.update({ verified: true });
-        yield verifySms.save();
+    const { smsCode, emailCode } = result.data;
+    try {
+        if (emailCode) {
+            const verifyEmail = yield Models_1.Verify.findOne({
+                where: {
+                    code: emailCode.code,
+                    contact: emailCode.email,
+                }
+            });
+            if (!verifyEmail)
+                return (0, modules_1.errorResponse)(res, 'Invalid Email Code', null);
+            if (verifyEmail.verified)
+                return (0, modules_1.errorResponse)(res, 'Email Code already verified');
+            if (verifyEmail.createdAt < new Date(Date.now() - configSetup_1.default.OTP_EXPIRY_TIME * 60 * 1000))
+                return (0, modules_1.errorResponse)(res, 'Email Code expired', null);
+            yield verifyEmail.update({ verified: true });
+            yield verifyEmail.save();
+        }
+        if (smsCode) {
+            const verifySms = yield Models_1.Verify.findOne({
+                where: {
+                    code: smsCode.code,
+                    contact: smsCode.phone,
+                }
+            });
+            if (!verifySms)
+                return (0, modules_1.errorResponse)(res, 'Invalid SMS Code', null);
+            if (verifySms.verified)
+                return (0, modules_1.errorResponse)(res, 'SMS Code already verified');
+            if (verifySms.createdAt < new Date(Date.now() - configSetup_1.default.OTP_EXPIRY_TIME * 60 * 1000))
+                return (0, modules_1.errorResponse)(res, 'SMS Code expired', null);
+            yield verifySms.update({ verified: true });
+            yield verifySms.save();
+        }
+        return (0, modules_1.successResponse)(res, 'success', 'Both codes verified successfully');
     }
-    return (0, modules_1.successResponse)(res, 'success', 'Both codes verified successfully');
-    // } catch (error: any) {
-    //     return errorResponse(res, 'error', error.message);
-    // }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error.message);
+    }
 });
 exports.verifyOtp = verifyOtp;
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, phone, password, confirmPassword, role, agreed, firstName, lastName, lga, state, address, avatar } = req.body;
-    if (!email || !phone || !password || !confirmPassword || !role || agreed || !firstName || !lastName || !lga || !state || !address || !avatar)
-        return (0, modules_1.handleResponse)(res, 404, false, "All fields are required");
-    if (password !== confirmPassword)
-        return (0, modules_1.handleResponse)(res, 404, false, "Password do not match");
+    const result = body_1.registrationSchema.safeParse(req.body);
+    if (!result.success)
+        return res.status(400).json({
+            error: "Invalid input",
+            issues: result.error.format()
+        });
+    const { email, phone, password, role, agreed, firstName, lastName, lga, state, address, avatar } = result.data;
     try {
         if (!(0, modules_1.validateEmail)(email))
             return (0, modules_1.handleResponse)(res, 404, false, "Enter a valid email");
         if (!(0, modules_1.validatePhone)(phone))
             return (0, modules_1.handleResponse)(res, 404, false, "Enter a valid phone number");
-        const verifiedEmail = yield Verify_1.Verify.findOne({
+        const verifiedEmail = yield Models_1.Verify.findOne({
             where: { contact: email, verified: true }
         });
         if (!verifiedEmail)
             return (0, modules_1.handleResponse)(res, 404, false, "Email not verified");
-        const verifiedPhone = yield Verify_1.Verify.findOne({
+        const verifiedPhone = yield Models_1.Verify.findOne({
             where: { contact: phone, verified: true }
         });
         if (!verifiedPhone)
             return (0, modules_1.handleResponse)(res, 404, false, "Phone not verified");
         const hashedPassword = yield bcryptjs_2.default.hash(password, 10);
-        const user = yield User_1.User.create({
+        const user = yield Models_1.User.create({
             email,
             phone,
             password: hashedPassword,
             role,
             agreed
         });
-        const profile = yield Profile_1.Profile.create({
+        const profile = yield Models_1.Profile.create({
             userId: user.id,
             firstName,
             lastName,
@@ -233,7 +232,7 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             role,
             avatar
         });
-        const wallet = yield Wallet_1.Wallet.create({
+        const wallet = yield Models_1.Wallet.create({
             userId: user.id,
             balance: 0,
         });
@@ -241,7 +240,7 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         wallet.pin = null;
         user.setDataValue('profile', profile);
         user.setDataValue('wallet', wallet);
-        let token = (0, jsonwebtoken_1.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
+        let token = (0, jsonwebtoken_2.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
         let regEmail = (0, messages_1.registerEmail)(user);
         let messageId = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, 'User');
         let emailSendStatus = Boolean(messageId);
@@ -253,40 +252,42 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.register = register;
 const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, phone, password, confirmPassword, role = 'corperate', firstName, lastName, cooperation } = req.body;
-    if (!email || !phone || !password || !confirmPassword || !role || !firstName || !lastName || !cooperation)
-        return (0, modules_1.handleResponse)(res, 404, false, "All fields are required");
-    if (password !== confirmPassword)
-        return (0, modules_1.handleResponse)(res, 404, false, "Password do not match");
+    const result = body_1.registerCoporateSchema.safeParse(req.body);
+    if (!result.success)
+        return res.status(400).json({
+            error: "Invalid input",
+            issues: result.error.format()
+        });
+    const { email, phone, password, confirmPassword, role = 'corperate', firstName, lastName, cooperation } = result.data;
     if (!(0, modules_1.validateEmail)(email))
         return (0, modules_1.handleResponse)(res, 404, false, "Enter a valid email");
     if (!(0, modules_1.validatePhone)(phone))
         return (0, modules_1.handleResponse)(res, 404, false, "Enter a valid phone number");
     try {
-        const verifiedEmail = yield Verify_1.Verify.findOne({
+        const verifiedEmail = yield Models_1.Verify.findOne({
             where: { contact: email, verified: true }
         });
         if (!verifiedEmail)
             return (0, modules_1.handleResponse)(res, 404, false, "Email not verified");
-        const verifiedPhone = yield Verify_1.Verify.findOne({
+        const verifiedPhone = yield Models_1.Verify.findOne({
             where: { contact: phone, verified: true }
         });
         if (!verifiedPhone)
             return (0, modules_1.handleResponse)(res, 404, false, "Phone not verified");
         const hashedPassword = yield bcryptjs_2.default.hash(password, 10);
-        const user = yield User_1.User.create({
+        const user = yield Models_1.User.create({
             email,
             phone,
             password: hashedPassword,
             role,
         });
-        const profile = yield Profile_1.Profile.create({
+        const profile = yield Models_1.Profile.create({
             avatar: cooperation.avatar,
             userId: user.id,
             firstName,
             lastName
         });
-        const newCooperation = yield Cooperation_1.Cooperation.create({
+        const newCooperation = yield Models_1.Cooperation.create({
             avatar: cooperation.avatar,
             nameOfOrg: cooperation.nameOfOrg,
             phone: cooperation.phone,
@@ -297,7 +298,7 @@ const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, functi
             noOfEmployees: cooperation.noOfEmployees,
             profileId: profile.id
         });
-        const newDirector = yield Director_1.Director.create({
+        const newDirector = yield Models_1.Director.create({
             firstName: cooperation.director.firstName,
             lastName: cooperation.director.lastName,
             email: cooperation.director.email,
@@ -305,10 +306,9 @@ const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, functi
             address: cooperation.director.address,
             state: cooperation.director.state,
             lga: cooperation.director.lga,
-            bvn: cooperation.director.bvn,
             cooperateId: newCooperation.id
         });
-        const wallet = yield Wallet_1.Wallet.create({
+        const wallet = yield Models_1.Wallet.create({
             userId: user.id,
             balance: 0,
         });
@@ -316,7 +316,7 @@ const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, functi
         wallet.pin = null;
         user.setDataValue('profile', profile);
         user.setDataValue('wallet', wallet);
-        let token = (0, jsonwebtoken_1.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
+        let token = (0, jsonwebtoken_2.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
         let regEmail = (0, messages_1.registerEmail)(user);
         let messageId = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, 'User');
         let emailSendStatus = Boolean(messageId);
@@ -332,7 +332,7 @@ const passwordChange = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const { id } = req.user;
     if (password !== confirmPassword)
         return (0, modules_1.errorResponse)(res, "Password do not match", { status: false, message: "Password do not match" });
-    const user = yield User_1.User.findOne({ where: { id } });
+    const user = yield Models_1.User.findOne({ where: { id } });
     if (!user)
         return (0, modules_1.errorResponse)(res, "Failed", { status: false, message: "User does not exist" });
     (0, bcryptjs_1.hash)(password, modules_1.saltRounds, function (err, hashedPassword) {
@@ -346,65 +346,65 @@ exports.passwordChange = passwordChange;
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { email, password, fcmToken } = req.body;
     try {
-        const user = yield User_1.User.findOne({ where: { email } });
+        const user = yield Models_1.User.findOne({ where: { email } });
         if (!user)
             return (0, modules_1.handleResponse)(res, 404, false, "User does not exist");
         const match = yield (0, bcryptjs_1.compare)(password, user.password || '');
         if (!match)
             return (0, modules_1.handleResponse)(res, 404, false, "Invalid Credentials");
-        let token = (0, jsonwebtoken_1.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
+        let token = (0, jsonwebtoken_2.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
         // const chatToken = serverClient.createToken(`${String(user.id)}`);
-        const profile = yield Profile_1.Profile.findOne({ where: { userId: user.id } });
+        const profile = yield Models_1.Profile.findOne({ where: { userId: user.id } });
         yield (profile === null || profile === void 0 ? void 0 : profile.update({ fcmToken }));
         let userData;
-        if (user.role == User_1.UserRole.CLIENT) {
-            userData = yield User_1.User.findOne({
+        if (user.role == enum_1.UserRole.CLIENT) {
+            userData = yield Models_1.User.findOne({
                 where: { id: user.id },
                 attributes: { exclude: ['password'] },
                 include: [{
-                        model: Wallet_1.Wallet,
+                        model: Models_1.Wallet,
                         attributes: { exclude: ['password'] },
                     }, {
-                        model: Profile_1.Profile,
+                        model: Models_1.Profile,
                     }]
             });
         }
-        else if (user.role == User_1.UserRole.PROFESSIONAL) {
-            userData = yield User_1.User.findOne({
+        else if (user.role == enum_1.UserRole.PROFESSIONAL) {
+            userData = yield Models_1.User.findOne({
                 where: { id: user.id },
                 attributes: { exclude: ['password'] },
                 include: [{
-                        model: Wallet_1.Wallet,
+                        model: Models_1.Wallet,
                         attributes: { exclude: ['password'] },
                     }, {
-                        model: Profile_1.Profile,
+                        model: Models_1.Profile,
                         include: [{
-                                model: Professional_1.Professional,
+                                model: Models_1.Professional,
                                 include: [{
-                                        model: Profession_1.Profession,
-                                        include: [Sector_1.Sector]
+                                        model: Models_1.Profession,
+                                        include: [Models_1.Sector]
                                     }]
                             }]
                     }, {
-                        model: Review_1.Review
+                        model: Models_1.Review
                     }]
             });
         }
         else {
-            userData = yield User_1.User.findOne({
+            userData = yield Models_1.User.findOne({
                 where: { id: user.id },
                 attributes: { exclude: ['password'] },
                 include: [{
-                        model: Wallet_1.Wallet,
+                        model: Models_1.Wallet,
                         attributes: { exclude: ['password'] },
                     }, {
-                        model: Profile_1.Profile,
+                        model: Models_1.Profile,
                         include: [{
-                                model: Cooperation_1.Cooperation,
-                                include: [Director_1.Director]
+                                model: Models_1.Cooperation,
+                                include: [Models_1.Director]
                             }]
                     }, {
-                        model: Review_1.Review,
+                        model: Models_1.Review,
                     }]
             });
         }
@@ -498,7 +498,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.login = login;
 const deleteUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield User_1.User.findAll({});
+    const user = yield Models_1.User.findAll({});
     let index = 0;
     for (let value of user) {
         yield value.destroy();
@@ -532,12 +532,12 @@ exports.deleteUsers = deleteUsers;
 const corperateReg = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { nameOfOrg, phone, address, state, lga, postalCode, regNum, noOfEmployees } = req.body;
     let { id } = req.user;
-    const user = yield User_1.User.findOne({ where: { id } });
-    const corperate = yield Cooperation_1.Cooperation.findOne({ where: { userId: id } });
+    const user = yield Models_1.User.findOne({ where: { id } });
+    const corperate = yield Models_1.Cooperation.findOne({ where: { userId: id } });
     if (corperate)
         return (0, modules_1.errorResponse)(res, "Failed", { status: false, message: "Coorperate Account Already Exist" });
-    const profile = yield Profile_1.Profile.findOne({ where: { userId: id } });
-    const coorperateCreate = yield Cooperation_1.Cooperation.create({
+    const profile = yield Models_1.Profile.findOne({ where: { userId: id } });
+    const coorperateCreate = yield Models_1.Cooperation.create({
         nameOfOrg, phone, address, state, lga, postalCode, regNum, noOfEmployees, profileId: profile === null || profile === void 0 ? void 0 : profile.id,
         userId: id
     });
@@ -567,7 +567,7 @@ exports.corperateReg = corperateReg;
 const updateFcmToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { token } = req.body;
     let { id } = req.user;
-    const user = yield User_1.User.findOne({ where: { id } });
+    const user = yield Models_1.User.findOne({ where: { id } });
     yield (user === null || user === void 0 ? void 0 : user.update({ fcmToken: token }));
     (0, modules_1.successResponse)(res, "Successful", token);
 });
@@ -577,7 +577,7 @@ const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
     try {
         (0, bcryptjs_1.hash)(password, modules_1.saltRounds, function (err, hashedPassword) {
             return __awaiter(this, void 0, void 0, function* () {
-                const user = yield User_1.User.findOne({ where: { email: email } });
+                const user = yield Models_1.User.findOne({ where: { email: email } });
                 user === null || user === void 0 ? void 0 : user.update({ password: hashedPassword });
                 return (0, modules_1.successResponse)(res, "Password Changed Successfully");
             });
@@ -1112,12 +1112,12 @@ const postlocationData = (req, res) => __awaiter(void 0, void 0, void 0, functio
     const { lan, log, address } = req.body;
     const { id } = req.user;
     try {
-        const getlocation = yield LanLog_1.LanLog.findOne({
+        const getlocation = yield Models_1.LanLog.findOne({
             where: {
                 userId: id
             }
         });
-        const user = yield User_1.User.findOne({
+        const user = yield Models_1.User.findOne({
             where: {
                 id
             }
@@ -1137,7 +1137,7 @@ const postlocationData = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 latitude: lan, longitude: log, userId: id, address,
                 coordinates: { type: 'Point', coordinates: [lan, log] },
             };
-            const location = yield LanLog_1.LanLog.create(insertData);
+            const location = yield Models_1.LanLog.create(insertData);
             yield (user === null || user === void 0 ? void 0 : user.update({ locationId: location.id }));
             if (location)
                 return (0, modules_1.successResponse)(res, "Created Successfully", location);
