@@ -240,9 +240,10 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         wallet.pin = null;
         user.setDataValue('profile', profile);
         user.setDataValue('wallet', wallet);
+        // console.log('user', user);
         let token = (0, jsonwebtoken_2.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
-        let regEmail = (0, messages_1.registerEmail)(user);
-        let messageId = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, 'User');
+        let regEmail = (0, messages_1.registerEmail)(user.dataValues);
+        let messageId = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, profile.firstName || 'User');
         let emailSendStatus = Boolean(messageId);
         return (0, modules_1.successResponse)(res, "success", { user, token, emailSendStatus });
     }
@@ -258,7 +259,7 @@ const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, functi
             error: "Invalid input",
             issues: result.error.format()
         });
-    const { email, phone, password, confirmPassword, role = 'corperate', firstName, lastName, cooperation } = result.data;
+    const { email, phone, password, confirmPassword, role = 'corperate', agreed, firstName, lastName, cooperation } = result.data;
     if (!(0, modules_1.validateEmail)(email))
         return (0, modules_1.handleResponse)(res, 404, false, "Enter a valid email");
     if (!(0, modules_1.validatePhone)(phone))
@@ -280,6 +281,7 @@ const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, functi
             phone,
             password: hashedPassword,
             role,
+            agreed
         });
         const profile = yield Models_1.Profile.create({
             avatar: cooperation.avatar,
@@ -317,8 +319,8 @@ const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, functi
         user.setDataValue('profile', profile);
         user.setDataValue('wallet', wallet);
         let token = (0, jsonwebtoken_2.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
-        let regEmail = (0, messages_1.registerEmail)(user);
-        let messageId = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, 'User');
+        let regEmail = (0, messages_1.registerEmail)(user.dataValues);
+        let messageId = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, (profile === null || profile === void 0 ? void 0 : profile.firstName) || 'User');
         let emailSendStatus = Boolean(messageId);
         return (0, modules_1.successResponse)(res, "success", { user, token, emailSendStatus });
     }

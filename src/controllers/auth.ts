@@ -323,15 +323,17 @@ export const register = async (req: Request, res: Response): Promise<any> => {
         user.setDataValue('profile', profile);
         user.setDataValue('wallet', wallet);
 
+        // console.log('user', user);
+
         let token = sign({ id: user.id, email: user.email, role: user.role }, config.TOKEN_SECRET);
 
-        let regEmail = registerEmail(user);
+        let regEmail = registerEmail(user.dataValues);
 
         let messageId = await sendEmail(
             email,
             regEmail.title,
             regEmail.body,
-            'User'
+            profile.firstName || 'User'
         )
 
         let emailSendStatus = Boolean(messageId);
@@ -353,7 +355,7 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
             issues: result.error.format()
         })
 
-    const { email, phone, password, confirmPassword, role = 'corperate', firstName, lastName, cooperation } = result.data;
+    const { email, phone, password, confirmPassword, role = 'corperate', agreed, firstName, lastName, cooperation } = result.data;
 
     if (!validateEmail(email)) return handleResponse(res, 404, false, "Enter a valid email");
 
@@ -379,6 +381,7 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
             phone,
             password: hashedPassword,
             role,
+            agreed
         })
 
         const profile = await Profile.create({
@@ -424,13 +427,13 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
 
         let token = sign({ id: user.id, email: user.email, role: user.role }, config.TOKEN_SECRET);
 
-        let regEmail = registerEmail(user);
+        let regEmail = registerEmail(user.dataValues);
 
         let messageId = await sendEmail(
             email,
             regEmail.title,
             regEmail.body,
-            'User'
+            profile?.firstName || 'User'
         )
 
         let emailSendStatus = Boolean(messageId);

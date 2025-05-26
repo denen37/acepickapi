@@ -2,6 +2,7 @@ import { Router } from "express";
 import { createSector, deleteSector, getSectors, getSectorsMetrics, updateSector } from "../controllers/sector";
 import { createProfession, deleteProfession, getProfessionById, getProfessions, updateProfession } from "../controllers/professions";
 import { getProfessionals } from "../controllers/professionals";
+import { getCooperates } from "../controllers/cooperates";
 
 const routes = Router();
 
@@ -19,4 +20,5 @@ routes.delete("professions/:id", deleteProfession)
 
 routes.get("/professionals", getProfessionals)
 
+routes.get("/cooperates", getCooperates);
 export default routes;

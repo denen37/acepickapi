@@ -41,8 +41,10 @@ const emailCodeSchema = z.object({
 });
 
 export const verifyOTPSchema = z.object({
-    smsCode: smsCodeSchema.nullable(),
-    emailCode: emailCodeSchema.nullable(),
+    smsCode: smsCodeSchema.nullable().optional(),
+    emailCode: emailCodeSchema.nullable().optional(),
+}).refine((data) => !data.smsCode && !data.emailCode, {
+    message: "At least one of smsCode or emailCode must be provided",
 });
 
 
@@ -77,8 +79,7 @@ const directorSchema = z.object({
     address: z.string().min(1, "Director's address is required"),
     state: z.string().min(1, "Director's state is required"),
     lga: z.string().min(1, "Director's LGA is required"),
-});
-
+})
 // Cooperation schema
 const cooperationSchema = z.object({
     avatar: z.string().url("Invalid avatar URL"),
@@ -100,6 +101,9 @@ export const registerCoporateSchema = z.object({
     confirmPassword: z.string().min(4, "Confirm Password is required"),
     role: z.literal("corperate", {
         errorMap: () => ({ message: "Role must be 'corperate'" }),
+    }),
+    agreed: z.literal(true, {
+        errorMap: () => ({ message: "You must agree to the terms and conditions" }),
     }),
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),

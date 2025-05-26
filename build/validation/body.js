@@ -36,8 +36,10 @@ const emailCodeSchema = zod_1.z.object({
     code: zod_1.z.string().length(4, "Code must be exactly 4 characters"),
 });
 exports.verifyOTPSchema = zod_1.z.object({
-    smsCode: smsCodeSchema.nullable(),
-    emailCode: emailCodeSchema.nullable(),
+    smsCode: smsCodeSchema.nullable().optional(),
+    emailCode: emailCodeSchema.nullable().optional(),
+}).refine((data) => !data.smsCode && !data.emailCode, {
+    message: "At least one of smsCode or emailCode must be provided",
 });
 exports.registrationSchema = zod_1.z.object({
     email: zod_1.z.string().email("Invalid email address"),
@@ -88,6 +90,9 @@ exports.registerCoporateSchema = zod_1.z.object({
     confirmPassword: zod_1.z.string().min(4, "Confirm Password is required"),
     role: zod_1.z.literal("corperate", {
         errorMap: () => ({ message: "Role must be 'corperate'" }),
+    }),
+    agreed: zod_1.z.literal(true, {
+        errorMap: () => ({ message: "You must agree to the terms and conditions" }),
     }),
     firstName: zod_1.z.string().min(1, "First name is required"),
     lastName: zod_1.z.string().min(1, "Last name is required"),
