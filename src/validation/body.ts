@@ -43,7 +43,7 @@ const emailCodeSchema = z.object({
 export const verifyOTPSchema = z.object({
     smsCode: smsCodeSchema.nullable().optional(),
     emailCode: emailCodeSchema.nullable().optional(),
-}).refine((data) => !data.smsCode && !data.emailCode, {
+}).refine((data) => data.smsCode || data.emailCode, {
     message: "At least one of smsCode or emailCode must be provided",
 });
 

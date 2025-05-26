@@ -38,7 +38,7 @@ const emailCodeSchema = zod_1.z.object({
 exports.verifyOTPSchema = zod_1.z.object({
     smsCode: smsCodeSchema.nullable().optional(),
     emailCode: emailCodeSchema.nullable().optional(),
-}).refine((data) => !data.smsCode && !data.emailCode, {
+}).refine((data) => data.smsCode || data.emailCode, {
     message: "At least one of smsCode or emailCode must be provided",
 });
 exports.registrationSchema = zod_1.z.object({
