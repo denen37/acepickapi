@@ -10,6 +10,6 @@ routes.get('/profiles/professionals/:userId', profiles_1.getProfessionalById);
 routes.get('/profiles/get_corporates', profiles_1.getCooperates);
 routes.get('/profiles/me', profiles_1.ProfAccountInfo);
 routes.post('/profiles/update', profiles_2.updateProfile);
-routes.post('/profiles/update-metrics/:userId', profiles_1.metricOperations);
+// routes.post('/profiles/update-metrics/:userId', metricOperations);
 routes.get('/users/:id', user_1.getUser);
 exports.default = routes;

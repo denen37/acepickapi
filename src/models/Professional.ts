@@ -66,7 +66,7 @@ export class Professional extends Model {
     @Column(DataType.STRING)
     regNum!: string;
 
-    @AllowNull(false)
+    @AllowNull(true)
     @Column(DataType.INTEGER)  // Fixed to INTEGER if it is meant to be a number
     yearsOfExp!: number;
 

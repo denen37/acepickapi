@@ -9,49 +9,20 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Job = exports.PayStatus = exports.PaidFor = exports.modeType = exports.JobStatus = void 0;
+exports.Job = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
 // import { Profile } from './Profile';
 // import { Wallet } from './Wallet';
 // import { LanLog } from './LanLog';
 // import { User } from './User';
 const Models_1 = require("./Models");
+const enum_1 = require("../enum");
 // import { VoiceRecording } from './VoiceRecording';
 // export enum UserGender {
 // 	MALE = 'MALE',
 // 	FEMALE = 'FEMALE',
 // 	OTHER = 'OTHER',
 // }
-var JobStatus;
-(function (JobStatus) {
-    JobStatus["COMPLETED"] = "COMPLETED";
-    JobStatus["APPROVED"] = "APPROVED";
-    JobStatus["DISPUTED"] = "DISPUTED";
-    JobStatus["PENDING"] = "PENDING";
-    JobStatus["DECLINED"] = "DECLINED";
-    JobStatus["ONGOING"] = "ONGOING";
-    JobStatus["CANCEL"] = "CANCEL";
-    JobStatus["REJECTED"] = "REJECTED";
-})(JobStatus || (exports.JobStatus = JobStatus = {}));
-var modeType;
-(function (modeType) {
-    modeType["VIRTUAL"] = "VIRTUAL";
-    modeType["PHYSICAL"] = "PHYSICAL";
-})(modeType || (exports.modeType = modeType = {}));
-var PaidFor;
-(function (PaidFor) {
-    PaidFor["WORKMANSHIP"] = "workmanship";
-    PaidFor["MATERIAL"] = "material";
-    PaidFor["BOTH"] = "both";
-})(PaidFor || (exports.PaidFor = PaidFor = {}));
-var PayStatus;
-(function (PayStatus) {
-    PayStatus["UNPAID"] = "unpaid";
-    PayStatus["PAID"] = "paid";
-    PayStatus["PARTIALLY_PAID"] = "partially_paid";
-    PayStatus["REFUNDED"] = "refunded";
-    PayStatus["RELEASED"] = "released";
-})(PayStatus || (exports.PayStatus = PayStatus = {}));
 let Job = class Job extends sequelize_typescript_1.Model {
 };
 exports.Job = Job;
@@ -78,9 +49,9 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Job.prototype, "approved", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Default)(modeType.VIRTUAL),
+    (0, sequelize_typescript_1.Default)(enum_1.JobMode.VIRTUAL),
     (0, sequelize_typescript_1.AllowNull)(true),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(modeType.VIRTUAL, modeType.PHYSICAL)),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(enum_1.JobMode.VIRTUAL, enum_1.JobMode.PHYSICAL)),
     __metadata("design:type", String)
 ], Job.prototype, "mode", void 0);
 __decorate([
@@ -145,15 +116,15 @@ __decorate([
     __metadata("design:type", String)
 ], Job.prototype, "isLocationMatch", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Default)(PayStatus.UNPAID),
+    (0, sequelize_typescript_1.Default)(enum_1.PayStatus.UNPAID),
     (0, sequelize_typescript_1.AllowNull)(true),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(...Object.values(PayStatus))),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(...Object.values(enum_1.PayStatus))),
     __metadata("design:type", String)
 ], Job.prototype, "payStatus", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Default)(PaidFor.WORKMANSHIP),
+    (0, sequelize_typescript_1.Default)(enum_1.PaidFor.WORKMANSHIP),
     (0, sequelize_typescript_1.AllowNull)(false),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(PaidFor.WORKMANSHIP, PaidFor.MATERIAL, PaidFor.BOTH)),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(enum_1.PaidFor.WORKMANSHIP, enum_1.PaidFor.MATERIAL, enum_1.PaidFor.BOTH)),
     __metadata("design:type", String)
 ], Job.prototype, "paidFor", void 0);
 __decorate([
@@ -197,9 +168,9 @@ __decorate([
     __metadata("design:type", String)
 ], Job.prototype, "durationValue", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Default)(JobStatus.PENDING),
+    (0, sequelize_typescript_1.Default)(enum_1.JobStatus.PENDING),
     (0, sequelize_typescript_1.AllowNull)(false),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(...Object.values(JobStatus))),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(...Object.values(enum_1.JobStatus))),
     __metadata("design:type", String)
 ], Job.prototype, "status", void 0);
 __decorate([

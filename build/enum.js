@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserState = exports.UserStatus = exports.UserRole = exports.VerificationType = exports.OTPReason = void 0;
+exports.PaidFor = exports.JobStatus = exports.PayStatus = exports.JobMode = exports.UserState = exports.UserStatus = exports.UserRole = exports.VerificationType = exports.OTPReason = void 0;
 var OTPReason;
 (function (OTPReason) {
     OTPReason["VERIFICATION"] = "verification";
@@ -32,3 +32,33 @@ var UserState;
     UserState["STEP_THREE"] = "STEP_THREE";
     UserState["VERIFIED"] = "VERIFIED";
 })(UserState || (exports.UserState = UserState = {}));
+var JobMode;
+(function (JobMode) {
+    JobMode["VIRTUAL"] = "VIRTUAL";
+    JobMode["PHYSICAL"] = "PHYSICAL";
+})(JobMode || (exports.JobMode = JobMode = {}));
+var PayStatus;
+(function (PayStatus) {
+    PayStatus["UNPAID"] = "unpaid";
+    PayStatus["PAID"] = "paid";
+    PayStatus["PARTIALLY_PAID"] = "partially_paid";
+    PayStatus["REFUNDED"] = "refunded";
+    PayStatus["RELEASED"] = "released";
+})(PayStatus || (exports.PayStatus = PayStatus = {}));
+var JobStatus;
+(function (JobStatus) {
+    JobStatus["COMPLETED"] = "COMPLETED";
+    JobStatus["APPROVED"] = "APPROVED";
+    JobStatus["DISPUTED"] = "DISPUTED";
+    JobStatus["PENDING"] = "PENDING";
+    JobStatus["DECLINED"] = "DECLINED";
+    JobStatus["ONGOING"] = "ONGOING";
+    JobStatus["CANCEL"] = "CANCEL";
+    JobStatus["REJECTED"] = "REJECTED";
+})(JobStatus || (exports.JobStatus = JobStatus = {}));
+var PaidFor;
+(function (PaidFor) {
+    PaidFor["WORKMANSHIP"] = "workmanship";
+    PaidFor["MATERIAL"] = "material";
+    PaidFor["BOTH"] = "both";
+})(PaidFor || (exports.PaidFor = PaidFor = {}));

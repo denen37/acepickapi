@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Profile = exports.ProfileType = void 0;
+exports.Profile = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
 const User_1 = require("./User");
 // import { Professional } from './Professional';
@@ -22,12 +22,6 @@ const Models_1 = require("./Models");
 // 	FEMALE = 'FEMALE',
 // 	OTHER = 'OTHER',
 // }
-var ProfileType;
-(function (ProfileType) {
-    ProfileType["CLIENT"] = "CLIENT";
-    ProfileType["PROFESSIONAL"] = "PROFESSIONAL";
-    ProfileType["CORPERATE"] = "CORPERATE";
-})(ProfileType || (exports.ProfileType = ProfileType = {}));
 let Profile = class Profile extends sequelize_typescript_1.Model {
 };
 exports.Profile = Profile;
@@ -161,6 +155,11 @@ __decorate([
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BOOLEAN),
     __metadata("design:type", Boolean)
 ], Profile.prototype, "store", void 0);
+__decorate([
+    (0, sequelize_typescript_1.AllowNull)(true),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING(50)),
+    __metadata("design:type", String)
+], Profile.prototype, "position", void 0);
 __decorate([
     (0, sequelize_typescript_1.ForeignKey)(() => User_1.User),
     (0, sequelize_typescript_1.AllowNull)(false),

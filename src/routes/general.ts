@@ -3,6 +3,9 @@ import { createSector, deleteSector, getSectors, getSectorsMetrics, updateSector
 import { createProfession, deleteProfession, getProfessionById, getProfessions, updateProfession } from "../controllers/professions";
 import { getProfessionals } from "../controllers/professionals";
 import { getCooperates } from "../controllers/cooperates";
+import { createJobOrder, generateInvoice, getJobById, getJobs, payforJob, respondToJob } from "../controllers/Jobs";
+import { UserRole } from "../enum";
+import { allowRoles } from "../middlewares/allowRoles";
 
 const routes = Router();
 
@@ -21,4 +24,12 @@ routes.delete("professions/:id", deleteProfession)
 routes.get("/professionals", getProfessionals)
 
 routes.get("/cooperates", getCooperates);
+
+routes.get('/jobs', allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), getJobs);
+routes.get('/jobs/:id', allowRoles('*'), getJobById);
+routes.post('/jobs', allowRoles(UserRole.CLIENT), createJobOrder);
+routes.put('/jobs/response/:jobId', allowRoles(UserRole.PROFESSIONAL), respondToJob);
+routes.post('/jobs/invoice', allowRoles(UserRole.PROFESSIONAL), generateInvoice);
+routes.post('/jobs/payment', allowRoles(UserRole.CLIENT), payforJob);
+
 export default routes;

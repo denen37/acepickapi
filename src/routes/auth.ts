@@ -8,6 +8,7 @@ import {
     passwordChange,
     register,
     registerCorperate,
+    registerProfessional,
     sendEmailTest,
     sendOtp,
     sendSMSTest,
@@ -31,6 +32,7 @@ API CALL START
 // routes.get('/switch', swithAccount);
 routes.post('/update-profile', updateProfile);
 routes.post('/register', register);
+routes.post('/register-professional', registerProfessional);
 routes.post('/register-corperate', registerCorperate);
 routes.post('/upload_avatar', uploads.single('avatar'), uploadAvatar);
 routes.post('/login', login);

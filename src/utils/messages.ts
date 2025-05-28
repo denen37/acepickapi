@@ -1,4 +1,4 @@
-import { User } from "../models/Models"
+import { Dispute, Job, User } from "../models/Models"
 
 interface Message {
     title: string,
@@ -60,5 +60,49 @@ export const forgotPasswordEmail = (code: string): Message => {
              proceed with the password reset process. 
              If you did not initiate this action, 
              please ignore this email.<br><br>`
+    }
+}
+
+
+export const jobCreatedEmail = (job: Job): Message => {
+    console.log('fullName', `${job.client.profile.firstName} ${job.client.profile.lastName}`);
+    return {
+        title: `Job created: ${job.title}`,
+        body: `You have a new job from ${job.client.profile.firstName} ${job.client.profile.lastName}
+        <p><b>Job title: </b>${job.title}</p>
+        <p><b>Job description: </b>${job.description}</p>
+        <p><b>Job location: </b>${job.fullAddress}</p>
+
+        Log into your account to accept or decline the job offer.
+        `
+    }
+}
+
+export const jobResponseEmail = (job: Job): Message => {
+    const response = job.accepted ? "accepted" : "declined"
+
+
+    return {
+        title: `Job ${response}: ${job.title}`,
+        body: `Your job offer has been ${response} by ${job.professional.profile.firstName} ${job.professional.profile.lastName}
+        <p><b>Job title: </b>${job.title}</p>
+        <p><b>Job description: </b>${job.description}</p>
+        <p><b>Job location: </b>${job.fullAddress}</p>
+        `
+    }
+}
+
+
+export const jobDisputeEmail = (job: Job, dispute: Dispute): Message => {
+
+    return {
+        title: `Job dispute: ${job.title}`,
+        body: `A dispute has been raised for job ${job.title} by ${job.professional.profile.firstName} ${job.professional.profile.lastName}
+        <p><b>Job title: </b>${job.title}</p>
+        <p><b>Job description: </b>${job.description}</p>
+        <p><b>Job location: </b>${job.fullAddress}</p>
+        <p><b>Dispute reason: </b>${dispute.reason}</p>
+        <p><b>Dispute description: </b>${dispute.description}</p>
+        `
     }
 }

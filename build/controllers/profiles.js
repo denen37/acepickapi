@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.metricOperations = exports.updateProfile = exports.ProfAccountInfo = exports.getProfessionalById = exports.getProfessionals = exports.getCooperates = void 0;
+exports.updateProfile = exports.ProfAccountInfo = exports.getProfessionalById = exports.getProfessionals = exports.getCooperates = void 0;
 const Cooperation_1 = require("../models/Cooperation");
 const Profile_1 = require("../models/Profile");
 const User_1 = require("../models/User");
@@ -20,16 +20,6 @@ const modules_1 = require("../utils/modules");
 const Professional_1 = require("../models/Professional");
 const axios_1 = __importDefault(require("axios"));
 const configSetup_1 = __importDefault(require("../config/configSetup"));
-var Metrics;
-(function (Metrics) {
-    Metrics["ONGOING"] = "ongoing";
-    Metrics["PENDING"] = "pending";
-    Metrics["DECLINED"] = "declined";
-    Metrics["COMPLETED"] = "completed";
-    Metrics["CANCELLED"] = "cancelled";
-    Metrics["APPROVED"] = "approved";
-    Metrics["REVIEWS"] = "reviews";
-})(Metrics || (Metrics = {}));
 var MetricOperation;
 (function (MetricOperation) {
     MetricOperation["INCREMENT"] = "increment";
@@ -201,64 +191,63 @@ const updateProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.updateProfile = updateProfile;
-const metricOperations = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.params;
-    const { payload } = req.body;
-    const profile = yield Profile_1.Profile.findOne({
-        where: { userId: userId },
-    });
-    if (!profile)
-        return (0, modules_1.handleResponse)(res, 404, false, "Profile Does not exist");
-    payload.forEach(item => {
-        switch (item.field) {
-            case Metrics.ONGOING:
-                if (item.action === MetricOperation.INCREMENT) {
-                    profile.totalJobsOngoing += 1;
-                }
-                else {
-                    profile.totalJobsOngoing -= 1;
-                }
-                break;
-            case Metrics.COMPLETED:
-                if (item.action === MetricOperation.INCREMENT)
-                    profile.totalJobsCompleted += 1;
-                else
-                    profile.totalJobsCompleted -= 1;
-                break;
-            case Metrics.CANCELLED:
-                if (item.action === MetricOperation.INCREMENT)
-                    profile.totalJobsCanceled += 1;
-                else
-                    profile.totalJobsCanceled -= 1;
-                break;
-            case Metrics.PENDING:
-                if (item.action === MetricOperation.INCREMENT)
-                    profile.totalJobsPending += 1;
-                else
-                    profile.totalJobsPending -= 1;
-                break;
-            case Metrics.DECLINED:
-                if (item.action === MetricOperation.INCREMENT)
-                    profile.totalJobsDeclined += 1;
-                else
-                    profile.totalJobsDeclined -= 1;
-                break;
-            case Metrics.APPROVED:
-                if (item.action === MetricOperation.INCREMENT)
-                    profile.totalJobsApproved += 1;
-                else
-                    profile.totalJobsApproved -= 1;
-                break;
-            case Metrics.REVIEWS:
-                if (item.action === MetricOperation.INCREMENT)
-                    profile.totalReview += 1;
-                else
-                    profile.totalReview -= 1;
-            default:
-                break;
-        }
-    });
-    yield profile.save();
-    return (0, modules_1.successResponse)(res, 'success', 'Profile updated successfully');
-});
-exports.metricOperations = metricOperations;
+// export const metricOperations = async (req: Request, res: Response) => {
+//     const { userId } = req.params;
+//     const { payload }: {
+//         payload: { field: string, action: string }[]
+//     } = req.body;
+//     const profile = await Profile.findOne({
+//         where: { userId: userId },
+//     })
+//     if (!profile) return handleResponse(res, 404, false, "Profile Does not exist");
+//     payload.forEach(item => {
+//         switch (item.field) {
+//             case Metrics.ONGOING:
+//                 if (item.action === MetricOperation.INCREMENT) {
+//                     profile.totalJobsOngoing += 1;
+//                 } else {
+//                     profile.totalJobsOngoing -= 1;
+//                 }
+//                 break;
+//             case Metrics.COMPLETED:
+//                 if (item.action === MetricOperation.INCREMENT)
+//                     profile.totalJobsCompleted += 1;
+//                 else
+//                     profile.totalJobsCompleted -= 1;
+//                 break;
+//             case Metrics.CANCELLED:
+//                 if (item.action === MetricOperation.INCREMENT)
+//                     profile.totalJobsCanceled += 1;
+//                 else
+//                     profile.totalJobsCanceled -= 1;
+//                 break;
+//             case Metrics.PENDING:
+//                 if (item.action === MetricOperation.INCREMENT)
+//                     profile.totalJobsPending += 1;
+//                 else
+//                     profile.totalJobsPending -= 1;
+//                 break;
+//             case Metrics.DECLINED:
+//                 if (item.action === MetricOperation.INCREMENT)
+//                     profile.totalJobsDeclined += 1;
+//                 else
+//                     profile.totalJobsDeclined -= 1;
+//                 break;
+//             case Metrics.APPROVED:
+//                 if (item.action === MetricOperation.INCREMENT)
+//                     profile.totalJobsApproved += 1;
+//                 else
+//                     profile.totalJobsApproved -= 1;
+//                 break;
+//             case Metrics.REVIEWS:
+//                 if (item.action === MetricOperation.INCREMENT)
+//                     profile.totalReview += 1;
+//                 else
+//                     profile.totalReview -= 1;
+//             default:
+//                 break;
+//         }
+//     })
+//     await profile.save();
+//     return successResponse(res, 'success', 'Profile updated successfully');
+// }

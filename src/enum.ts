@@ -31,3 +31,37 @@ export enum UserState {
     STEP_THREE = 'STEP_THREE',
     VERIFIED = 'VERIFIED',
 }
+
+
+export enum JobMode {
+    VIRTUAL = "VIRTUAL",
+    PHYSICAL = "PHYSICAL"
+}
+
+
+export enum PayStatus {
+    UNPAID = 'unpaid',
+    PAID = 'paid',
+    PARTIALLY_PAID = 'partially_paid',
+    REFUNDED = 'refunded',
+    RELEASED = 'released',
+}
+
+export enum JobStatus {
+    COMPLETED = 'COMPLETED',
+    APPROVED = 'APPROVED',
+    DISPUTED = 'DISPUTED',
+    PENDING = 'PENDING',
+    DECLINED = 'DECLINED',
+    ONGOING = "ONGOING",
+    CANCEL = "CANCEL",
+    REJECTED = "REJECTED",
+}
+
+
+
+export enum PaidFor {
+    WORKMANSHIP = 'workmanship',
+    MATERIAL = 'material',
+    BOTH = 'both'
+}

@@ -6,14 +6,13 @@ import { basename } from "path";
 import { VerificationType, UserState, UserStatus, UserRole, OTPReason } from "../enum";
 import { User, Director, Professional, Profession, Sector, Review, Wallet, Profile, Cooperation, LanLog, Verify } from "../models/Models"
 import { forgotPasswordEmail, registerEmail, sendOTPEmail } from "../utils/messages";
-import { otpRequestSchema, registerCoporateSchema, registrationSchema, verifyOTPSchema } from "../validation/body";
+import { otpRequestSchema, registerCoporateSchema, registrationProfSchema, registrationSchema, verifyOTPSchema } from "../validation/body";
 import { compare, hash } from "bcryptjs";
 import { verify } from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { sign } from "jsonwebtoken";
 import { sendSMS } from "../services/sms";
 import { sendEmail } from "../services/gmail";
-import { ProfileType } from "../models/Profile";
 import { } from "../models/LanLog";
 import { verifyBvn } from "../services/bvn";
 import { compareTwoStrings } from 'string-similarity';
@@ -272,7 +271,7 @@ export const register = async (req: Request, res: Response): Promise<any> => {
             issues: result.error.format()
         })
 
-    const { email, phone, password, role, agreed, firstName, lastName, lga, state, address, avatar } = result.data
+    const { email, phone, password, agreed, firstName, lastName, lga, state, address, avatar } = result.data
 
     try {
         if (!validateEmail(email)) return handleResponse(res, 404, false, "Enter a valid email");
@@ -297,7 +296,7 @@ export const register = async (req: Request, res: Response): Promise<any> => {
             email,
             phone,
             password: hashedPassword,
-            role,
+            role: UserRole.CLIENT,
             agreed
         })
 
@@ -308,7 +307,6 @@ export const register = async (req: Request, res: Response): Promise<any> => {
             lga,
             state,
             address,
-            role,
             avatar
         })
 
@@ -346,6 +344,97 @@ export const register = async (req: Request, res: Response): Promise<any> => {
     }
 }
 
+export const registerProfessional = async (req: Request, res: Response): Promise<any> => {
+    const result = registrationProfSchema.safeParse(req.body);
+
+    if (!result.success)
+        return res.status(400).json({
+            error: "Invalid input",
+            issues: result.error.format()
+        })
+
+    const { email, phone, password, agreed, firstName, lastName, lga, state, address, avatar, professionId } = result.data
+
+    try {
+        if (!validateEmail(email)) return handleResponse(res, 404, false, "Enter a valid email");
+
+        if (!validatePhone(phone)) return handleResponse(res, 404, false, "Enter a valid phone number");
+
+        const verifiedEmail = await Verify.findOne({
+            where: { contact: email, verified: true }
+        });
+
+        if (!verifiedEmail) return handleResponse(res, 404, false, "Email not verified");
+
+        const verifiedPhone = await Verify.findOne({
+            where: { contact: phone, verified: true }
+        })
+
+        if (!verifiedPhone) return handleResponse(res, 404, false, "Phone not verified");
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const user = await User.create({
+            email,
+            phone,
+            password: hashedPassword,
+            role: UserRole.PROFESSIONAL,
+            agreed
+        })
+
+        const profile = await Profile.create({
+            userId: user.id,
+            firstName,
+            lastName,
+            lga,
+            state,
+            address,
+            avatar
+        })
+
+        console.log('professionalId', professionId);
+        console.log('profile', profile.id);
+
+        const professional = await Professional.create({
+            profileId: profile.id,
+            professionId: professionId,
+        })
+
+        const wallet = await Wallet.create({
+            userId: user.id,
+            balance: 0,
+        })
+
+        user.password = null;
+        wallet.pin = null;
+
+        user.setDataValue('profile', profile);
+        user.setDataValue('wallet', wallet);
+        user.setDataValue('professional', professional);
+
+        // console.log('user', user);
+
+        let token = sign({ id: user.id, email: user.email, role: user.role }, config.TOKEN_SECRET);
+
+        let regEmail = registerEmail(user.dataValues);
+
+        let messageId = await sendEmail(
+            email,
+            regEmail.title,
+            regEmail.body,
+            profile.firstName || 'User'
+        )
+
+        let emailSendStatus = Boolean(messageId);
+
+
+
+        return successResponse(res, "success", { user, token, emailSendStatus });
+    } catch (error: any) {
+        return errorResponse(res, 'error', { message: error.message, error });
+    }
+}
+
 export const registerCorperate = async (req: Request, res: Response): Promise<any> => {
     const result = registerCoporateSchema.safeParse(req.body)
 
@@ -355,7 +444,7 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
             issues: result.error.format()
         })
 
-    const { email, phone, password, confirmPassword, role = 'corperate', agreed, firstName, lastName, cooperation } = result.data;
+    const { email, phone, password, confirmPassword, position, agreed, firstName, lastName, cooperation } = result.data;
 
     if (!validateEmail(email)) return handleResponse(res, 404, false, "Enter a valid email");
 
@@ -380,7 +469,7 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
             email,
             phone,
             password: hashedPassword,
-            role,
+            role: UserRole.CORPERATE,
             agreed
         })
 
@@ -388,7 +477,8 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
             avatar: cooperation.avatar,
             userId: user.id,
             firstName,
-            lastName
+            lastName,
+            position
         })
 
         const newCooperation = await Cooperation.create({
@@ -400,6 +490,7 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
             lga: cooperation.lga,
             regNum: cooperation.regNum,
             noOfEmployees: cooperation.noOfEmployees,
+            professionId: cooperation.professionId,
             profileId: profile.id
         })
 

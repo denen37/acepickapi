@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.updateFcmToken = exports.corperateReg = exports.deleteUsers = exports.login = exports.passwordChange = exports.registerCorperate = exports.register = exports.verifyOtp = exports.sendEmailTest = exports.sendSMSTest = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
+exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.updateFcmToken = exports.corperateReg = exports.deleteUsers = exports.login = exports.passwordChange = exports.registerCorperate = exports.registerProfessional = exports.register = exports.verifyOtp = exports.sendEmailTest = exports.sendSMSTest = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
 const modules_1 = require("../utils/modules");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
 const enum_1 = require("../enum");
@@ -198,7 +198,7 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             error: "Invalid input",
             issues: result.error.format()
         });
-    const { email, phone, password, role, agreed, firstName, lastName, lga, state, address, avatar } = result.data;
+    const { email, phone, password, agreed, firstName, lastName, lga, state, address, avatar } = result.data;
     try {
         if (!(0, modules_1.validateEmail)(email))
             return (0, modules_1.handleResponse)(res, 404, false, "Enter a valid email");
@@ -219,7 +219,7 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             email,
             phone,
             password: hashedPassword,
-            role,
+            role: enum_1.UserRole.CLIENT,
             agreed
         });
         const profile = yield Models_1.Profile.create({
@@ -229,7 +229,6 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             lga,
             state,
             address,
-            role,
             avatar
         });
         const wallet = yield Models_1.Wallet.create({
@@ -252,6 +251,73 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.register = register;
+const registerProfessional = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = body_1.registrationProfSchema.safeParse(req.body);
+    if (!result.success)
+        return res.status(400).json({
+            error: "Invalid input",
+            issues: result.error.format()
+        });
+    const { email, phone, password, agreed, firstName, lastName, lga, state, address, avatar, professionId } = result.data;
+    try {
+        if (!(0, modules_1.validateEmail)(email))
+            return (0, modules_1.handleResponse)(res, 404, false, "Enter a valid email");
+        if (!(0, modules_1.validatePhone)(phone))
+            return (0, modules_1.handleResponse)(res, 404, false, "Enter a valid phone number");
+        const verifiedEmail = yield Models_1.Verify.findOne({
+            where: { contact: email, verified: true }
+        });
+        if (!verifiedEmail)
+            return (0, modules_1.handleResponse)(res, 404, false, "Email not verified");
+        const verifiedPhone = yield Models_1.Verify.findOne({
+            where: { contact: phone, verified: true }
+        });
+        if (!verifiedPhone)
+            return (0, modules_1.handleResponse)(res, 404, false, "Phone not verified");
+        const hashedPassword = yield bcryptjs_2.default.hash(password, 10);
+        const user = yield Models_1.User.create({
+            email,
+            phone,
+            password: hashedPassword,
+            role: enum_1.UserRole.PROFESSIONAL,
+            agreed
+        });
+        const profile = yield Models_1.Profile.create({
+            userId: user.id,
+            firstName,
+            lastName,
+            lga,
+            state,
+            address,
+            avatar
+        });
+        console.log('professionalId', professionId);
+        console.log('profile', profile.id);
+        const professional = yield Models_1.Professional.create({
+            profileId: profile.id,
+            professionId: professionId,
+        });
+        const wallet = yield Models_1.Wallet.create({
+            userId: user.id,
+            balance: 0,
+        });
+        user.password = null;
+        wallet.pin = null;
+        user.setDataValue('profile', profile);
+        user.setDataValue('wallet', wallet);
+        user.setDataValue('professional', professional);
+        // console.log('user', user);
+        let token = (0, jsonwebtoken_2.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
+        let regEmail = (0, messages_1.registerEmail)(user.dataValues);
+        let messageId = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, profile.firstName || 'User');
+        let emailSendStatus = Boolean(messageId);
+        return (0, modules_1.successResponse)(res, "success", { user, token, emailSendStatus });
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', { message: error.message, error });
+    }
+});
+exports.registerProfessional = registerProfessional;
 const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = body_1.registerCoporateSchema.safeParse(req.body);
     if (!result.success)
@@ -259,7 +325,7 @@ const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, functi
             error: "Invalid input",
             issues: result.error.format()
         });
-    const { email, phone, password, confirmPassword, role = 'corperate', agreed, firstName, lastName, cooperation } = result.data;
+    const { email, phone, password, confirmPassword, position, agreed, firstName, lastName, cooperation } = result.data;
     if (!(0, modules_1.validateEmail)(email))
         return (0, modules_1.handleResponse)(res, 404, false, "Enter a valid email");
     if (!(0, modules_1.validatePhone)(phone))
@@ -280,14 +346,15 @@ const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, functi
             email,
             phone,
             password: hashedPassword,
-            role,
+            role: enum_1.UserRole.CORPERATE,
             agreed
         });
         const profile = yield Models_1.Profile.create({
             avatar: cooperation.avatar,
             userId: user.id,
             firstName,
-            lastName
+            lastName,
+            position
         });
         const newCooperation = yield Models_1.Cooperation.create({
             avatar: cooperation.avatar,
@@ -298,6 +365,7 @@ const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, functi
             lga: cooperation.lga,
             regNum: cooperation.regNum,
             noOfEmployees: cooperation.noOfEmployees,
+            professionId: cooperation.professionId,
             profileId: profile.id
         });
         const newDirector = yield Models_1.Director.create({

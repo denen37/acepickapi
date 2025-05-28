@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.forgotPasswordEmail = exports.sendOTPEmail = exports.sendOTPPhone = exports.registerEmail = void 0;
+exports.jobDisputeEmail = exports.jobResponseEmail = exports.jobCreatedEmail = exports.forgotPasswordEmail = exports.sendOTPEmail = exports.sendOTPPhone = exports.registerEmail = void 0;
 const registerEmail = (user) => {
     var _a, _b;
     return {
@@ -60,3 +60,42 @@ const forgotPasswordEmail = (code) => {
     };
 };
 exports.forgotPasswordEmail = forgotPasswordEmail;
+const jobCreatedEmail = (job) => {
+    console.log('fullName', `${job.client.profile.firstName} ${job.client.profile.lastName}`);
+    return {
+        title: `Job created: ${job.title}`,
+        body: `You have a new job from ${job.client.profile.firstName} ${job.client.profile.lastName}
+        <p><b>Job title: </b>${job.title}</p>
+        <p><b>Job description: </b>${job.description}</p>
+        <p><b>Job location: </b>${job.fullAddress}</p>
+
+        Log into your account to accept or decline the job offer.
+        `
+    };
+};
+exports.jobCreatedEmail = jobCreatedEmail;
+const jobResponseEmail = (job) => {
+    const response = job.accepted ? "accepted" : "declined";
+    return {
+        title: `Job ${response}: ${job.title}`,
+        body: `Your job offer has been ${response} by ${job.professional.profile.firstName} ${job.professional.profile.lastName}
+        <p><b>Job title: </b>${job.title}</p>
+        <p><b>Job description: </b>${job.description}</p>
+        <p><b>Job location: </b>${job.fullAddress}</p>
+        `
+    };
+};
+exports.jobResponseEmail = jobResponseEmail;
+const jobDisputeEmail = (job, dispute) => {
+    return {
+        title: `Job dispute: ${job.title}`,
+        body: `A dispute has been raised for job ${job.title} by ${job.professional.profile.firstName} ${job.professional.profile.lastName}
+        <p><b>Job title: </b>${job.title}</p>
+        <p><b>Job description: </b>${job.description}</p>
+        <p><b>Job location: </b>${job.fullAddress}</p>
+        <p><b>Dispute reason: </b>${dispute.reason}</p>
+        <p><b>Dispute description: </b>${dispute.description}</p>
+        `
+    };
+};
+exports.jobDisputeEmail = jobDisputeEmail;

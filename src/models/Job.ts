@@ -4,6 +4,7 @@ import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNu
 // import { LanLog } from './LanLog';
 // import { User } from './User';
 import { User, Material, Dispute } from './Models'
+import { JobMode, JobStatus, PaidFor, PayStatus } from '../enum';
 // import { VoiceRecording } from './VoiceRecording';
 
 
@@ -13,37 +14,6 @@ import { User, Material, Dispute } from './Models'
 // 	OTHER = 'OTHER',
 // }
 
-export enum JobStatus {
-    COMPLETED = 'COMPLETED',
-    APPROVED = 'APPROVED',
-    DISPUTED = 'DISPUTED',
-    PENDING = 'PENDING',
-    DECLINED = 'DECLINED',
-    ONGOING = "ONGOING",
-    CANCEL = "CANCEL",
-    REJECTED = "REJECTED",
-}
-
-
-
-export enum modeType {
-    VIRTUAL = "VIRTUAL",
-    PHYSICAL = "PHYSICAL"
-}
-
-export enum PaidFor {
-    WORKMANSHIP = 'workmanship',
-    MATERIAL = 'material',
-    BOTH = 'both'
-}
-
-export enum PayStatus {
-    UNPAID = 'unpaid',
-    PAID = 'paid',
-    PARTIALLY_PAID = 'partially_paid',
-    REFUNDED = 'refunded',
-    RELEASED = 'released',
-}
 
 
 
@@ -72,9 +42,9 @@ export class Job extends Model {
     approved!: boolean
 
 
-    @Default(modeType.VIRTUAL)
+    @Default(JobMode.VIRTUAL)
     @AllowNull(true)
-    @Column(DataType.ENUM(modeType.VIRTUAL, modeType.PHYSICAL))
+    @Column(DataType.ENUM(JobMode.VIRTUAL, JobMode.PHYSICAL))
     mode!: string
 
 

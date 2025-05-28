@@ -68,6 +68,8 @@ const getConfig = () => {
             '/api/auth/verify-otp',
             '/api/auth/verify-token',
             '/api/auth/upload_avatar',
+            '/api/auth/register-professional',
+            '/api/auth/register-corperate',
             '/api/sectors',
             '/api/professions',
             '/api/webhook',

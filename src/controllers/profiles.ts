@@ -9,15 +9,6 @@ import { randomUUID } from "crypto";
 import axios from "axios";
 import config from '../config/configSetup'
 
-enum Metrics {
-    ONGOING = 'ongoing',
-    PENDING = 'pending',
-    DECLINED = 'declined',
-    COMPLETED = 'completed',
-    CANCELLED = 'cancelled',
-    APPROVED = 'approved',
-    REVIEWS = 'reviews',
-}
 
 enum MetricOperation {
     INCREMENT = 'increment',
@@ -238,78 +229,78 @@ export const updateProfile = async (req: Request, res: Response) => {
     }
 }
 
-export const metricOperations = async (req: Request, res: Response) => {
-    const { userId } = req.params;
-    const { payload }: {
-        payload: { field: string, action: string }[]
-    } = req.body;
+// export const metricOperations = async (req: Request, res: Response) => {
+//     const { userId } = req.params;
+//     const { payload }: {
+//         payload: { field: string, action: string }[]
+//     } = req.body;
 
-    const profile = await Profile.findOne({
-        where: { userId: userId },
-    })
+//     const profile = await Profile.findOne({
+//         where: { userId: userId },
+//     })
 
-    if (!profile) return handleResponse(res, 404, false, "Profile Does not exist");
+//     if (!profile) return handleResponse(res, 404, false, "Profile Does not exist");
 
-    payload.forEach(item => {
-        switch (item.field) {
-            case Metrics.ONGOING:
-                if (item.action === MetricOperation.INCREMENT) {
-                    profile.totalJobsOngoing += 1;
-                } else {
-                    profile.totalJobsOngoing -= 1;
-                }
-                break;
+//     payload.forEach(item => {
+//         switch (item.field) {
+//             case Metrics.ONGOING:
+//                 if (item.action === MetricOperation.INCREMENT) {
+//                     profile.totalJobsOngoing += 1;
+//                 } else {
+//                     profile.totalJobsOngoing -= 1;
+//                 }
+//                 break;
 
-            case Metrics.COMPLETED:
-                if (item.action === MetricOperation.INCREMENT)
-                    profile.totalJobsCompleted += 1;
-                else
-                    profile.totalJobsCompleted -= 1;
-                break;
+//             case Metrics.COMPLETED:
+//                 if (item.action === MetricOperation.INCREMENT)
+//                     profile.totalJobsCompleted += 1;
+//                 else
+//                     profile.totalJobsCompleted -= 1;
+//                 break;
 
-            case Metrics.CANCELLED:
-                if (item.action === MetricOperation.INCREMENT)
-                    profile.totalJobsCanceled += 1;
-                else
-                    profile.totalJobsCanceled -= 1;
-                break;
+//             case Metrics.CANCELLED:
+//                 if (item.action === MetricOperation.INCREMENT)
+//                     profile.totalJobsCanceled += 1;
+//                 else
+//                     profile.totalJobsCanceled -= 1;
+//                 break;
 
-            case Metrics.PENDING:
-                if (item.action === MetricOperation.INCREMENT)
-                    profile.totalJobsPending += 1;
-                else
-                    profile.totalJobsPending -= 1;
-                break;
-
-
-            case Metrics.DECLINED:
-                if (item.action === MetricOperation.INCREMENT)
-                    profile.totalJobsDeclined += 1;
-                else
-                    profile.totalJobsDeclined -= 1;
-                break;
-
-            case Metrics.APPROVED:
-                if (item.action === MetricOperation.INCREMENT)
-                    profile.totalJobsApproved += 1;
-                else
-                    profile.totalJobsApproved -= 1;
-                break;
+//             case Metrics.PENDING:
+//                 if (item.action === MetricOperation.INCREMENT)
+//                     profile.totalJobsPending += 1;
+//                 else
+//                     profile.totalJobsPending -= 1;
+//                 break;
 
 
-            case Metrics.REVIEWS:
-                if (item.action === MetricOperation.INCREMENT)
-                    profile.totalReview += 1;
-                else
-                    profile.totalReview -= 1;
-            default:
-                break;
-        }
+//             case Metrics.DECLINED:
+//                 if (item.action === MetricOperation.INCREMENT)
+//                     profile.totalJobsDeclined += 1;
+//                 else
+//                     profile.totalJobsDeclined -= 1;
+//                 break;
 
-    })
-    await profile.save();
+//             case Metrics.APPROVED:
+//                 if (item.action === MetricOperation.INCREMENT)
+//                     profile.totalJobsApproved += 1;
+//                 else
+//                     profile.totalJobsApproved -= 1;
+//                 break;
 
-    return successResponse(res, 'success', 'Profile updated successfully');
-}
+
+//             case Metrics.REVIEWS:
+//                 if (item.action === MetricOperation.INCREMENT)
+//                     profile.totalReview += 1;
+//                 else
+//                     profile.totalReview -= 1;
+//             default:
+//                 break;
+//         }
+
+//     })
+//     await profile.save();
+
+//     return successResponse(res, 'success', 'Profile updated successfully');
+// }
 
 

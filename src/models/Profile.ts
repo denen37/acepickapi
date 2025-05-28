@@ -1,7 +1,7 @@
 import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index, BelongsTo, ForeignKey } from 'sequelize-typescript';
 import { User } from './User';
 // import { Professional } from './Professional';
-import {Certification, Experience, Education, Portfolio, VoiceRecording, Professional, Cooperation} from './Models'
+import { Certification, Experience, Education, Portfolio, VoiceRecording, Professional, Cooperation } from './Models'
 // import { Review } from './Review';
 // import { ProfessionalSector } from './ProfessionalSector';
 // import { MarketPlace } from './Market';
@@ -12,12 +12,6 @@ import {Certification, Experience, Education, Portfolio, VoiceRecording, Profess
 // 	FEMALE = 'FEMALE',
 // 	OTHER = 'OTHER',
 // }
-
-export enum ProfileType {
-    CLIENT = 'CLIENT',
-    PROFESSIONAL = 'PROFESSIONAL',
-    CORPERATE = "CORPERATE"
-}
 
 @Table({ timestamps: true, tableName: 'profiles' })
 export class Profile extends Model {
@@ -198,6 +192,10 @@ export class Profile extends Model {
     @AllowNull(true)
     @Column(DataType.BOOLEAN)
     store!: boolean;
+
+    @AllowNull(true)
+    @Column(DataType.STRING(50))
+    position!: string;
 
 
     // @ForeignKey(() => LanLog)
