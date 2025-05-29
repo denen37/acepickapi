@@ -21,11 +21,9 @@ routes.post('/change-password-loggedin', auth_1.passwordChange);
 routes.post('/change-password-forgot', auth_1.changePassword);
 routes.post('/send-otp', auth_1.sendOtp);
 routes.post('/verify-otp', auth_1.verifyOtp);
-routes.post('/update-fcm-token', auth_1.updateFcmToken);
+routes.post('/update-push-token', auth_1.updatePushToken);
 // routes.post("/verify-bvn", verifyBvnDetail)
 routes.post("/verify-bvn2", auth_1.verifyMyBvn);
 routes.get("/delete-users", auth_1.deleteUsers);
 routes.post('/verify-token', auth_1.authorize);
-routes.post('/send-sms', auth_1.sendSMSTest);
-routes.post('/send-email', auth_1.sendEmailTest);
 exports.default = routes;

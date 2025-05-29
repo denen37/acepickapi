@@ -198,3 +198,16 @@
 2025-05-28 18:29:39	POST - /api/jobs/payment
 2025-05-28 18:29:54	POST - /api/jobs/payment
 2025-05-28 18:32:43	POST - /api/jobs/payment
+2025-05-28 18:38:03	POST - /api/auth/register-corperate
+2025-05-28 18:38:56	POST - /api/auth/register-corperate
+2025-05-28 18:40:11	POST - /api/auth/register-corperate
+2025-05-28 18:41:04	POST - /api/auth/register-corperate
+2025-05-28 18:41:37	POST - /api/auth/register-corperate
+2025-05-28 18:42:20	POST - /api/auth/register-corperate
+2025-05-29 13:32:49	POST - /api/notification-test
+2025-05-29 13:33:16	POST - /api/notification-test
+2025-05-29 13:41:06	POST - /api/notification-test
+2025-05-29 15:00:46	GET - /api/professionals
+2025-05-29 15:03:49	GET - /api/professionals
+2025-05-29 15:04:04	GET - /api/professionals
+2025-05-29 15:04:22	GET - /api/professionals

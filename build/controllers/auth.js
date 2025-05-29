@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.updateFcmToken = exports.corperateReg = exports.deleteUsers = exports.login = exports.passwordChange = exports.registerCorperate = exports.registerProfessional = exports.register = exports.verifyOtp = exports.sendEmailTest = exports.sendSMSTest = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
+exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.corperateReg = exports.deleteUsers = exports.updatePushToken = exports.login = exports.passwordChange = exports.registerCorperate = exports.registerProfessional = exports.register = exports.verifyOtp = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
 const modules_1 = require("../utils/modules");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
 const enum_1 = require("../enum");
@@ -121,27 +121,6 @@ const sendOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.sendOtp = sendOtp;
-const sendSMSTest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { phone } = req.body;
-    // try {
-    const status = yield (0, sms_1.sendSMS)(phone, '123456');
-    return (0, modules_1.successResponse)(res, 'OTP sent successfully', { smsSendStatus: status });
-    // } catch (error) {
-    //     return errorResponse(res, 'error', error);
-    // }
-});
-exports.sendSMSTest = sendSMSTest;
-const sendEmailTest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email } = req.body;
-    // try {
-    const verifyEmailMsg = (0, messages_1.sendOTPEmail)('123456');
-    const messageId = yield (0, gmail_1.sendEmail)(email, verifyEmailMsg.title, verifyEmailMsg.body, 'User');
-    let emailSendStatus = Boolean(messageId);
-    return (0, modules_1.successResponse)(res, 'OTP sent successfully', { emailSendStatus });
-    // } catch (error) {
-    //     return errorResponse(res, 'error', error);
-});
-exports.sendEmailTest = sendEmailTest;
 const verifyOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = body_1.verifyOTPSchema.safeParse(req.body);
     if (!result.success) {
@@ -483,90 +462,107 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     catch (error) {
         return (0, modules_1.errorResponse)(res, 'error', error.message);
     }
-    // profile?.fcmToken == null ? null : sendExpoNotification(profileUpdated!.fcmToken, "hello world");
-    // if (profile?.type == ProfileType.CLIENT) {
-    //     if (type == profile?.type) {
-    //         const response = await serverClient.upsertUsers([{
-    //             id: String(user.id),
-    //             role: 'admin',
-    //             mycustomfield: {
-    //                 email: `${user.email}`,
-    //                 accountType: profile?.type,
-    //                 userId: String(user.id),
-    //             }
-    //         }]);
-    //         return successResponse(res, "Successful", { status: true, message: { ...user.dataValues, token, chatToken } })
-    //     } else {
-    //         return successResponseFalse(res, "Cannot access Client account")
-    //     }
-    // } else {
-    //     if (type == profile?.type) {
-    //         const professionalProfile = await Professional.findAll(
-    //             {
-    //                 order: [
-    //                     ['id', 'DESC']
-    //                 ],
-    //                 include: [
-    //                     { model: Cooperation },
-    //                     {
-    //                         model: Profile,
-    //                         where: { userId: profile?.userId },
-    //                         include: [
-    //                             {
-    //                                 model: User,
-    //                                 attributes: [
-    //                                     'createdAt', 'updatedAt', "email", "phone"],
-    //                                 include: [{
-    //                                     model: Wallet,
-    //                                     where: {
-    //                                         type: WalletType.PROFESSIONAL
-    //                                     }
-    //                                 },
-    //                                 {
-    //                                     model: Education,
-    //                                 },
-    //                                 {
-    //                                     model: Certification,
-    //                                 },
-    //                                 {
-    //                                     model: Experience,
-    //                                 },
-    //                                 {
-    //                                     model: Portfolio,
-    //                                     order: [
-    //                                         ['id', 'DESC'],
-    //                                     ],
-    //                                 },
-    //                                 ]
-    //                             },
-    //                         ],
-    //                     }
-    //                 ],
-    //             }
-    //         )
-    //         let data = deleteKey(professionalProfile[0].dataValues, "profile", "corperate");
-    //         let mergedObj = {
-    //             profile: professionalProfile[0].dataValues.profile,
-    //             professional: { ...data },
-    //             corperate: professionalProfile[0].dataValues.corperate,
-    //         }
-    //         const response = await serverClient.upsertUsers([{
-    //             id: String(user.id),
-    //             role: 'admin',
-    //             // mycustomfield: {
-    //             //   email: `${user.email}`,
-    //             //   accountType: profile?.type,
-    //             //   data: mergedObj
-    //             // }
-    //         }]);
-    //         return successResponse(res, "Successful", { status: true, message: { ...user.dataValues, token, chatToken } })
-    //     }
-    //     else {
-    //         return successResponseFalse(res, "Cannot access Professional account")
-    //     }
-    // }
 });
 exports.login = login;
+const updatePushToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { token } = req.body;
+        if (!token)
+            return (0, modules_1.errorResponse)(res, "Token is required", { status: false });
+        const { id } = req.user;
+        const user = yield Models_1.User.findOne({ where: { id } });
+        if (!user)
+            return (0, modules_1.errorResponse)(res, "User not found", { status: false });
+        yield user.update({ fcmToken: token });
+        return (0, modules_1.successResponse)(res, "Successful", { status: true, user });
+    }
+    catch (error) {
+    }
+    return (0, modules_1.errorResponse)(res, "error", 'Error updating push token');
+});
+exports.updatePushToken = updatePushToken;
+// profile?.fcmToken == null ? null : sendExpoNotification(profileUpdated!.fcmToken, "hello world");
+// if (profile?.type == ProfileType.CLIENT) {
+//     if (type == profile?.type) {
+//         const response = await serverClient.upsertUsers([{
+//             id: String(user.id),
+//             role: 'admin',
+//             mycustomfield: {
+//                 email: `${user.email}`,
+//                 accountType: profile?.type,
+//                 userId: String(user.id),
+//             }
+//         }]);
+//         return successResponse(res, "Successful", { status: true, message: { ...user.dataValues, token, chatToken } })
+//     } else {
+//         return successResponseFalse(res, "Cannot access Client account")
+//     }
+// } else {
+//     if (type == profile?.type) {
+//         const professionalProfile = await Professional.findAll(
+//             {
+//                 order: [
+//                     ['id', 'DESC']
+//                 ],
+//                 include: [
+//                     { model: Cooperation },
+//                     {
+//                         model: Profile,
+//                         where: { userId: profile?.userId },
+//                         include: [
+//                             {
+//                                 model: User,
+//                                 attributes: [
+//                                     'createdAt', 'updatedAt', "email", "phone"],
+//                                 include: [{
+//                                     model: Wallet,
+//                                     where: {
+//                                         type: WalletType.PROFESSIONAL
+//                                     }
+//                                 },
+//                                 {
+//                                     model: Education,
+//                                 },
+//                                 {
+//                                     model: Certification,
+//                                 },
+//                                 {
+//                                     model: Experience,
+//                                 },
+//                                 {
+//                                     model: Portfolio,
+//                                     order: [
+//                                         ['id', 'DESC'],
+//                                     ],
+//                                 },
+//                                 ]
+//                             },
+//                         ],
+//                     }
+//                 ],
+//             }
+//         )
+//         let data = deleteKey(professionalProfile[0].dataValues, "profile", "corperate");
+//         let mergedObj = {
+//             profile: professionalProfile[0].dataValues.profile,
+//             professional: { ...data },
+//             corperate: professionalProfile[0].dataValues.corperate,
+//         }
+//         const response = await serverClient.upsertUsers([{
+//             id: String(user.id),
+//             role: 'admin',
+//             // mycustomfield: {
+//             //   email: `${user.email}`,
+//             //   accountType: profile?.type,
+//             //   data: mergedObj
+//             // }
+//         }]);
+//         return successResponse(res, "Successful", { status: true, message: { ...user.dataValues, token, chatToken } })
+//     }
+//     else {
+//         return successResponseFalse(res, "Cannot access Professional account")
+//     }
+// }
 const deleteUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield Models_1.User.findAll({});
     let index = 0;
@@ -634,14 +630,6 @@ exports.corperateReg = corperateReg;
 //         }
 //     }
 // }
-const updateFcmToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    let { token } = req.body;
-    let { id } = req.user;
-    const user = yield Models_1.User.findOne({ where: { id } });
-    yield (user === null || user === void 0 ? void 0 : user.update({ fcmToken: token }));
-    (0, modules_1.successResponse)(res, "Successful", token);
-});
-exports.updateFcmToken = updateFcmToken;
 const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     try {

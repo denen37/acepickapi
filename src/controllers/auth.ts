@@ -25,6 +25,7 @@ import { Sequelize } from "sequelize-typescript";
 import { Op } from "sequelize";
 import { sendExpoNotification } from "../services/expo";
 import { resolve } from "path/win32";
+import { sendPushNotification } from "../services/notification";
 
 
 
@@ -164,37 +165,6 @@ export const sendOtp = async (req: Request, res: Response) => {
     }
 };
 
-export const sendSMSTest = async (req: Request, res: Response) => {
-    const { phone } = req.body;
-
-    // try {
-    const status = await sendSMS(phone, '123456')
-
-    return successResponse(res, 'OTP sent successfully', { smsSendStatus: status })
-    // } catch (error) {
-    //     return errorResponse(res, 'error', error);
-    // }
-}
-
-export const sendEmailTest = async (req: Request, res: Response) => {
-    const { email } = req.body;
-
-    // try {
-    const verifyEmailMsg = sendOTPEmail('123456');
-
-    const messageId = await sendEmail(
-        email,
-        verifyEmailMsg.title,
-        verifyEmailMsg.body,
-        'User'
-    )
-
-    let emailSendStatus = Boolean(messageId);
-
-    return successResponse(res, 'OTP sent successfully', { emailSendStatus })
-    // } catch (error) {
-    //     return errorResponse(res, 'error', error);
-}
 
 
 
@@ -634,109 +604,131 @@ export const login = async (req: Request, res: Response) => {
     } catch (error: any) {
         return errorResponse(res, 'error', error.message);
     }
-
-
-
-    // profile?.fcmToken == null ? null : sendExpoNotification(profileUpdated!.fcmToken, "hello world");
-
-    // if (profile?.type == ProfileType.CLIENT) {
-    //     if (type == profile?.type) {
-    //         const response = await serverClient.upsertUsers([{
-    //             id: String(user.id),
-    //             role: 'admin',
-    //             mycustomfield: {
-    //                 email: `${user.email}`,
-    //                 accountType: profile?.type,
-    //                 userId: String(user.id),
-    //             }
-    //         }]);
-    //         return successResponse(res, "Successful", { status: true, message: { ...user.dataValues, token, chatToken } })
-
-
-    //     } else {
-    //         return successResponseFalse(res, "Cannot access Client account")
-    //     }
-
-
-    // } else {
-    //     if (type == profile?.type) {
-    //         const professionalProfile = await Professional.findAll(
-    //             {
-    //                 order: [
-    //                     ['id', 'DESC']
-    //                 ],
-    //                 include: [
-
-    //                     { model: Cooperation },
-    //                     {
-    //                         model: Profile,
-    //                         where: { userId: profile?.userId },
-    //                         include: [
-
-    //                             {
-    //                                 model: User,
-    //                                 attributes: [
-    //                                     'createdAt', 'updatedAt', "email", "phone"],
-    //                                 include: [{
-    //                                     model: Wallet,
-    //                                     where: {
-    //                                         type: WalletType.PROFESSIONAL
-    //                                     }
-    //                                 },
-
-    //                                 {
-    //                                     model: Education,
-    //                                 },
-    //                                 {
-    //                                     model: Certification,
-    //                                 },
-    //                                 {
-    //                                     model: Experience,
-    //                                 },
-    //                                 {
-    //                                     model: Portfolio,
-    //                                     order: [
-    //                                         ['id', 'DESC'],
-    //                                     ],
-    //                                 },
-
-
-
-    //                                 ]
-    //                             },
-
-    //                         ],
-    //                     }
-    //                 ],
-    //             }
-    //         )
-
-    //         let data = deleteKey(professionalProfile[0].dataValues, "profile", "corperate");
-
-    //         let mergedObj = {
-    //             profile: professionalProfile[0].dataValues.profile,
-    //             professional: { ...data },
-    //             corperate: professionalProfile[0].dataValues.corperate,
-    //         }
-
-    //         const response = await serverClient.upsertUsers([{
-    //             id: String(user.id),
-    //             role: 'admin',
-    //             // mycustomfield: {
-    //             //   email: `${user.email}`,
-    //             //   accountType: profile?.type,
-    //             //   data: mergedObj
-    //             // }
-    //         }]);
-    //         return successResponse(res, "Successful", { status: true, message: { ...user.dataValues, token, chatToken } })
-    //     }
-
-    //     else {
-    //         return successResponseFalse(res, "Cannot access Professional account")
-    //     }
-
-    // }
 }
+
+
+export const updatePushToken = async (req: Request, res: Response) => {
+    try {
+        const { token } = req.body;
+
+        if (!token) return errorResponse(res, "Token is required", { status: false });
+
+        const { id } = req.user;
+
+        const user = await User.findOne({ where: { id } });
+
+        if (!user) return errorResponse(res, "User not found", { status: false });
+
+        await user.update({ fcmToken: token });
+
+        return successResponse(res, "Successful", { status: true, user })
+    } catch (error: any) {
+    }
+    return errorResponse(res, "error", 'Error updating push token');
+}
+
+
+
+// profile?.fcmToken == null ? null : sendExpoNotification(profileUpdated!.fcmToken, "hello world");
+
+// if (profile?.type == ProfileType.CLIENT) {
+//     if (type == profile?.type) {
+//         const response = await serverClient.upsertUsers([{
+//             id: String(user.id),
+//             role: 'admin',
+//             mycustomfield: {
+//                 email: `${user.email}`,
+//                 accountType: profile?.type,
+//                 userId: String(user.id),
+//             }
+//         }]);
+//         return successResponse(res, "Successful", { status: true, message: { ...user.dataValues, token, chatToken } })
+
+
+//     } else {
+//         return successResponseFalse(res, "Cannot access Client account")
+//     }
+
+
+// } else {
+//     if (type == profile?.type) {
+//         const professionalProfile = await Professional.findAll(
+//             {
+//                 order: [
+//                     ['id', 'DESC']
+//                 ],
+//                 include: [
+
+//                     { model: Cooperation },
+//                     {
+//                         model: Profile,
+//                         where: { userId: profile?.userId },
+//                         include: [
+
+//                             {
+//                                 model: User,
+//                                 attributes: [
+//                                     'createdAt', 'updatedAt', "email", "phone"],
+//                                 include: [{
+//                                     model: Wallet,
+//                                     where: {
+//                                         type: WalletType.PROFESSIONAL
+//                                     }
+//                                 },
+
+//                                 {
+//                                     model: Education,
+//                                 },
+//                                 {
+//                                     model: Certification,
+//                                 },
+//                                 {
+//                                     model: Experience,
+//                                 },
+//                                 {
+//                                     model: Portfolio,
+//                                     order: [
+//                                         ['id', 'DESC'],
+//                                     ],
+//                                 },
+
+
+
+//                                 ]
+//                             },
+
+//                         ],
+//                     }
+//                 ],
+//             }
+//         )
+
+//         let data = deleteKey(professionalProfile[0].dataValues, "profile", "corperate");
+
+//         let mergedObj = {
+//             profile: professionalProfile[0].dataValues.profile,
+//             professional: { ...data },
+//             corperate: professionalProfile[0].dataValues.corperate,
+//         }
+
+//         const response = await serverClient.upsertUsers([{
+//             id: String(user.id),
+//             role: 'admin',
+//             // mycustomfield: {
+//             //   email: `${user.email}`,
+//             //   accountType: profile?.type,
+//             //   data: mergedObj
+//             // }
+//         }]);
+//         return successResponse(res, "Successful", { status: true, message: { ...user.dataValues, token, chatToken } })
+//     }
+
+//     else {
+//         return successResponseFalse(res, "Cannot access Professional account")
+//     }
+
+// }
+
 
 
 
@@ -826,21 +818,6 @@ export const corperateReg = async (req: Request, res: Response) => {
 //         }
 //     }
 // }
-
-
-
-
-export const updateFcmToken = async (req: Request, res: Response) => {
-    let { token } = req.body;
-    let { id } = req.user;
-    const user = await User.findOne({ where: { id } });
-    await user?.update({ fcmToken: token })
-    successResponse(res, "Successful", token)
-}
-
-
-
-
 
 
 

@@ -1,35 +1,84 @@
-import { QueryInterface, Sequelize } from 'sequelize';
-
-const userIds = [
-    "0a1a5aad-6cfc-4cc7-b7c7-2ef40c314e2c",
-    "2c785cab-e960-486f-b684-6cfc5e777fc2",
-    "33bb5c54-fd64-4cfa-b90b-b0951d3f0564",
-    "5b509520-9507-466c-b085-b6eac6c98a9f",
-    "5e0cd8e5-1342-4577-82b4-935ffc18af8c",
-    "79b426ad-8846-4f4b-b3f7-679c44f82950",
-    "7d214fc6-6369-43af-be0b-aa1a0f5ee967",
-    "a0a13da5-ee75-4954-a13e-32dbc7167dd3",
-    "e69bb0bb-0bfd-417c-a64a-d501ce59c618",
-    "f42f3fb5-646c-4743-afbd-de92e97ecf98"
-];
+import { QueryInterface } from 'sequelize';
 
 module.exports = {
-    up: async (queryInterface: QueryInterface) => {
-        return queryInterface.bulkInsert('lanlog', userIds.map(userId => ({
-            address: `Address for ${userId}`,
-            latitude: Math.random() * 90,  // Use floating point numbers
-            longitude: Math.random() * 180, // Use floating point numbers
-            coordinates: Sequelize.fn(
-                'ST_GeomFromText',
-                `POINT(${Math.random() * 180 - 90} ${Math.random() * 360 - 180})`
-            ),
-            userId,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        })));
+    async up(queryInterface: QueryInterface) {
+        await queryInterface.bulkInsert('lanlog', [
+            {
+                address: '123 Market Street, Lagos',
+                latitude: 6.5244,
+                longitude: 3.3792,
+                userId: '5b509520-9507-466c-b085-b6eac6c98a9f',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                address: 'Plot 11, Abuja Tech Hub',
+                latitude: 9.0579,
+                longitude: 7.4951,
+                userId: '5b509520-9507-466c-b085-b6eac6c98a9f',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                address: 'Main Road, Enugu',
+                latitude: 6.4483,
+                longitude: 7.5139,
+                userId: '5e0cd8e5-1342-4577-82b4-935ffc18af8c',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                address: 'Tech Valley, Port Harcourt',
+                latitude: 4.8156,
+                longitude: 7.0498,
+                userId: '79b426ad-8846-4f4b-b3f7-679c44f82950',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                address: 'University Rd, Kano',
+                latitude: 12.0022,
+                longitude: 8.5919,
+                userId: '7d214fc6-6369-43af-be0b-aa1a0f5ee967',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                address: 'Old Airport Rd, Kaduna',
+                latitude: 10.5484,
+                longitude: 7.4528,
+                userId: '83df1fcd-7e93-4395-8b95-c4bac2b3e316',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                address: 'Trade Fair Complex, Aba',
+                latitude: 5.1126,
+                longitude: 7.3667,
+                userId: 'a0a13da5-ee75-4954-a13e-32dbc7167dd3',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                address: 'Ring Road, Ibadan',
+                latitude: 7.3775,
+                longitude: 3.947,
+                userId: 'e69bb0bb-0bfd-417c-a64a-d501ce59c618',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                address: 'Tech Drive, Uyo',
+                latitude: 5.0375,
+                longitude: 7.9128,
+                userId: 'f42f3fb5-646c-4743-afbd-de92e97ecf98',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+        ]);
     },
 
-    down: async (queryInterface: QueryInterface) => {
-        return queryInterface.bulkDelete('lanlog', {}, {});
+    async down(queryInterface: QueryInterface) {
+        await queryInterface.bulkDelete('lanlog', {}, {});
     },
 };

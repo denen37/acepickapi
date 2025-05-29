@@ -8,6 +8,7 @@ const cooperates_1 = require("../controllers/cooperates");
 const Jobs_1 = require("../controllers/Jobs");
 const enum_1 = require("../enum");
 const allowRoles_1 = require("../middlewares/allowRoles");
+const test_1 = require("../controllers/test");
 const routes = (0, express_1.Router)();
 routes.get("/sectors", sector_1.getSectors);
 routes.get("/sectors/details", sector_1.getSectorsMetrics);
@@ -27,4 +28,7 @@ routes.post('/jobs', (0, allowRoles_1.allowRoles)(enum_1.UserRole.CLIENT), Jobs_
 routes.put('/jobs/response/:jobId', (0, allowRoles_1.allowRoles)(enum_1.UserRole.PROFESSIONAL), Jobs_1.respondToJob);
 routes.post('/jobs/invoice', (0, allowRoles_1.allowRoles)(enum_1.UserRole.PROFESSIONAL), Jobs_1.generateInvoice);
 routes.post('/jobs/payment', (0, allowRoles_1.allowRoles)(enum_1.UserRole.CLIENT), Jobs_1.payforJob);
+routes.post('/notification-test', test_1.testNotification);
+routes.post('/send-sms', test_1.sendSMSTest);
+routes.post('/send-email', test_1.sendEmailTest);
 exports.default = routes;

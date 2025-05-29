@@ -6,6 +6,7 @@ import { getCooperates } from "../controllers/cooperates";
 import { createJobOrder, generateInvoice, getJobById, getJobs, payforJob, respondToJob } from "../controllers/Jobs";
 import { UserRole } from "../enum";
 import { allowRoles } from "../middlewares/allowRoles";
+import { sendEmailTest, sendSMSTest, testNotification } from "../controllers/test";
 
 const routes = Router();
 
@@ -31,5 +32,9 @@ routes.post('/jobs', allowRoles(UserRole.CLIENT), createJobOrder);
 routes.put('/jobs/response/:jobId', allowRoles(UserRole.PROFESSIONAL), respondToJob);
 routes.post('/jobs/invoice', allowRoles(UserRole.PROFESSIONAL), generateInvoice);
 routes.post('/jobs/payment', allowRoles(UserRole.CLIENT), payforJob);
+
+routes.post('/notification-test', testNotification);
+routes.post('/send-sms', sendSMSTest)
+routes.post('/send-email', sendEmailTest)
 
 export default routes;

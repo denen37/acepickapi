@@ -9,12 +9,10 @@ import {
     register,
     registerCorperate,
     registerProfessional,
-    sendEmailTest,
     sendOtp,
-    sendSMSTest,
     // swithAccount,
-    updateFcmToken,
     updateProfile,
+    updatePushToken,
     verifyMyBvn,
     verifyOtp
 } from '../controllers/auth';
@@ -40,13 +38,11 @@ routes.post('/change-password-loggedin', passwordChange);
 routes.post('/change-password-forgot', changePassword);
 routes.post('/send-otp', sendOtp);
 routes.post('/verify-otp', verifyOtp);
-routes.post('/update-fcm-token', updateFcmToken)
+routes.post('/update-push-token', updatePushToken)
 // routes.post("/verify-bvn", verifyBvnDetail)
 routes.post("/verify-bvn2", verifyMyBvn);
 routes.get("/delete-users", deleteUsers)
 routes.post('/verify-token', authorize)
-routes.post('/send-sms', sendSMSTest)
-routes.post('/send-email', sendEmailTest)
 
 
 export default routes;
