@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -10,11 +43,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.testNotification = exports.sendEmailTest = exports.sendSMSTest = void 0;
+exports.findPersonsNearby = findPersonsNearby;
 const notification_1 = require("../services/notification");
 const sms_1 = require("../services/sms");
 const modules_1 = require("../utils/modules");
 const messages_1 = require("../utils/messages");
 const gmail_1 = require("../services/gmail");
+const Location_1 = require("../models/Location");
+const sequelize_1 = __importStar(require("sequelize"));
 const sendSMSTest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { phone } = req.body;
     // try {
@@ -51,3 +87,26 @@ const testNotification = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.testNotification = testNotification;
+function findPersonsNearby(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { lat, lng, radiusInKm } = req.body;
+        const distanceQuery = `
+    6371 * acos(
+      cos(radians(:lat)) * cos(radians("latitude")) *
+      cos(radians("longitude") - radians(:lng)) +
+      sin(radians(:lat)) * sin(radians("latitude"))
+    )
+  `;
+        const location = yield Location_1.Location.findAll({
+            attributes: {
+                include: [
+                    [sequelize_1.default.literal(distanceQuery), 'distance']
+                ]
+            },
+            where: sequelize_1.default.where(sequelize_1.default.literal(distanceQuery), { [sequelize_1.Op.lte]: radiusInKm }),
+            replacements: { lat, lng },
+            order: sequelize_1.default.literal('distance ASC'),
+        });
+        return (0, modules_1.successResponse)(res, 'Persons found nearby', { location });
+    });
+}

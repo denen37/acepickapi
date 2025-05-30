@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 import axios from "axios";
 import { basename } from "path";
 import { VerificationType, UserState, UserStatus, UserRole, OTPReason } from "../enum";
-import { User, Director, Professional, Profession, Sector, Review, Wallet, Profile, Cooperation, LanLog, Verify } from "../models/Models"
+import { User, Director, Professional, Profession, Sector, Review, Wallet, Profile, Cooperation, Location, Verify } from "../models/Models"
 import { forgotPasswordEmail, registerEmail, sendOTPEmail } from "../utils/messages";
 import { otpRequestSchema, registerCoporateSchema, registrationProfSchema, registrationSchema, verifyOTPSchema } from "../validation/body";
 import { compare, hash } from "bcryptjs";
@@ -13,7 +13,7 @@ import bcrypt from "bcryptjs";
 import { sign } from "jsonwebtoken";
 import { sendSMS } from "../services/sms";
 import { sendEmail } from "../services/gmail";
-import { } from "../models/LanLog";
+import { } from "../models/Location";
 import { verifyBvn } from "../services/bvn";
 import { compareTwoStrings } from 'string-similarity';
 
@@ -67,10 +67,10 @@ export const updateProfile = async (req: Request, res: Response) => {
     if (!profile?.verified) return errorResponse(res, "Verify your bvn")
 
     await profile?.update({
-        lga: lga ?? profile.lga,
+        //lga: lga ?? profile.lga,
         avatar: avatar ?? profile.avatar,
-        state: state ?? profile.state,
-        address: address ?? profile.address,
+        //state: state ?? profile.state,
+        //address: address ?? profile.address,
     })
 
     const updated = await Profile.findOne({ where: { id } })
@@ -274,10 +274,14 @@ export const register = async (req: Request, res: Response): Promise<any> => {
             userId: user.id,
             firstName,
             lastName,
+            avatar
+        })
+
+        const lanLog = await Location.create({
+            userId: user.id,
             lga,
             state,
             address,
-            avatar
         })
 
         const wallet = await Wallet.create({
@@ -356,10 +360,14 @@ export const registerProfessional = async (req: Request, res: Response): Promise
             userId: user.id,
             firstName,
             lastName,
+            avatar
+        })
+
+        const lanLog = await Location.create({
+            userId: user.id,
             lga,
             state,
             address,
-            avatar
         })
 
         console.log('professionalId', professionId);
@@ -443,6 +451,13 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
             agreed
         })
 
+        const lanLog = await Location.create({
+            userId: user.id,
+            lga: cooperation.lga,
+            state: cooperation.state,
+            address: cooperation.address,
+        })
+
         const profile = await Profile.create({
             avatar: cooperation.avatar,
             userId: user.id,
@@ -455,9 +470,6 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
             avatar: cooperation.avatar,
             nameOfOrg: cooperation.nameOfOrg,
             phone: cooperation.phone,
-            address: cooperation.address,
-            state: cooperation.state,
-            lga: cooperation.lga,
             regNum: cooperation.regNum,
             noOfEmployees: cooperation.noOfEmployees,
             professionId: cooperation.professionId,
@@ -555,7 +567,12 @@ export const login = async (req: Request, res: Response) => {
                 include: [{
                     model: Wallet,
                     attributes: { exclude: ['password'] },
-                }, {
+                },
+                {
+                    model: Location,
+                    as: 'location',
+                },
+                {
                     model: Profile,
                 }]
             })
@@ -566,7 +583,12 @@ export const login = async (req: Request, res: Response) => {
                 include: [{
                     model: Wallet,
                     attributes: { exclude: ['password'] },
-                }, {
+                },
+                {
+                    model: Location,
+                    as: 'location',
+                },
+                {
                     model: Profile,
                     include: [{
                         model: Professional,
@@ -586,7 +608,12 @@ export const login = async (req: Request, res: Response) => {
                 include: [{
                     model: Wallet,
                     attributes: { exclude: ['password'] },
-                }, {
+                },
+                {
+                    model: Location,
+                    as: 'location',
+                },
+                {
                     model: Profile,
                     include: [{
                         model: Cooperation,
@@ -1473,7 +1500,7 @@ export const changePassword = async (req: Request, res: Response) => {
 
 //                 {
 //                     model: User,
-//                     include: [{ model: LanLog },
+//                     include: [{ model: Location },
 
 //                     {
 //                         model: Education,
@@ -1530,7 +1557,7 @@ export const postlocationData = async (req: Request, res: Response) => {
     const { id } = req.user;
 
     try {
-        const getlocation = await LanLog.findOne({
+        const getlocation = await Location.findOne({
             where: {
                 userId: id
             }
@@ -1553,7 +1580,7 @@ export const postlocationData = async (req: Request, res: Response) => {
                 latitude: lan, longitude: log, userId: id, address,
                 coordinates: { type: 'Point', coordinates: [lan, log] },
             }
-            const location = await LanLog.create(insertData);
+            const location = await Location.create(insertData);
             await user?.update({ locationId: location.id })
             if (location) return successResponse(res, "Created Successfully", location);
             return errorResponse(res, "Failed Creating Location");

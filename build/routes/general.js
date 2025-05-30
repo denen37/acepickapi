@@ -31,4 +31,5 @@ routes.post('/jobs/payment', (0, allowRoles_1.allowRoles)(enum_1.UserRole.CLIENT
 routes.post('/notification-test', test_1.testNotification);
 routes.post('/send-sms', test_1.sendSMSTest);
 routes.post('/send-email', test_1.sendEmailTest);
+routes.post('/nearest-person', test_1.findPersonsNearby);
 exports.default = routes;

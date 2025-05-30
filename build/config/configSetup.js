@@ -80,6 +80,7 @@ const getConfig = () => {
             '/api/send-sms',
             '/api/send-email',
             '/api/notification-test',
+            '/api/nearest-person',
             '/api/testN',
             '/api/fileupload',
             '/api/admin/send-invites',

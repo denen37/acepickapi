@@ -5,6 +5,8 @@ import { sendSMS } from '../services/sms';
 import { errorResponse, successResponse } from '../utils/modules';
 import { sendOTPEmail } from '../utils/messages';
 import { sendEmail } from '../services/gmail';
+import { Location } from '../models/Location';
+import sequelize, { Op } from 'sequelize';
 
 export const sendSMSTest = async (req: Request, res: Response) => {
     const { phone } = req.body;
@@ -55,4 +57,34 @@ export const testNotification = async (req: Request, res: Response) => {
         console.log(error);
         return errorResponse(res, 'Error sending notification', error);
     }
+}
+
+
+
+export async function findPersonsNearby(req: Request, res: Response) {
+    const { lat, lng, radiusInKm } = req.body;
+
+    const distanceQuery = `
+    6371 * acos(
+      cos(radians(:lat)) * cos(radians("latitude")) *
+      cos(radians("longitude") - radians(:lng)) +
+      sin(radians(:lat)) * sin(radians("latitude"))
+    )
+  `;
+
+    const location = await Location.findAll({
+        attributes: {
+            include: [
+                [sequelize.literal(distanceQuery), 'distance']
+            ]
+        },
+        where: sequelize.where(
+            sequelize.literal(distanceQuery),
+            { [Op.lte]: radiusInKm }
+        ),
+        replacements: { lat, lng },
+        order: sequelize.literal('distance ASC'),
+    });
+
+    return successResponse(res, 'Persons found nearby', { location });
 }

@@ -64,14 +64,8 @@ __decorate([
     __metadata("design:type", Models_1.Profile)
 ], User.prototype, "profile", void 0);
 __decorate([
-    (0, sequelize_typescript_1.ForeignKey)(() => Models_1.LanLog),
-    (0, sequelize_typescript_1.AllowNull)(true),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.INTEGER),
-    __metadata("design:type", Number)
-], User.prototype, "locationId", void 0);
-__decorate([
-    (0, sequelize_typescript_1.HasOne)(() => Models_1.LanLog),
-    __metadata("design:type", Models_1.LanLog)
+    (0, sequelize_typescript_1.HasOne)(() => Models_1.Location),
+    __metadata("design:type", Models_1.Location)
 ], User.prototype, "location", void 0);
 __decorate([
     (0, sequelize_typescript_1.HasMany)(() => Models_1.Review),

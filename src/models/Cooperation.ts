@@ -21,24 +21,24 @@ export class Cooperation extends Model {
     phone!: string;
 
 
-    @AllowNull(false)
-    @Column(DataType.STRING)
-    address!: string;
+    // @AllowNull(false)
+    // @Column(DataType.STRING)
+    // address!: string;
 
 
 
 
-    @AllowNull(false)
-    @Column(DataType.STRING)
-    state!: string;
+    // @AllowNull(false)
+    // @Column(DataType.STRING)
+    // state!: string;
 
 
 
 
 
-    @AllowNull(false)
-    @Column(DataType.STRING)
-    lga!: string;
+    // @AllowNull(false)
+    // @Column(DataType.STRING)
+    // lga!: string;
 
 
 

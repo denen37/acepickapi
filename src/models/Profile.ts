@@ -54,20 +54,6 @@ export class Profile extends Model {
     notified!: boolean;
 
 
-    @AllowNull(true)
-    @Column(DataType.STRING)
-    lga!: string;
-
-
-    @AllowNull(true)
-    @Column(DataType.STRING)
-    state!: string;
-
-
-    @AllowNull(true)
-    @Column(DataType.STRING)
-    address!: string;
-
 
 
     @Default(0)

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Material = exports.Dispute = exports.Review = exports.Job = exports.Director = exports.Sector = exports.Profession = exports.Wallet = exports.VoiceRecording = exports.Cooperation = exports.Verify = exports.Professional = exports.Portfolio = exports.LanLog = exports.Experience = exports.Education = exports.Certification = exports.Profile = exports.User = void 0;
+exports.Material = exports.Dispute = exports.Review = exports.Job = exports.Director = exports.Sector = exports.Profession = exports.Wallet = exports.VoiceRecording = exports.Cooperation = exports.Verify = exports.Professional = exports.Portfolio = exports.Location = exports.Experience = exports.Education = exports.Certification = exports.Profile = exports.User = void 0;
 const User_1 = require("./User");
 Object.defineProperty(exports, "User", { enumerable: true, get: function () { return User_1.User; } });
 const Certification_1 = require("./Certification");
@@ -9,8 +9,8 @@ const Cooperation_1 = require("./Cooperation");
 Object.defineProperty(exports, "Cooperation", { enumerable: true, get: function () { return Cooperation_1.Cooperation; } });
 const Experience_1 = require("./Experience");
 Object.defineProperty(exports, "Experience", { enumerable: true, get: function () { return Experience_1.Experience; } });
-const LanLog_1 = require("./LanLog");
-Object.defineProperty(exports, "LanLog", { enumerable: true, get: function () { return LanLog_1.LanLog; } });
+const Location_1 = require("./Location");
+Object.defineProperty(exports, "Location", { enumerable: true, get: function () { return Location_1.Location; } });
 const Professional_1 = require("./Professional");
 Object.defineProperty(exports, "Professional", { enumerable: true, get: function () { return Professional_1.Professional; } });
 const Profile_1 = require("./Profile");

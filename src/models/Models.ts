@@ -2,7 +2,7 @@ import { User } from './User'
 import { Certification } from './Certification'
 import { Cooperation } from './Cooperation'
 import { Experience } from './Experience'
-import { LanLog } from './LanLog'
+import { Location } from './Location'
 import { Professional } from './Professional'
 import { Profile } from './Profile'
 import { Verify } from './Verify'
@@ -24,7 +24,7 @@ export {
     Certification,
     Education,
     Experience,
-    LanLog,
+    Location,
     Portfolio,
     Professional,
     Verify,

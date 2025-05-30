@@ -54,10 +54,10 @@ const updateProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (!(profile === null || profile === void 0 ? void 0 : profile.verified))
         return (0, modules_1.errorResponse)(res, "Verify your bvn");
     yield (profile === null || profile === void 0 ? void 0 : profile.update({
-        lga: lga !== null && lga !== void 0 ? lga : profile.lga,
+        //lga: lga ?? profile.lga,
         avatar: avatar !== null && avatar !== void 0 ? avatar : profile.avatar,
-        state: state !== null && state !== void 0 ? state : profile.state,
-        address: address !== null && address !== void 0 ? address : profile.address,
+        //state: state ?? profile.state,
+        //address: address ?? profile.address,
     }));
     const updated = yield Models_1.Profile.findOne({ where: { id } });
     return (0, modules_1.successResponse)(res, "Updated Successfully", updated);
@@ -205,10 +205,13 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             userId: user.id,
             firstName,
             lastName,
+            avatar
+        });
+        const lanLog = yield Models_1.Location.create({
+            userId: user.id,
             lga,
             state,
             address,
-            avatar
         });
         const wallet = yield Models_1.Wallet.create({
             userId: user.id,
@@ -265,10 +268,13 @@ const registerProfessional = (req, res) => __awaiter(void 0, void 0, void 0, fun
             userId: user.id,
             firstName,
             lastName,
+            avatar
+        });
+        const lanLog = yield Models_1.Location.create({
+            userId: user.id,
             lga,
             state,
             address,
-            avatar
         });
         console.log('professionalId', professionId);
         console.log('profile', profile.id);
@@ -328,6 +334,12 @@ const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, functi
             role: enum_1.UserRole.CORPERATE,
             agreed
         });
+        const lanLog = yield Models_1.Location.create({
+            userId: user.id,
+            lga: cooperation.lga,
+            state: cooperation.state,
+            address: cooperation.address,
+        });
         const profile = yield Models_1.Profile.create({
             avatar: cooperation.avatar,
             userId: user.id,
@@ -339,9 +351,6 @@ const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, functi
             avatar: cooperation.avatar,
             nameOfOrg: cooperation.nameOfOrg,
             phone: cooperation.phone,
-            address: cooperation.address,
-            state: cooperation.state,
-            lga: cooperation.lga,
             regNum: cooperation.regNum,
             noOfEmployees: cooperation.noOfEmployees,
             professionId: cooperation.professionId,
@@ -413,7 +422,12 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 include: [{
                         model: Models_1.Wallet,
                         attributes: { exclude: ['password'] },
-                    }, {
+                    },
+                    {
+                        model: Models_1.Location,
+                        as: 'location',
+                    },
+                    {
                         model: Models_1.Profile,
                     }]
             });
@@ -425,7 +439,12 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 include: [{
                         model: Models_1.Wallet,
                         attributes: { exclude: ['password'] },
-                    }, {
+                    },
+                    {
+                        model: Models_1.Location,
+                        as: 'location',
+                    },
+                    {
                         model: Models_1.Profile,
                         include: [{
                                 model: Models_1.Professional,
@@ -446,7 +465,12 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 include: [{
                         model: Models_1.Wallet,
                         attributes: { exclude: ['password'] },
-                    }, {
+                    },
+                    {
+                        model: Models_1.Location,
+                        as: 'location',
+                    },
+                    {
                         model: Models_1.Profile,
                         include: [{
                                 model: Models_1.Cooperation,
@@ -1130,7 +1154,7 @@ exports.changePassword = changePassword;
 //                 { model: Cooperation },
 //                 {
 //                     model: User,
-//                     include: [{ model: LanLog },
+//                     include: [{ model: Location },
 //                     {
 //                         model: Education,
 //                         order: [
@@ -1170,7 +1194,7 @@ const postlocationData = (req, res) => __awaiter(void 0, void 0, void 0, functio
     const { lan, log, address } = req.body;
     const { id } = req.user;
     try {
-        const getlocation = yield Models_1.LanLog.findOne({
+        const getlocation = yield Models_1.Location.findOne({
             where: {
                 userId: id
             }
@@ -1195,7 +1219,7 @@ const postlocationData = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 latitude: lan, longitude: log, userId: id, address,
                 coordinates: { type: 'Point', coordinates: [lan, log] },
             };
-            const location = yield Models_1.LanLog.create(insertData);
+            const location = yield Models_1.Location.create(insertData);
             yield (user === null || user === void 0 ? void 0 : user.update({ locationId: location.id }));
             if (location)
                 return (0, modules_1.successResponse)(res, "Created Successfully", location);

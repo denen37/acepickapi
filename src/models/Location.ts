@@ -3,11 +3,21 @@ import { User } from './User';
 
 
 
-@Table({ timestamps: true, tableName: 'lanlog' })
-export class LanLog extends Model {
+@Table({ timestamps: true, tableName: 'location' })
+export class Location extends Model {
     @AllowNull(true)
     @Column(DataType.STRING)
     address!: string;
+
+    @AllowNull(true)
+    @Column(DataType.STRING)
+    lga!: string;
+
+
+    @AllowNull(true)
+    @Column(DataType.STRING)
+    state!: string;
+
 
     @AllowNull(true)
     @Column(DataType.FLOAT)
@@ -20,12 +30,6 @@ export class LanLog extends Model {
 
 
 
-    @AllowNull(true)
-    @Column(DataType.GEOMETRY("POINT"))
-    coordinates!: any
-
-
-
 
     @ForeignKey(() => User)
     @AllowNull(false)
@@ -35,6 +39,4 @@ export class LanLog extends Model {
 
     @BelongsTo(() => User, { onDelete: 'CASCADE' })
     user!: User;
-
-
 }
