@@ -58,8 +58,13 @@ export class User extends Model {
     location!: Location;
 
 
-    @HasMany(() => Review)
-    review!: Review[];
+    @HasMany(() => Review, { foreignKey: 'professionalUserId', as: 'professionalReviews' })
+    professionalReviews!: Review[];
+
+
+
+    @HasMany(() => Review, { foreignKey: 'clientUserId', as: 'clientReviews' })
+    clientReviews!: Review[]; // Reviews given as a client
 
 
 

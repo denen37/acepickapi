@@ -68,9 +68,13 @@ __decorate([
     __metadata("design:type", Models_1.Location)
 ], User.prototype, "location", void 0);
 __decorate([
-    (0, sequelize_typescript_1.HasMany)(() => Models_1.Review),
+    (0, sequelize_typescript_1.HasMany)(() => Models_1.Review, { foreignKey: 'professionalUserId', as: 'professionalReviews' }),
     __metadata("design:type", Array)
-], User.prototype, "review", void 0);
+], User.prototype, "professionalReviews", void 0);
+__decorate([
+    (0, sequelize_typescript_1.HasMany)(() => Models_1.Review, { foreignKey: 'clientUserId', as: 'clientReviews' }),
+    __metadata("design:type", Array)
+], User.prototype, "clientReviews", void 0);
 exports.User = User = __decorate([
     (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'users' })
 ], User);

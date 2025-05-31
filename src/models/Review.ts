@@ -13,7 +13,7 @@ export class Review extends Model {
 
 	@AllowNull(false)
 	@Column(DataType.INTEGER)
-	rating!: number
+	rating!: number;
 
 
 	// @ForeignKey(() => User)
@@ -54,7 +54,7 @@ export class Review extends Model {
 	// user!: User;
 
 
-	@BelongsTo(() => User, { onDelete: 'CASCADE', foreignKey: "professionalUserId", as: "proffesionalUser" })
+	@BelongsTo(() => User, { onDelete: 'CASCADE', foreignKey: "professionalUserId", as: "professionalUser" })
 	professionalUser!: User;
 
 
@@ -64,7 +64,6 @@ export class Review extends Model {
 
 	// @BelongsTo(() => Professional, { onDelete: 'CASCADE' })
 	// proffesional!: Professional;
-
 
 
 	@BelongsTo(() => Job, { onDelete: 'CASCADE' })

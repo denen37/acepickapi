@@ -44,7 +44,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Review.prototype, "jobId", void 0);
 __decorate([
-    (0, sequelize_typescript_1.BelongsTo)(() => Models_1.User, { onDelete: 'CASCADE', foreignKey: "professionalUserId", as: "proffesionalUser" }),
+    (0, sequelize_typescript_1.BelongsTo)(() => Models_1.User, { onDelete: 'CASCADE', foreignKey: "professionalUserId", as: "professionalUser" }),
     __metadata("design:type", Models_1.User)
 ], Review.prototype, "professionalUser", void 0);
 __decorate([
