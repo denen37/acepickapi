@@ -29,6 +29,9 @@ export class Location extends Model {
     longitude!: number
 
 
+    @AllowNull(true)
+    @Column(DataType.INTEGER)
+    zipcode!: number;
 
 
     @ForeignKey(() => User)

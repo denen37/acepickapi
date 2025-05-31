@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.paymentSchema = exports.jobCostingSchema = exports.jobPostSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.updateLocationSchema = exports.paymentSchema = exports.jobCostingSchema = exports.jobPostSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../enum"); // adjust the path
 const enum_2 = require("../enum");
@@ -148,4 +148,13 @@ exports.paymentSchema = zod_1.z.object({
     paidFor: zod_1.z.string().min(1, "paidFor is required"),
     pin: zod_1.z.string().length(4, "PIN must be exactly 4 characters"),
     jobId: zod_1.z.number().int().positive("Job ID must be a positive integer"),
+});
+exports.updateLocationSchema = zod_1.z.object({
+    address: zod_1.z.string().optional(),
+    lga: zod_1.z.string().optional(),
+    state: zod_1.z.string().optional(),
+    latitude: zod_1.z.number().optional(),
+    longitude: zod_1.z.number().optional(),
+    zipcode: zod_1.z.number().int().optional(),
+    userId: zod_1.z.string().uuid({ message: "Invalid UUID for userId" }),
 });

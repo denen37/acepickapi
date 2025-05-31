@@ -7,6 +7,7 @@ import { createJobOrder, generateInvoice, getJobById, getJobs, payforJob, respon
 import { UserRole } from "../enum";
 import { allowRoles } from "../middlewares/allowRoles";
 import { findPersonsNearby, sendEmailTest, sendSMSTest, testNotification } from "../controllers/test";
+import { updateLocation } from "../controllers/location";
 
 const routes = Router();
 
@@ -37,5 +38,7 @@ routes.post('/notification-test', testNotification);
 routes.post('/send-sms', sendSMSTest)
 routes.post('/send-email', sendEmailTest)
 routes.post('/nearest-person', findPersonsNearby)
+
+routes.put('/location', updateLocation);
 
 export default routes;

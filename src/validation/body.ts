@@ -171,5 +171,17 @@ export const paymentSchema = z.object({
 });
 
 
+export const updateLocationSchema = z.object({
+    address: z.string().optional(),
+    lga: z.string().optional(),
+    state: z.string().optional(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+    zipcode: z.number().int().optional(),
+    userId: z.string().uuid({ message: "Invalid UUID for userId" }),
+});
+
+
+
 
 
