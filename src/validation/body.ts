@@ -178,7 +178,7 @@ export const updateLocationSchema = z.object({
     latitude: z.number().optional(),
     longitude: z.number().optional(),
     zipcode: z.number().int().optional(),
-    userId: z.string().uuid({ message: "Invalid UUID for userId" }),
+    //userId: z.string().uuid({ message: "Invalid UUID for userId" }),
 });
 
 

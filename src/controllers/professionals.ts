@@ -10,46 +10,46 @@ import { professionalSearchQuerySchema } from '../validation/query';
 
 
 export const getProfessionals = async (req: Request, res: Response) => {
-    // try {
+    try {
 
-    const result = professionalSearchQuerySchema.safeParse(req.query);
+        const result = professionalSearchQuerySchema.safeParse(req.query);
 
-    if (!result.success) {
-        return res.status(400).json({
-            error: "Invalid query parameters",
-            issues: result.error.format(),
-        });
-    }
+        if (!result.success) {
+            return res.status(400).json({
+                error: "Invalid query parameters",
+                issues: result.error.format(),
+            });
+        }
 
-    const { profession, sector, span, state, lga, rating, page, limit, chargeFrom } = result.data;
-    const { id } = req.user;
+        const { professionId, profession, sector, span, state, lga, rating, page, limit, chargeFrom } = result.data;
+        const { id } = req.user;
 
-    let spanValue;
-    let userLocation;
-    let distanceQuery = '';
-    let minRating = rating;
-    let offset = (page - 1) * limit;
-
-
-    if (span) {
-        userLocation = await Location.findOne({
-            where: {
-                userId: id
-            }
-        })
+        let spanValue;
+        let userLocation;
+        let distanceQuery = '';
+        let minRating = rating;
+        let offset = (page - 1) * limit;
 
 
-        distanceQuery = `
+        if (span) {
+            userLocation = await Location.findOne({
+                where: {
+                    userId: id
+                }
+            })
+
+
+            distanceQuery = `
   6371 * acos(
     cos(radians(${userLocation?.latitude})) * cos(radians([profile->user->location].[latitude])) *
     cos(radians([profile->user->location].[longitude]) - radians(${userLocation?.longitude})) +
     sin(radians(${userLocation?.latitude})) * sin(radians([profile->user->location].[latitude]))
   )
 `;
-    }
+        }
 
-    const professionals = await dbSequelize.query(
-        `
+        const professionals = await dbSequelize.query(
+            `
           SELECT [Professional].[id], 
                  [Professional].[chargeFrom], 
                  [Professional].[available], 
@@ -108,8 +108,10 @@ export const getProfessionals = async (req: Request, res: Response) => {
               ON [profession].[sectorId] = [profession->sector].[id] 
               ${sector ? `AND [profession->sector].[title] LIKE N'%${sector}%'` : ''}
       
-          ${chargeFrom ? `WHERE [Professional].[chargeFrom] >= ${chargeFrom}` : ''}
-      
+              ${chargeFrom || professionId ? `WHERE ` : ''}
+          ${chargeFrom ? `[Professional].[chargeFrom] >= ${chargeFrom}` : ''}
+          ${professionId ? `[Professional].[professionId] = ${professionId}` : ''}
+
           GROUP BY 
               [Professional].[id], [Professional].[chargeFrom], [Professional].[available], 
               [profile].[id], [profile].[firstName], [profile].[lastName], [profile].[avatar], 
@@ -131,21 +133,21 @@ export const getProfessionals = async (req: Request, res: Response) => {
           ORDER BY [Professional].[id] ASC
           OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY;
         `,
-        {
-            type: QueryTypes.SELECT
-        }
-    );
+            {
+                type: QueryTypes.SELECT
+            }
+        );
 
-    const nestedProfessionals = professionals.map(nestFlatKeys);
-
-
-    return successResponse(res, 'success', nestedProfessionals);
+        const nestedProfessionals = professionals.map(nestFlatKeys);
 
 
+        return successResponse(res, 'success', nestedProfessionals);
 
-    // } catch (error: any) {
-    //     return errorResponse(res, 'error', error.message || 'Something went wrong');
-    // }
+
+
+    } catch (error: any) {
+        return errorResponse(res, 'error', error.message || 'Something went wrong');
+    }
 };
 
 export const getProfessionalById = async (req: Request, res: Response) => {

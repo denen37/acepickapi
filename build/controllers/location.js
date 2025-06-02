@@ -15,6 +15,7 @@ const body_1 = require("../validation/body");
 const modules_1 = require("../utils/modules");
 const updateLocation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const { id } = req.user;
         const result = body_1.updateLocationSchema.safeParse(req.body);
         if (!result.success) {
             return res.status(400).json({
@@ -22,7 +23,7 @@ const updateLocation = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 issues: result.error.format(),
             });
         }
-        const { userId, latitude, longitude, address, lga, state, zipcode } = result.data;
+        const { latitude, longitude, address, lga, state, zipcode } = result.data;
         const location = yield Models_1.Location.update({
             latitude,
             longitude,
@@ -31,7 +32,7 @@ const updateLocation = (req, res) => __awaiter(void 0, void 0, void 0, function*
             state,
             zipcode
         }, {
-            where: { userId }
+            where: { userId: id }
         });
         return (0, modules_1.successResponse)(res, 'Location updated successfully', location);
     }

@@ -7,6 +7,7 @@ export const jobStatusQuerySchema = z.object({
 
 
 export const professionalSearchQuerySchema = z.object({
+    professionId: z.coerce.number().int().positive("Profession ID must be a positive integer").optional(),
     profession: z.string().optional(),
     sector: z.string().optional(),
     span: z.coerce.number().int().positive("Span must be a positive integer").optional(),

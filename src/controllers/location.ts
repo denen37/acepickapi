@@ -5,6 +5,8 @@ import { errorResponse, successResponse } from '../utils/modules';
 
 export const updateLocation = async (req: Request, res: Response) => {
     try {
+        const { id } = req.user;
+
         const result = updateLocationSchema.safeParse(req.body);
 
         if (!result.success) {
@@ -14,7 +16,7 @@ export const updateLocation = async (req: Request, res: Response) => {
             });
         }
 
-        const { userId, latitude, longitude, address, lga, state, zipcode } = result.data;
+        const { latitude, longitude, address, lga, state, zipcode } = result.data;
 
         const location = await Location.update({
             latitude,
@@ -24,7 +26,7 @@ export const updateLocation = async (req: Request, res: Response) => {
             state,
             zipcode
         }, {
-            where: { userId }
+            where: { userId: id }
         });
 
         return successResponse(res, 'Location updated successfully', location);

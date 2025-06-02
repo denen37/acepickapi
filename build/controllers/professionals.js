@@ -53,36 +53,36 @@ const sequelize_1 = __importStar(require("sequelize"));
 const db_1 = __importDefault(require("../config/db"));
 const query_1 = require("../validation/query");
 const getProfessionals = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // try {
-    const result = query_1.professionalSearchQuerySchema.safeParse(req.query);
-    if (!result.success) {
-        return res.status(400).json({
-            error: "Invalid query parameters",
-            issues: result.error.format(),
-        });
-    }
-    const { profession, sector, span, state, lga, rating, page, limit, chargeFrom } = result.data;
-    const { id } = req.user;
-    let spanValue;
-    let userLocation;
-    let distanceQuery = '';
-    let minRating = rating;
-    let offset = (page - 1) * limit;
-    if (span) {
-        userLocation = yield Models_1.Location.findOne({
-            where: {
-                userId: id
-            }
-        });
-        distanceQuery = `
+    try {
+        const result = query_1.professionalSearchQuerySchema.safeParse(req.query);
+        if (!result.success) {
+            return res.status(400).json({
+                error: "Invalid query parameters",
+                issues: result.error.format(),
+            });
+        }
+        const { professionId, profession, sector, span, state, lga, rating, page, limit, chargeFrom } = result.data;
+        const { id } = req.user;
+        let spanValue;
+        let userLocation;
+        let distanceQuery = '';
+        let minRating = rating;
+        let offset = (page - 1) * limit;
+        if (span) {
+            userLocation = yield Models_1.Location.findOne({
+                where: {
+                    userId: id
+                }
+            });
+            distanceQuery = `
   6371 * acos(
     cos(radians(${userLocation === null || userLocation === void 0 ? void 0 : userLocation.latitude})) * cos(radians([profile->user->location].[latitude])) *
     cos(radians([profile->user->location].[longitude]) - radians(${userLocation === null || userLocation === void 0 ? void 0 : userLocation.longitude})) +
     sin(radians(${userLocation === null || userLocation === void 0 ? void 0 : userLocation.latitude})) * sin(radians([profile->user->location].[latitude]))
   )
 `;
-    }
-    const professionals = yield db_1.default.query(`
+        }
+        const professionals = yield db_1.default.query(`
           SELECT [Professional].[id], 
                  [Professional].[chargeFrom], 
                  [Professional].[available], 
@@ -141,8 +141,10 @@ const getProfessionals = (req, res) => __awaiter(void 0, void 0, void 0, functio
               ON [profession].[sectorId] = [profession->sector].[id] 
               ${sector ? `AND [profession->sector].[title] LIKE N'%${sector}%'` : ''}
       
-          ${chargeFrom ? `WHERE [Professional].[chargeFrom] >= ${chargeFrom}` : ''}
-      
+              ${chargeFrom || professionId ? `WHERE ` : ''}
+          ${chargeFrom ? `[Professional].[chargeFrom] >= ${chargeFrom}` : ''}
+          ${professionId ? `[Professional].[professionId] = ${professionId}` : ''}
+
           GROUP BY 
               [Professional].[id], [Professional].[chargeFrom], [Professional].[available], 
               [profile].[id], [profile].[firstName], [profile].[lastName], [profile].[avatar], 
@@ -164,13 +166,14 @@ const getProfessionals = (req, res) => __awaiter(void 0, void 0, void 0, functio
           ORDER BY [Professional].[id] ASC
           OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY;
         `, {
-        type: sequelize_1.QueryTypes.SELECT
-    });
-    const nestedProfessionals = professionals.map(modules_1.nestFlatKeys);
-    return (0, modules_1.successResponse)(res, 'success', nestedProfessionals);
-    // } catch (error: any) {
-    //     return errorResponse(res, 'error', error.message || 'Something went wrong');
-    // }
+            type: sequelize_1.QueryTypes.SELECT
+        });
+        const nestedProfessionals = professionals.map(modules_1.nestFlatKeys);
+        return (0, modules_1.successResponse)(res, 'success', nestedProfessionals);
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error.message || 'Something went wrong');
+    }
 });
 exports.getProfessionals = getProfessionals;
 const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

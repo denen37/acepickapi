@@ -156,5 +156,5 @@ exports.updateLocationSchema = zod_1.z.object({
     latitude: zod_1.z.number().optional(),
     longitude: zod_1.z.number().optional(),
     zipcode: zod_1.z.number().int().optional(),
-    userId: zod_1.z.string().uuid({ message: "Invalid UUID for userId" }),
+    //userId: z.string().uuid({ message: "Invalid UUID for userId" }),
 });
