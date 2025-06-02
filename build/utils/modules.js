@@ -6,6 +6,7 @@ exports.getDistanceFromLatLonInKm = getDistanceFromLatLonInKm;
 exports.isGreaterByOne = isGreaterByOne;
 exports.isEqual = isEqual;
 exports.mergeDuplicates = mergeDuplicates;
+exports.nestFlatKeys = nestFlatKeys;
 // import { TransactionDateType } from '../models/Transaction';
 exports.saltRounds = 10;
 const removeEnd = (str, char) => {
@@ -170,4 +171,20 @@ function mergeDuplicates(inputList) {
         }
     });
     return mergedList;
+}
+function nestFlatKeys(flatObject) {
+    const result = {};
+    for (const [key, value] of Object.entries(flatObject)) {
+        const keys = key.split('.');
+        keys.reduce((acc, curr, idx) => {
+            if (idx === keys.length - 1) {
+                acc[curr] = value;
+            }
+            else {
+                acc[curr] = acc[curr] || {};
+            }
+            return acc[curr];
+        }, result);
+    }
+    return result;
 }

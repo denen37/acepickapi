@@ -201,3 +201,20 @@ export function mergeDuplicates(inputList: any) {
 
 	return mergedList;
 }
+
+export function nestFlatKeys(flatObject: any) {
+	const result: { [key: string]: any } = {};
+	for (const [key, value] of Object.entries(flatObject)) {
+		const keys = key.split('.');
+		keys.reduce((acc: { [key: string]: any }, curr: string, idx: number) => {
+			if (idx === keys.length - 1) {
+				acc[curr] = value;
+			} else {
+				acc[curr] = acc[curr] || {};
+			}
+			return acc[curr];
+		}, result);
+	}
+	return result;
+}
+

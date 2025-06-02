@@ -13,8 +13,9 @@ exports.professionalSearchQuerySchema = zod_1.z.object({
     state: zod_1.z.string().optional(),
     lga: zod_1.z.string().optional(),
     rating: zod_1.z.coerce.number().int().min(0).max(5).optional(),
+    chargeFrom: zod_1.z.coerce.number().int().min(0).optional(),
     page: zod_1.z.coerce.number().int().min(1).default(1),
     limit: zod_1.z.coerce.number().int().min(1).max(100).default(10),
-    sortBy: zod_1.z.enum(['rating', 'chargeFrom', 'available']).optional(),
-    sortOrder: zod_1.z.enum(['asc', 'desc']).optional(),
+    // sortBy: z.enum(['rating', 'chargeFrom', 'available']).optional(),
+    // sortOrder: z.enum(['asc', 'desc']).optional(),
 });
