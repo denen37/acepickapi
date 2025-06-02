@@ -211,7 +211,7 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
                                 {
                                     model: Models_1.Review,
                                     as: 'professionalReviews',
-                                    attributes: [] // used only for aggregation
+                                    attributes: ['id', 'rating', 'review', 'professionalUserId', 'clientUserId', 'createdAt', 'updatedAt'] // used only for aggregation
                                 }
                             ]
                         }
@@ -279,6 +279,13 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
                 'profile.user.location.latitude',
                 'profile.user.location.longitude',
                 'profile.user.location.zipcode',
+                'profile.user.professionalReviews.id',
+                'profile.user.professionalReviews.rating',
+                'profile.user.professionalReviews.review',
+                'profile.user.professionalReviews.professionalUserId',
+                'profile.user.professionalReviews.clientUserId',
+                'profile.user.professionalReviews.createdAt',
+                'profile.user.professionalReviews.updatedAt'
             ]
         });
         if (!professional) {
