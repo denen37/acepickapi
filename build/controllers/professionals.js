@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -16,7 +49,7 @@ exports.getProfessionalById = exports.getProfessionals = void 0;
 const { Op } = require('sequelize');
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
-const sequelize_1 = require("sequelize");
+const sequelize_1 = __importStar(require("sequelize"));
 const db_1 = __importDefault(require("../config/db"));
 const query_1 = require("../validation/query");
 const getProfessionals = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -142,32 +175,114 @@ const getProfessionals = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.getProfessionals = getProfessionals;
 const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const professional = yield Models_1.Professional.findByPk(id, {
+        const { professionalId } = req.params;
+        const professional = yield Models_1.Professional.findOne({
+            where: { id: professionalId },
+            attributes: [
+                'id', 'file', 'intro', 'chargeFrom', 'language', 'available', 'workType',
+                'totalEarning', 'completedAmount', 'pendingAmount', 'rejectedAmount',
+                'availableWithdrawalAmount', 'regNum', 'yearsOfExp', 'online',
+                'profileId', 'professionId', 'createdAt', 'updatedAt',
+                [sequelize_1.default.fn('AVG', sequelize_1.default.col('profile.user.professionalReviews.rating')), 'avgRating'],
+                [sequelize_1.default.fn('COUNT', sequelize_1.default.col('profile.user.professionalReviews.rating')), 'numRating'],
+            ],
             include: [
                 {
                     model: Models_1.Profile,
+                    as: 'profile',
+                    attributes: [
+                        'id', 'firstName', 'lastName', 'fcmToken', 'avatar', 'verified', 'notified',
+                        'totalJobs', 'totalExpense', 'rate', 'totalJobsDeclined', 'totalJobsPending',
+                        'count', 'totalJobsOngoing', 'totalJobsCompleted', 'totalReview',
+                        'totalJobsApproved', 'totalJobsCanceled', 'totalDisputes', 'bvn',
+                        'bvnVerified', 'switch', 'store', 'position', 'userId', 'createdAt', 'updatedAt'
+                    ],
                     include: [
                         {
                             model: Models_1.User,
+                            as: 'user',
                             attributes: ['id', 'email', 'phone', 'status', 'role', 'createdAt', 'updatedAt'],
                             include: [
                                 {
                                     model: Models_1.Location,
-                                    attributes: ['id', 'address', 'lga', 'state', 'latitude', 'longitude', 'zipcode'],
+                                    as: 'location',
+                                    attributes: ['id', 'address', 'lga', 'state', 'latitude', 'longitude', 'zipcode']
                                 },
                                 {
                                     model: Models_1.Review,
                                     as: 'professionalReviews',
+                                    attributes: [] // used only for aggregation
                                 }
                             ]
                         }
                     ]
                 }
+            ],
+            group: [
+                'Professional.id',
+                'Professional.file',
+                'Professional.intro',
+                'Professional.chargeFrom',
+                'Professional.language',
+                'Professional.available',
+                'Professional.workType',
+                'Professional.totalEarning',
+                'Professional.completedAmount',
+                'Professional.pendingAmount',
+                'Professional.rejectedAmount',
+                'Professional.availableWithdrawalAmount',
+                'Professional.regNum',
+                'Professional.yearsOfExp',
+                'Professional.online',
+                'Professional.profileId',
+                'Professional.professionId',
+                'Professional.createdAt',
+                'Professional.updatedAt',
+                'profile.id',
+                'profile.firstName',
+                'profile.lastName',
+                'profile.fcmToken',
+                'profile.avatar',
+                'profile.verified',
+                'profile.notified',
+                'profile.totalJobs',
+                'profile.totalExpense',
+                'profile.rate',
+                'profile.totalJobsDeclined',
+                'profile.totalJobsPending',
+                'profile.count',
+                'profile.totalJobsOngoing',
+                'profile.totalJobsCompleted',
+                'profile.totalReview',
+                'profile.totalJobsApproved',
+                'profile.totalJobsCanceled',
+                'profile.totalDisputes',
+                'profile.bvn',
+                'profile.bvnVerified',
+                'profile.switch',
+                'profile.store',
+                'profile.position',
+                'profile.userId',
+                'profile.createdAt',
+                'profile.updatedAt',
+                'profile.user.id',
+                'profile.user.email',
+                'profile.user.phone',
+                'profile.user.status',
+                'profile.user.role',
+                'profile.user.createdAt',
+                'profile.user.updatedAt',
+                'profile.user.location.id',
+                'profile.user.location.address',
+                'profile.user.location.lga',
+                'profile.user.location.state',
+                'profile.user.location.latitude',
+                'profile.user.location.longitude',
+                'profile.user.location.zipcode',
             ]
         });
         if (!professional) {
-            return (0, modules_1.errorResponse)(res, 'Professional not found');
+            return (0, modules_1.handleResponse)(res, 404, false, 'Professional not found');
         }
         return (0, modules_1.successResponse)(res, 'success', professional);
     }

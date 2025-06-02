@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 const { Op } = require('sequelize');
 import { Location, Profession, Professional, Profile, Review, Sector, User } from '../models/Models';
-import { successResponse, errorResponse, nestFlatKeys } from '../utils/modules';
+import { successResponse, errorResponse, nestFlatKeys, handleResponse } from '../utils/modules';
 import sequelize, { QueryTypes } from 'sequelize';
 import dbSequelize from '../config/db';
 import { professionalSearchQuerySchema } from '../validation/query';
@@ -150,36 +150,120 @@ export const getProfessionals = async (req: Request, res: Response) => {
 
 export const getProfessionalById = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const { professionalId } = req.params;
 
-        const professional = await Professional.findByPk(id, {
+        const professional = await Professional.findOne({
+            where: { id: professionalId },
+            attributes: [
+                'id', 'file', 'intro', 'chargeFrom', 'language', 'available', 'workType',
+                'totalEarning', 'completedAmount', 'pendingAmount', 'rejectedAmount',
+                'availableWithdrawalAmount', 'regNum', 'yearsOfExp', 'online',
+                'profileId', 'professionId', 'createdAt', 'updatedAt',
+                [sequelize.fn('AVG', sequelize.col('profile.user.professionalReviews.rating')), 'avgRating'],
+                [sequelize.fn('COUNT', sequelize.col('profile.user.professionalReviews.rating')), 'numRating'],
+            ],
             include: [
                 {
                     model: Profile,
+                    as: 'profile',
+                    attributes: [
+                        'id', 'firstName', 'lastName', 'fcmToken', 'avatar', 'verified', 'notified',
+                        'totalJobs', 'totalExpense', 'rate', 'totalJobsDeclined', 'totalJobsPending',
+                        'count', 'totalJobsOngoing', 'totalJobsCompleted', 'totalReview',
+                        'totalJobsApproved', 'totalJobsCanceled', 'totalDisputes', 'bvn',
+                        'bvnVerified', 'switch', 'store', 'position', 'userId', 'createdAt', 'updatedAt'
+                    ],
                     include: [
                         {
                             model: User,
+                            as: 'user',
                             attributes: ['id', 'email', 'phone', 'status', 'role', 'createdAt', 'updatedAt'],
                             include: [
                                 {
                                     model: Location,
-                                    attributes: ['id', 'address', 'lga', 'state', 'latitude', 'longitude', 'zipcode'],
+                                    as: 'location',
+                                    attributes: ['id', 'address', 'lga', 'state', 'latitude', 'longitude', 'zipcode']
                                 },
                                 {
                                     model: Review,
                                     as: 'professionalReviews',
-
+                                    attributes: [] // used only for aggregation
                                 }
                             ]
-
                         }
                     ]
                 }
+            ],
+            group: [
+                'Professional.id',
+                'Professional.file',
+                'Professional.intro',
+                'Professional.chargeFrom',
+                'Professional.language',
+                'Professional.available',
+                'Professional.workType',
+                'Professional.totalEarning',
+                'Professional.completedAmount',
+                'Professional.pendingAmount',
+                'Professional.rejectedAmount',
+                'Professional.availableWithdrawalAmount',
+                'Professional.regNum',
+                'Professional.yearsOfExp',
+                'Professional.online',
+                'Professional.profileId',
+                'Professional.professionId',
+                'Professional.createdAt',
+                'Professional.updatedAt',
+
+                'profile.id',
+                'profile.firstName',
+                'profile.lastName',
+                'profile.fcmToken',
+                'profile.avatar',
+                'profile.verified',
+                'profile.notified',
+                'profile.totalJobs',
+                'profile.totalExpense',
+                'profile.rate',
+                'profile.totalJobsDeclined',
+                'profile.totalJobsPending',
+                'profile.count',
+                'profile.totalJobsOngoing',
+                'profile.totalJobsCompleted',
+                'profile.totalReview',
+                'profile.totalJobsApproved',
+                'profile.totalJobsCanceled',
+                'profile.totalDisputes',
+                'profile.bvn',
+                'profile.bvnVerified',
+                'profile.switch',
+                'profile.store',
+                'profile.position',
+                'profile.userId',
+                'profile.createdAt',
+                'profile.updatedAt',
+
+                'profile.user.id',
+                'profile.user.email',
+                'profile.user.phone',
+                'profile.user.status',
+                'profile.user.role',
+                'profile.user.createdAt',
+                'profile.user.updatedAt',
+
+                'profile.user.location.id',
+                'profile.user.location.address',
+                'profile.user.location.lga',
+                'profile.user.location.state',
+                'profile.user.location.latitude',
+                'profile.user.location.longitude',
+                'profile.user.location.zipcode',
             ]
-        })
+        });
+
 
         if (!professional) {
-            return errorResponse(res, 'Professional not found');
+            return handleResponse(res, 404, false, 'Professional not found');
         }
 
         return successResponse(res, 'success', professional);
