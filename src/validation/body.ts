@@ -141,6 +141,7 @@ export const jobPostSchema = z.object({
     title: z.string().min(1, "Title is required"),
     description: z.string().min(1, "Description is required"),
     address: z.string().min(1, "Address is required"),
+    numOfJobs: z.number().int().positive("Number of jobs must be a positive integer").optional(),
     professionalId: z.string().uuid("Professional ID must be a valid UUID"),
     mode: z.nativeEnum(JobMode).optional(),
 });

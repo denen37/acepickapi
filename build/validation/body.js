@@ -125,6 +125,7 @@ exports.jobPostSchema = zod_1.z.object({
     title: zod_1.z.string().min(1, "Title is required"),
     description: zod_1.z.string().min(1, "Description is required"),
     address: zod_1.z.string().min(1, "Address is required"),
+    numOfJobs: zod_1.z.number().int().positive("Number of jobs must be a positive integer").optional(),
     professionalId: zod_1.z.string().uuid("Professional ID must be a valid UUID"),
     mode: zod_1.z.nativeEnum(enum_1.JobMode).optional(),
 });

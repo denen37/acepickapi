@@ -225,6 +225,11 @@ export class Job extends Model {
     @Column(DataType.DECIMAL(10, 2))
     materials!: number
 
+    @AllowNull(true)
+    @Default(0)
+    @Column(DataType.INTEGER)
+    numOfJobs!: number
+
 
 
 

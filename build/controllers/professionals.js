@@ -215,7 +215,7 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
                                     model: Models_1.Review,
                                     as: 'professionalReviews',
                                     attributes: ['id', 'rating', 'review', 'professionalUserId', 'clientUserId', 'createdAt', 'updatedAt'] // used only for aggregation
-                                }
+                                },
                             ]
                         }
                     ]

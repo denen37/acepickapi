@@ -190,7 +190,8 @@ export const getProfessionalById = async (req: Request, res: Response) => {
                                     model: Review,
                                     as: 'professionalReviews',
                                     attributes: ['id', 'rating', 'review', 'professionalUserId', 'clientUserId', 'createdAt', 'updatedAt'] // used only for aggregation
-                                }
+                                },
+
                             ]
                         }
                     ]

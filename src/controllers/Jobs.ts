@@ -99,6 +99,7 @@ export const createJobOrder = async (req: Request, res: Response) => {
         title: validatedData.title,
         description: validatedData.description,
         fullAddress: validatedData.address,
+        numOfJobs: validatedData.numOfJobs || 1,
         mode: validatedData.mode || JobMode.PHYSICAL,
         professionalId: validatedData.professionalId,
         clientId: id,

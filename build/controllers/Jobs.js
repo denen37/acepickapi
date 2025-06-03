@@ -93,6 +93,7 @@ const createJobOrder = (req, res) => __awaiter(void 0, void 0, void 0, function*
         title: validatedData.title,
         description: validatedData.description,
         fullAddress: validatedData.address,
+        numOfJobs: validatedData.numOfJobs || 1,
         mode: validatedData.mode || enum_1.JobMode.PHYSICAL,
         professionalId: validatedData.professionalId,
         clientId: id,
