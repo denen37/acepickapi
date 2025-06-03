@@ -40,7 +40,7 @@ __decorate([
     (0, sequelize_typescript_1.ForeignKey)(() => Profile_1.Profile),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.INTEGER),
     __metadata("design:type", Number)
-], Experience.prototype, "userId", void 0);
+], Experience.prototype, "profileId", void 0);
 exports.Experience = Experience = __decorate([
     (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'experiences' })
 ], Experience);

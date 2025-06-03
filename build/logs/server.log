@@ -282,3 +282,10 @@
 2025-06-02 19:08:47	GET - /api/cooperates
 2025-06-02 22:22:40	PUT - /api/location
 2025-06-02 23:35:45	GET - /api/professionals
+2025-06-03 10:41:02	GET - /api/professionals/9
+2025-06-03 10:41:49	GET - /api/professionals/2
+2025-06-03 10:43:57	GET - /api/professionals/2
+2025-06-03 16:51:34	GET - /api/professionals/2
+2025-06-03 17:26:09	GET - /api/professionals/2
+2025-06-03 17:36:55	GET - /api/professionals/2
+2025-06-03 17:44:30	GET - /api/professionals/2

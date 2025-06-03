@@ -31,6 +31,6 @@ export class Experience extends Model {
     @AllowNull(false)
     @ForeignKey(() => Profile)
     @Column(DataType.INTEGER)
-    userId!: number;
+    profileId!: number;
 
 }

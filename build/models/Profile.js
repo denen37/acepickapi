@@ -46,6 +46,11 @@ __decorate([
     __metadata("design:type", String)
 ], Profile.prototype, "avatar", void 0);
 __decorate([
+    (0, sequelize_typescript_1.AllowNull)(false),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DATEONLY),
+    __metadata("design:type", Date)
+], Profile.prototype, "birthDate", void 0);
+__decorate([
     (0, sequelize_typescript_1.Default)(true),
     (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BOOLEAN),
