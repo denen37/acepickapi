@@ -292,7 +292,7 @@ export class Job extends Model {
 
 
     // relationships
-    @BelongsTo(() => User, { foreignKey: 'userId' })
+    @BelongsTo(() => User, { foreignKey: 'clientId' })
     client!: User;
 
     @BelongsTo(() => User, { foreignKey: 'professionalId' })

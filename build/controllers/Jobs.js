@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.disputeJob = exports.approveJob = exports.completeJob = exports.payforJob = exports.generateInvoice = exports.respondToJob = exports.createJobOrder = exports.getJobById = exports.getLatestJob = exports.getJobs = exports.testApi = void 0;
+exports.disputeJob = exports.approveJob = exports.completeJob = exports.payforJob = exports.viewInvoice = exports.generateInvoice = exports.respondToJob = exports.createJobOrder = exports.getJobById = exports.getLatestJob = exports.getJobs = exports.testApi = void 0;
 const modules_1 = require("../utils/modules");
 const crypto_1 = require("crypto");
 const Models_1 = require("../models/Models");
@@ -276,6 +276,25 @@ const generateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.generateInvoice = generateInvoice;
+const viewInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.user;
+    const { jobId } = req.params;
+    try {
+        const invoice = yield Models_1.Job.findByPk(jobId, {
+            attributes: ['id', 'title', 'description', 'status', 'workmanship', 'materials', 'createdAt', 'updatedAt'],
+            include: [
+                {
+                    model: Models_1.Material
+                }
+            ]
+        });
+        return (0, modules_1.successResponse)(res, 'success', invoice);
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error.message);
+    }
+});
+exports.viewInvoice = viewInvoice;
 const payforJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
     const result = body_1.paymentSchema.safeParse(req.body);

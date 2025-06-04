@@ -358,6 +358,26 @@ export const generateInvoice = async (req: Request, res: Response) => {
     }
 }
 
+export const viewInvoice = async (req: Request, res: Response) => {
+    const { id } = req.user;
+    const { jobId } = req.params;
+
+    try {
+        const invoice = await Job.findByPk(jobId, {
+            attributes: ['id', 'title', 'description', 'status', 'workmanship', 'materials', 'createdAt', 'updatedAt'],
+            include: [
+                {
+                    model: Material
+                }
+            ]
+        })
+
+        return successResponse(res, 'success', invoice);
+    } catch (error: any) {
+        return errorResponse(res, 'error', error.message);
+    }
+}
+
 
 export const payforJob = async (req: Request, res: Response) => {
     const { id } = req.user;

@@ -30,6 +30,7 @@ routes.get('/jobs/:id', (0, allowRoles_1.allowRoles)('*'), Jobs_1.getJobById);
 routes.post('/jobs', (0, allowRoles_1.allowRoles)(enum_1.UserRole.CLIENT), Jobs_1.createJobOrder);
 routes.put('/jobs/response/:jobId', (0, allowRoles_1.allowRoles)(enum_1.UserRole.PROFESSIONAL), Jobs_1.respondToJob);
 routes.post('/jobs/invoice', (0, allowRoles_1.allowRoles)(enum_1.UserRole.PROFESSIONAL), Jobs_1.generateInvoice);
+routes.get('/jobs/invoice/:jobId', (0, allowRoles_1.allowRoles)(enum_1.UserRole.PROFESSIONAL, enum_1.UserRole.CLIENT), Jobs_1.viewInvoice);
 routes.post('/jobs/payment', (0, allowRoles_1.allowRoles)(enum_1.UserRole.CLIENT), Jobs_1.payforJob);
 routes.post('/notification-test', test_1.testNotification);
 routes.post('/send-sms', test_1.sendSMSTest);

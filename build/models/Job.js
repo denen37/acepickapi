@@ -197,7 +197,7 @@ __decorate([
     __metadata("design:type", String)
 ], Job.prototype, "sectorId", void 0);
 __decorate([
-    (0, sequelize_typescript_1.BelongsTo)(() => Models_1.User, { foreignKey: 'userId' }),
+    (0, sequelize_typescript_1.BelongsTo)(() => Models_1.User, { foreignKey: 'clientId' }),
     __metadata("design:type", Models_1.User)
 ], Job.prototype, "client", void 0);
 __decorate([
