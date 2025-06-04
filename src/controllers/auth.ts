@@ -598,7 +598,8 @@ export const login = async (req: Request, res: Response) => {
                         }]
                     }]
                 }, {
-                    model: Review
+                    model: Review,
+                    as: 'professionalReviews'
                 }]
             })
         } else {
@@ -621,6 +622,7 @@ export const login = async (req: Request, res: Response) => {
                     }]
                 }, {
                     model: Review,
+                    as: 'professionalReviews'
                 }]
             })
         }

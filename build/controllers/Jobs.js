@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.payforJob = exports.generateInvoice = exports.respondToJob = exports.createJobOrder = exports.getJobById = exports.getLatestJob = exports.getJobs = exports.testApi = void 0;
+exports.disputeJob = exports.approveJob = exports.completeJob = exports.payforJob = exports.generateInvoice = exports.respondToJob = exports.createJobOrder = exports.getJobById = exports.getLatestJob = exports.getJobs = exports.testApi = void 0;
 const modules_1 = require("../utils/modules");
 const crypto_1 = require("crypto");
 const Models_1 = require("../models/Models");
@@ -19,6 +19,7 @@ const messages_1 = require("../utils/messages");
 const query_1 = require("../validation/query");
 const body_1 = require("../validation/body");
 const param_1 = require("../validation/param");
+const notification_1 = require("../services/notification");
 const testApi = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     return (0, modules_1.successResponse)(res, "success", "Your Api is working!");
 });
@@ -42,6 +43,36 @@ const getJobs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const jobs = yield Models_1.Job.findAll({
             where: whereCondition,
+            include: [
+                role === enum_1.UserRole.PROFESSIONAL ? {
+                    model: Models_1.User,
+                    attributes: ['id', 'email', 'phone', 'fcmToken'],
+                    as: 'client',
+                    include: [
+                        {
+                            model: Models_1.Profile,
+                            attributes: ['id', 'firstName', 'lastName', 'avatar']
+                        }
+                    ]
+                } : {
+                    model: Models_1.User,
+                    as: 'professional',
+                    attributes: ['id', 'email', 'phone', 'fcmToken'],
+                    include: [
+                        {
+                            model: Models_1.Profile,
+                            attributes: ['id', 'firstName', 'lastName', 'avatar'],
+                            include: [{
+                                    model: Models_1.Professional,
+                                    attributes: ['id']
+                                }]
+                        }
+                    ]
+                },
+                {
+                    model: Models_1.Material
+                }
+            ]
         });
         return (0, modules_1.successResponse)(res, "success", jobs);
     }
@@ -139,6 +170,9 @@ const createJobOrder = (req, res) => __awaiter(void 0, void 0, void 0, function*
     //send an email to the prof
     const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.professional.email, (0, messages_1.jobCreatedEmail)(job.dataValues).title, (0, messages_1.jobCreatedEmail)(job.dataValues).body, job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName);
     //send notification to the prof
+    if (job.dataValues.professional.fcmToken) {
+        yield (0, notification_1.sendPushNotification)(job.dataValues.professional.fcmToken, 'New job created', `A new job has been created: ${job.dataValues.title}`, null);
+    }
     return (0, modules_1.successResponse)(res, "Successful", { jobResponse, emailSendId: msgStat.messageId });
 });
 exports.createJobOrder = createJobOrder;
@@ -177,6 +211,10 @@ const respondToJob = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.client.email, (0, messages_1.jobResponseEmail)(job.dataValues).title, (0, messages_1.jobResponseEmail)(job.dataValues).body, job.dataValues.client.profile.firstName + ' ' + job.dataValues.client.profile.lastName
         //'User'
         );
+        //send notification to the prof
+        if (job.dataValues.client.fcmToken) {
+            yield (0, notification_1.sendPushNotification)(job.dataValues.client.fcmToken, 'Job response', `Your job has been ${accepted ? 'accepted' : 'rejected'} by the professional: ${job.dataValues.professional.profile.firstName} ${job.dataValues.professional.profile.lastName}`, null);
+        }
         return (0, modules_1.successResponse)(res, 'success', { message: 'Job respsonse updated', emailSendstatus: Boolean(msgStat.messageId) });
     }
     catch (error) {
@@ -194,7 +232,19 @@ const generateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
     const { jobId, durationUnit, durationValue, workmanship, materials } = result.data;
     try {
-        const job = yield Models_1.Job.findByPk(jobId);
+        const job = yield Models_1.Job.findByPk(jobId, {
+            include: [
+                {
+                    model: Models_1.User,
+                    as: 'client'
+                },
+                {
+                    model: Models_1.User,
+                    as: 'professional',
+                    include: [Models_1.Profile]
+                }
+            ]
+        });
         if (!job) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Job not found');
         }
@@ -211,7 +261,11 @@ const generateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function
             job.materials = materials.reduce((acc, mat) => acc + mat.price * mat.quantity, 0);
             const mats = yield Models_1.Material.bulkCreate(Object.assign(newMat));
             yield job.save();
+            //send an email to the client
             //Send notification to the client
+            if (job.dataValues.client.fcmToken) {
+                yield (0, notification_1.sendPushNotification)(job.dataValues.client.fcmToken, 'Invoice generated', `An invoice has been generated for your job: ${job.dataValues.title}`, null);
+            }
             return (0, modules_1.successResponse)(res, 'success', { message: 'Invoice generated' });
         }
         yield job.save();
@@ -284,162 +338,130 @@ const payforJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // }
 });
 exports.payforJob = payforJob;
-// export const completeJob = async (req: Request, res: Response) => {
-//     const { jobId } = req.params;
-//     try {
-//         const job = await Job.findByPk(jobId)
-//         if (!job) {
-//             return handleResponse(res, 404, false, 'Job does not exist');
-//         }
-//         job.status = JobStatus.COMPLETED
-//         await job.save()
-//         const updateUserProfile = await axios.post(`${config.AUTH_BASE_URL}/api/profiles/update-metrics/${job.profId}`,
-//             {
-//                 payload: [
-//                     { field: 'ongoing', action: 'decrement' },
-//                     { field: 'completed', action: 'increment' },
-//                 ]
-//             },
-//             {
-//                 headers: {
-//                     Authorization: req.headers.authorization,
-//                 }
-//             }
-//         )
-//         const updateOwnerProfile = await axios.post(`${config.AUTH_BASE_URL}/api/profiles/update-metrics/${job.clientId}`,
-//             {
-//                 payload: [
-//                     { field: 'ongoing', action: 'decrement' },
-//                     { field: 'completed', action: 'increment' },
-//                 ]
-//             },
-//             {
-//                 headers: {
-//                     Authorization: req.headers.authorization,
-//                 }
-//             }
-//         )
-//         return successResponse(res, 'success', 'Job completed sucessfully')
-//     } catch (error: any) {
-//         return errorResponse(res, 'error', error.message)
-//     }
-// }
-// export const approveJob = async (req: Request, res: Response) => {
-//     const { jobId } = req.params;
-//     try {
-//         const job = await Job.findByPk(jobId)
-//         if (!job) {
-//             return handleResponse(res, 404, false, 'Job does not exist');
-//         }
-//         if (job.status !== JobStatus.COMPLETED) {
-//             return handleResponse(res, 404, false, `You cannot approve a/an ${job.status} job`)
-//         }
-//         job.status = JobStatus.APPROVED;
-//         await job.save()
-//         const updateProfProfile = await axios.post(`${config.AUTH_BASE_URL}/api/profiles/update-metrics/${job.profId}`,
-//             {
-//                 payload: [
-//                     { field: 'completed', action: 'decrement' },
-//                     { field: 'approved', action: 'increment' },
-//                 ]
-//             },
-//             {
-//                 headers: {
-//                     Authorization: req.headers.authorization,
-//                 }
-//             }
-//         )
-//         const updateClientProfile = await axios.post(`${config.AUTH_BASE_URL}/api/profiles/update-metrics/${job.clientId}`,
-//             {
-//                 payload: [
-//                     { field: 'completed', action: 'decrement' },
-//                     { field: 'approved', action: 'increment' },
-//                 ]
-//             },
-//             {
-//                 headers: {
-//                     Authorization: req.headers.authorization,
-//                 }
-//             }
-//         )
-//         //credit job client
-//         const walletResponse = await axios.post(`${config.PAYMENT_BASE_URL}/pay-api/credit-wallet`,
-//             {
-//                 amount: job.workmanship,
-//                 userId: job.profId,
-//             },
-//             {
-//                 headers: {
-//                     Authorization: req.headers.authorization
-//                 }
-//             }
-//         )
-//         return successResponse(res, 'success', 'Job approved sucessfully')
-//     } catch (error: any) {
-//         return errorResponse(res, 'error', error.message)
-//     }
-// }
-// export const disputeJob = async (req: Request, res: Response) => {
-//     const jobId = req.params.jobId;
-//     const { reason, description } = req.body;
-//     try {
-//         const job = await Job.findByPk(jobId);
-//         if (!job) {
-//             return handleResponse(res, 404, false, 'Job does not exist');
-//         }
-//         if (job.status !== JobStatus.COMPLETED) {
-//             return handleResponse(res, 404, false, `You cannot dispute a/an ${job.status} job`)
-//         }
-//         job.status = JobStatus.DISPUTED;
-//         await job.save()
-//         const profResponse = await axios.get(`${config.AUTH_BASE_URL}/api/users/${job.profId}`, {
-//             headers: {
-//                 Authorization: req.headers.authorization,
-//             },
-//         });
-//         const prof = profResponse.data.data;
-//         job.setDataValue('prof', prof);
-//         const updateUserProfile = await axios.post(`${config.AUTH_BASE_URL}/api/profiles/update-metrics/${job.profId}`,
-//             {
-//                 payload: [
-//                     { field: 'completed', action: 'decrement' },
-//                     { field: 'disputed', action: 'increment' },
-//                 ]
-//             },
-//             {
-//                 headers: {
-//                     Authorization: req.headers.authorization,
-//                 }
-//             }
-//         )
-//         const updateOwnerProfile = await axios.post(`${config.AUTH_BASE_URL}/api/profiles/update-metrics/${job.clientId}`,
-//             {
-//                 payload: [
-//                     { field: 'completed', action: 'decrement' },
-//                     { field: 'disputed', action: 'increment' },
-//                 ]
-//             },
-//             {
-//                 headers: {
-//                     Authorization: req.headers.authorization,
-//                 }
-//             }
-//         )
-//         const dispute = await Dispute.create({
-//             reason,
-//             description,
-//             jobId: jobId,
-//             reporterId: job.profId,
-//             partnerId: job.clientId,
-//         })
-//         const msgStat = await sendEmail(
-//             job.dataValues.prof.email,
-//             jobDisputeEmail(job.dataValues, dispute).subject,
-//             jobDisputeEmail(job.dataValues, dispute).text,
-//             job.dataValues.prof.profile.fullName
-//         )
-//         return successResponse(res, 'success', { dispute, emailSendId: msgStat.messageId })
-//     } catch (error: any) {
-//         return errorResponse(res, 'error', error.message)
-//     }
-// }
+const completeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { jobId } = req.params;
+    try {
+        const job = yield Models_1.Job.findByPk(jobId);
+        if (!job) {
+            return (0, modules_1.handleResponse)(res, 404, false, 'Job does not exist');
+        }
+        job.status = enum_1.JobStatus.COMPLETED;
+        yield job.save();
+        //Update professional profile metrics
+        const professionalProfile = yield Models_1.Profile.findOne({
+            where: { userId: job.professionalId }
+        });
+        if (professionalProfile) {
+            professionalProfile.totalJobsCompleted = ((professionalProfile === null || professionalProfile === void 0 ? void 0 : professionalProfile.totalJobsCompleted) || 0) + 1;
+            yield (professionalProfile === null || professionalProfile === void 0 ? void 0 : professionalProfile.save());
+        }
+        //Update client profile metrics
+        const clientProfile = yield Models_1.Profile.findOne({
+            where: { userId: job.clientId }
+        });
+        if (clientProfile) {
+            clientProfile.totalJobsCompleted = ((clientProfile === null || clientProfile === void 0 ? void 0 : clientProfile.totalJobsCompleted) || 0) + 1;
+            yield (clientProfile === null || clientProfile === void 0 ? void 0 : clientProfile.save());
+        }
+        return (0, modules_1.successResponse)(res, 'success', 'Job completed sucessfully');
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error.message);
+    }
+});
+exports.completeJob = completeJob;
+const approveJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { jobId } = req.params;
+    try {
+        const job = yield Models_1.Job.findByPk(jobId);
+        if (!job) {
+            return (0, modules_1.handleResponse)(res, 404, false, 'Job does not exist');
+        }
+        if (job.status !== enum_1.JobStatus.COMPLETED) {
+            return (0, modules_1.handleResponse)(res, 404, false, `You cannot approve a/an ${job.status} job`);
+        }
+        job.status = enum_1.JobStatus.APPROVED;
+        yield job.save();
+        //Update professional profile metrics
+        const professionalProfile = yield Models_1.Profile.findOne({
+            where: { userId: job.professionalId }
+        });
+        if (professionalProfile) {
+            professionalProfile.totalJobsApproved = ((professionalProfile === null || professionalProfile === void 0 ? void 0 : professionalProfile.totalJobsApproved) || 0) + 1;
+            yield (professionalProfile === null || professionalProfile === void 0 ? void 0 : professionalProfile.save());
+        }
+        //Update client profile metrics
+        const clientProfile = yield Models_1.Profile.findOne({
+            where: { userId: job.clientId }
+        });
+        if (clientProfile) {
+            clientProfile.totalJobsApproved = ((clientProfile === null || clientProfile === void 0 ? void 0 : clientProfile.totalJobsApproved) || 0) + 1;
+            yield (clientProfile === null || clientProfile === void 0 ? void 0 : clientProfile.save());
+        }
+        //credit job client
+        const professionalWallet = yield Models_1.Wallet.findOne({
+            where: { userId: job.professionalId }
+        });
+        if (professionalWallet) {
+            professionalWallet.previousBalance = professionalWallet.currentBalance || 0;
+            professionalWallet.currentBalance = (professionalWallet.currentBalance || 0) + job.workmanship;
+            yield professionalWallet.save();
+        }
+        return (0, modules_1.successResponse)(res, 'success', 'Job approved sucessfully');
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error.message);
+    }
+});
+exports.approveJob = approveJob;
+const disputeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const jobId = req.params.jobId;
+    const { reason, description } = req.body;
+    try {
+        const job = yield Models_1.Job.findByPk(jobId, {
+            include: [
+                {
+                    model: Models_1.User,
+                    as: 'professional'
+                }
+            ]
+        });
+        if (!job) {
+            return (0, modules_1.handleResponse)(res, 404, false, 'Job does not exist');
+        }
+        if (job.status !== enum_1.JobStatus.COMPLETED) {
+            return (0, modules_1.handleResponse)(res, 404, false, `You cannot dispute a/an ${job.status} job`);
+        }
+        job.status = enum_1.JobStatus.DISPUTED;
+        yield job.save();
+        //Update professional profile metrics
+        const professionalProfile = yield Models_1.Profile.findOne({
+            where: { userId: job.professionalId }
+        });
+        if (professionalProfile) {
+            professionalProfile.totalDisputes = ((professionalProfile === null || professionalProfile === void 0 ? void 0 : professionalProfile.totalDisputes) || 0) + 1;
+            yield (professionalProfile === null || professionalProfile === void 0 ? void 0 : professionalProfile.save());
+        }
+        //Update client profile metrics
+        const clientProfile = yield Models_1.Profile.findOne({
+            where: { userId: job.clientId }
+        });
+        if (clientProfile) {
+            clientProfile.totalDisputes = ((clientProfile === null || clientProfile === void 0 ? void 0 : clientProfile.totalDisputes) || 0) + 1;
+            yield (clientProfile === null || clientProfile === void 0 ? void 0 : clientProfile.save());
+        }
+        const dispute = yield Models_1.Dispute.create({
+            reason,
+            description,
+            jobId: jobId,
+            reporterId: job.professionalId,
+            partnerId: job.clientId,
+        });
+        const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.prof.email, (0, messages_1.jobDisputeEmail)(job.dataValues, dispute).title, (0, messages_1.jobDisputeEmail)(job.dataValues, dispute).body, job.dataValues.prof.profile.fullName);
+        return (0, modules_1.successResponse)(res, 'success', { dispute, emailSendId: msgStat.messageId });
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error.message);
+    }
+});
+exports.disputeJob = disputeJob;

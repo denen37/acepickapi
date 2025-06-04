@@ -1,13 +1,14 @@
 import { Request, Response } from "express"
 import { successResponse, errorResponse, handleResponse } from "../utils/modules"
 import { randomUUID } from "crypto";
-import { Job, User, Material, Dispute, Profile, Professional } from "../models/Models"
+import { Job, User, Material, Dispute, Profile, Professional, Wallet } from "../models/Models"
 import { JobMode, JobStatus, PayStatus, UserRole } from "../enum"
 import { sendEmail } from "../services/gmail";
 import { jobResponseEmail, jobCreatedEmail, jobDisputeEmail } from "../utils/messages";
 import { jobStatusQuerySchema } from "../validation/query";
 import { jobCostingSchema, jobPostSchema, paymentSchema } from "../validation/body";
 import { jobIdParamSchema } from "../validation/param";
+import { sendPushNotification } from "../services/notification";
 
 
 export const testApi = async (req: Request, res: Response) => {
@@ -39,6 +40,37 @@ export const getJobs = async (req: Request, res: Response) => {
     try {
         const jobs = await Job.findAll({
             where: whereCondition,
+            include: [
+                role === UserRole.PROFESSIONAL ? {
+                    model: User,
+                    attributes: ['id', 'email', 'phone', 'fcmToken'],
+                    as: 'client',
+                    include: [
+                        {
+                            model: Profile,
+                            attributes: ['id', 'firstName', 'lastName', 'avatar']
+                        }
+                    ]
+                } : {
+                    model: User,
+                    as: 'professional',
+                    attributes: ['id', 'email', 'phone', 'fcmToken'],
+                    include: [
+                        {
+                            model: Profile,
+                            attributes: ['id', 'firstName', 'lastName', 'avatar'],
+                            include: [{
+                                model: Professional,
+                                attributes: ['id']
+                            }]
+                        }
+                    ]
+
+                },
+                {
+                    model: Material
+                }
+            ]
         })
 
         return successResponse(res, "success", jobs)
@@ -163,6 +195,14 @@ export const createJobOrder = async (req: Request, res: Response) => {
     )
 
     //send notification to the prof
+    if (job.dataValues.professional.fcmToken) {
+        await sendPushNotification(
+            job.dataValues.professional.fcmToken,
+            'New job created',
+            `A new job has been created: ${job.dataValues.title}`,
+            null
+        );
+    }
 
     return successResponse(res, "Successful", { jobResponse, emailSendId: msgStat.messageId });
 }
@@ -220,6 +260,16 @@ export const respondToJob = async (req: Request, res: Response) => {
             //'User'
         )
 
+        //send notification to the prof
+        if (job.dataValues.client.fcmToken) {
+            await sendPushNotification(
+                job.dataValues.client.fcmToken,
+                'Job response',
+                `Your job has been ${accepted ? 'accepted' : 'rejected'} by the professional: ${job.dataValues.professional.profile.firstName} ${job.dataValues.professional.profile.lastName}`,
+                null
+            );
+        }
+
         return successResponse(res, 'success', { message: 'Job respsonse updated', emailSendstatus: Boolean(msgStat.messageId) })
     } catch (error) {
         return errorResponse(res, 'error', error)
@@ -241,7 +291,19 @@ export const generateInvoice = async (req: Request, res: Response) => {
 
 
     try {
-        const job = await Job.findByPk(jobId);
+        const job = await Job.findByPk(jobId, {
+            include: [
+                {
+                    model: User,
+                    as: 'client'
+                },
+                {
+                    model: User,
+                    as: 'professional',
+                    include: [Profile]
+                }
+            ]
+        });
 
         if (!job) {
             return handleResponse(res, 404, false, 'Job not found');
@@ -272,7 +334,18 @@ export const generateInvoice = async (req: Request, res: Response) => {
 
             await job.save();
 
+            //send an email to the client
+
+
             //Send notification to the client
+            if (job.dataValues.client.fcmToken) {
+                await sendPushNotification(
+                    job.dataValues.client.fcmToken,
+                    'Invoice generated',
+                    `An invoice has been generated for your job: ${job.dataValues.title}`,
+                    null
+                );
+            }
 
             return successResponse(res, 'success', { message: 'Invoice generated' })
         }
@@ -367,199 +440,179 @@ export const payforJob = async (req: Request, res: Response) => {
     // }
 };
 
-// export const completeJob = async (req: Request, res: Response) => {
-//     const { jobId } = req.params;
+export const completeJob = async (req: Request, res: Response) => {
+    const { jobId } = req.params;
 
-//     try {
-//         const job = await Job.findByPk(jobId)
+    try {
+        const job = await Job.findByPk(jobId)
 
-//         if (!job) {
-//             return handleResponse(res, 404, false, 'Job does not exist');
-//         }
+        if (!job) {
+            return handleResponse(res, 404, false, 'Job does not exist');
+        }
 
-//         job.status = JobStatus.COMPLETED
+        job.status = JobStatus.COMPLETED
 
-//         await job.save()
+        await job.save()
 
-//         const updateUserProfile = await axios.post(`${config.AUTH_BASE_URL}/api/profiles/update-metrics/${job.profId}`,
-//             {
-//                 payload: [
-//                     { field: 'ongoing', action: 'decrement' },
-//                     { field: 'completed', action: 'increment' },
-//                 ]
-//             },
-//             {
-//                 headers: {
-//                     Authorization: req.headers.authorization,
-//                 }
-//             }
-//         )
-
-//         const updateOwnerProfile = await axios.post(`${config.AUTH_BASE_URL}/api/profiles/update-metrics/${job.clientId}`,
-//             {
-//                 payload: [
-//                     { field: 'ongoing', action: 'decrement' },
-//                     { field: 'completed', action: 'increment' },
-//                 ]
-//             },
-//             {
-//                 headers: {
-//                     Authorization: req.headers.authorization,
-//                 }
-//             }
-//         )
-
-//         return successResponse(res, 'success', 'Job completed sucessfully')
-//     } catch (error: any) {
-//         return errorResponse(res, 'error', error.message)
-//     }
-// }
+        //Update professional profile metrics
+        const professionalProfile = await Profile.findOne({
+            where: { userId: job.professionalId }
+        })
 
 
-// export const approveJob = async (req: Request, res: Response) => {
-//     const { jobId } = req.params;
+        if (professionalProfile) {
+            professionalProfile.totalJobsCompleted = (professionalProfile?.totalJobsCompleted || 0) + 1;
 
-//     try {
-//         const job = await Job.findByPk(jobId)
+            await professionalProfile?.save();
+        }
 
-//         if (!job) {
-//             return handleResponse(res, 404, false, 'Job does not exist');
-//         }
+        //Update client profile metrics
+        const clientProfile = await Profile.findOne({
+            where: { userId: job.clientId }
+        })
 
-//         if (job.status !== JobStatus.COMPLETED) {
-//             return handleResponse(res, 404, false, `You cannot approve a/an ${job.status} job`)
-//         }
+        if (clientProfile) {
+            clientProfile.totalJobsCompleted = (clientProfile?.totalJobsCompleted || 0) + 1;
 
-//         job.status = JobStatus.APPROVED;
-
-//         await job.save()
-
-//         const updateProfProfile = await axios.post(`${config.AUTH_BASE_URL}/api/profiles/update-metrics/${job.profId}`,
-//             {
-//                 payload: [
-//                     { field: 'completed', action: 'decrement' },
-//                     { field: 'approved', action: 'increment' },
-//                 ]
-//             },
-//             {
-//                 headers: {
-//                     Authorization: req.headers.authorization,
-//                 }
-//             }
-//         )
-
-//         const updateClientProfile = await axios.post(`${config.AUTH_BASE_URL}/api/profiles/update-metrics/${job.clientId}`,
-//             {
-//                 payload: [
-//                     { field: 'completed', action: 'decrement' },
-//                     { field: 'approved', action: 'increment' },
-//                 ]
-//             },
-//             {
-//                 headers: {
-//                     Authorization: req.headers.authorization,
-//                 }
-//             }
-//         )
-
-//         //credit job client
-
-//         const walletResponse = await axios.post(`${config.PAYMENT_BASE_URL}/pay-api/credit-wallet`,
-//             {
-//                 amount: job.workmanship,
-//                 userId: job.profId,
-//             },
-//             {
-//                 headers: {
-//                     Authorization: req.headers.authorization
-//                 }
-//             }
-//         )
-
-//         return successResponse(res, 'success', 'Job approved sucessfully')
-//     } catch (error: any) {
-//         return errorResponse(res, 'error', error.message)
-//     }
-// }
-
-// export const disputeJob = async (req: Request, res: Response) => {
-//     const jobId = req.params.jobId;
-
-//     const { reason, description } = req.body;
-
-//     try {
-//         const job = await Job.findByPk(jobId);
-
-//         if (!job) {
-//             return handleResponse(res, 404, false, 'Job does not exist');
-//         }
-
-//         if (job.status !== JobStatus.COMPLETED) {
-//             return handleResponse(res, 404, false, `You cannot dispute a/an ${job.status} job`)
-//         }
-
-//         job.status = JobStatus.DISPUTED;
-
-//         await job.save()
+            await clientProfile?.save();
+        }
 
 
-//         const profResponse = await axios.get(`${config.AUTH_BASE_URL}/api/users/${job.profId}`, {
-//             headers: {
-//                 Authorization: req.headers.authorization,
-//             },
-//         });
-
-//         const prof = profResponse.data.data;
-
-//         job.setDataValue('prof', prof);
+        return successResponse(res, 'success', 'Job completed sucessfully')
+    } catch (error: any) {
+        return errorResponse(res, 'error', error.message)
+    }
+}
 
 
-//         const updateUserProfile = await axios.post(`${config.AUTH_BASE_URL}/api/profiles/update-metrics/${job.profId}`,
-//             {
-//                 payload: [
-//                     { field: 'completed', action: 'decrement' },
-//                     { field: 'disputed', action: 'increment' },
-//                 ]
-//             },
-//             {
-//                 headers: {
-//                     Authorization: req.headers.authorization,
-//                 }
-//             }
-//         )
+export const approveJob = async (req: Request, res: Response) => {
+    const { jobId } = req.params;
 
-//         const updateOwnerProfile = await axios.post(`${config.AUTH_BASE_URL}/api/profiles/update-metrics/${job.clientId}`,
-//             {
-//                 payload: [
-//                     { field: 'completed', action: 'decrement' },
-//                     { field: 'disputed', action: 'increment' },
-//                 ]
-//             },
-//             {
-//                 headers: {
-//                     Authorization: req.headers.authorization,
-//                 }
-//             }
-//         )
+    try {
+        const job = await Job.findByPk(jobId)
 
-//         const dispute = await Dispute.create({
-//             reason,
-//             description,
-//             jobId: jobId,
-//             reporterId: job.profId,
-//             partnerId: job.clientId,
-//         })
+        if (!job) {
+            return handleResponse(res, 404, false, 'Job does not exist');
+        }
+
+        if (job.status !== JobStatus.COMPLETED) {
+            return handleResponse(res, 404, false, `You cannot approve a/an ${job.status} job`)
+        }
+
+        job.status = JobStatus.APPROVED;
+
+        await job.save();
+
+        //Update professional profile metrics
+        const professionalProfile = await Profile.findOne({
+            where: { userId: job.professionalId }
+        })
+
+        if (professionalProfile) {
+            professionalProfile.totalJobsApproved = (professionalProfile?.totalJobsApproved || 0) + 1;
+
+            await professionalProfile?.save();
+        }
+
+        //Update client profile metrics
+        const clientProfile = await Profile.findOne({
+            where: { userId: job.clientId }
+        })
+
+        if (clientProfile) {
+            clientProfile.totalJobsApproved = (clientProfile?.totalJobsApproved || 0) + 1;
+
+            await clientProfile?.save();
+        }
+
+        //credit job client
+
+        const professionalWallet = await Wallet.findOne({
+            where: { userId: job.professionalId }
+        })
+
+        if (professionalWallet) {
+            professionalWallet.previousBalance = professionalWallet.currentBalance || 0;
+
+            professionalWallet.currentBalance = (professionalWallet.currentBalance || 0) + job.workmanship;
+
+            await professionalWallet.save();
+        }
+
+        return successResponse(res, 'success', 'Job approved sucessfully')
+    } catch (error: any) {
+        return errorResponse(res, 'error', error.message)
+    }
+}
+
+export const disputeJob = async (req: Request, res: Response) => {
+    const jobId = req.params.jobId;
+
+    const { reason, description } = req.body;
+
+    try {
+        const job = await Job.findByPk(jobId, {
+            include: [
+                {
+                    model: User,
+                    as: 'professional'
+                }
+            ]
+        });
+
+        if (!job) {
+            return handleResponse(res, 404, false, 'Job does not exist');
+        }
+
+        if (job.status !== JobStatus.COMPLETED) {
+            return handleResponse(res, 404, false, `You cannot dispute a/an ${job.status} job`)
+        }
+
+        job.status = JobStatus.DISPUTED;
+
+        await job.save()
 
 
-//         const msgStat = await sendEmail(
-//             job.dataValues.prof.email,
-//             jobDisputeEmail(job.dataValues, dispute).subject,
-//             jobDisputeEmail(job.dataValues, dispute).text,
-//             job.dataValues.prof.profile.fullName
-//         )
+        //Update professional profile metrics
+        const professionalProfile = await Profile.findOne({
+            where: { userId: job.professionalId }
+        })
 
-//         return successResponse(res, 'success', { dispute, emailSendId: msgStat.messageId })
-//     } catch (error: any) {
-//         return errorResponse(res, 'error', error.message)
-//     }
-// }
+        if (professionalProfile) {
+            professionalProfile.totalDisputes = (professionalProfile?.totalDisputes || 0) + 1;
+
+            await professionalProfile?.save();
+        }
+
+        //Update client profile metrics
+        const clientProfile = await Profile.findOne({
+            where: { userId: job.clientId }
+        })
+
+        if (clientProfile) {
+            clientProfile.totalDisputes = (clientProfile?.totalDisputes || 0) + 1;
+
+            await clientProfile?.save();
+        }
+
+        const dispute = await Dispute.create({
+            reason,
+            description,
+            jobId: jobId,
+            reporterId: job.professionalId,
+            partnerId: job.clientId,
+        })
+
+
+        const msgStat = await sendEmail(
+            job.dataValues.prof.email,
+            jobDisputeEmail(job.dataValues, dispute).title,
+            jobDisputeEmail(job.dataValues, dispute).body,
+            job.dataValues.prof.profile.fullName
+        )
+
+        return successResponse(res, 'success', { dispute, emailSendId: msgStat.messageId })
+    } catch (error: any) {
+        return errorResponse(res, 'error', error.message)
+    }
+}

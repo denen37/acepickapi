@@ -454,7 +454,8 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                                     }]
                             }]
                     }, {
-                        model: Models_1.Review
+                        model: Models_1.Review,
+                        as: 'professionalReviews'
                     }]
             });
         }
@@ -478,6 +479,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                             }]
                     }, {
                         model: Models_1.Review,
+                        as: 'professionalReviews'
                     }]
             });
         }

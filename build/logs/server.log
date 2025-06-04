@@ -329,3 +329,12 @@
 2025-06-04 09:41:41	GET - /api/jobs/latest
 2025-06-04 10:07:45	GET - /api/jobs/latest
 2025-06-04 10:10:14	GET - /api/jobs/latest
+2025-06-04 11:01:41	GET - /api/professionals
+2025-06-04 11:05:23	POST - /api/jobs
+2025-06-04 11:10:42	POST - /api/auth/login
+2025-06-04 11:14:48	POST - /api/auth/login
+2025-06-04 11:16:24	PUT - /api/jobs/response/22
+2025-06-04 11:19:11	POST - /api/jobs/invoice
+2025-06-04 13:27:16	GET - /api/jobs
+2025-06-04 13:36:08	GET - /api/jobs
+2025-06-04 13:40:38	GET - /api/jobs
