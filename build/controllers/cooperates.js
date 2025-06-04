@@ -16,155 +16,208 @@ exports.getCooperates = void 0;
 const { Op, fn, col, literal } = require('sequelize');
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
-const sequelize_1 = __importDefault(require("sequelize"));
+const sequelize_1 = require("sequelize");
 const query_1 = require("../validation/query");
+const db_1 = __importDefault(require("../config/db"));
 const getCooperates = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { profession, sector } = req.query;
-    try {
-        const result = query_1.professionalSearchQuerySchema.safeParse(req.query);
-        if (!result.success) {
-            return res.status(400).json({
-                error: "Invalid query parameters",
-                issues: result.error.format(),
-            });
-        }
-        const { profession, sector, span, state, lga, rating, page, limit, chargeFrom } = result.data;
-        const { id } = req.user;
-        let userLocation;
-        let distanceQuery = '';
-        let minRating = rating;
-        let offset = (page - 1) * limit;
-        if (span) {
-            userLocation = yield Models_1.Location.findOne({
-                where: {
-                    userId: id
-                }
-            });
-            distanceQuery = `
+    // const { profession, sector } = req.query;
+    // try {
+    const result = query_1.professionalSearchQuerySchema.safeParse(req.query);
+    if (!result.success) {
+        return res.status(400).json({
+            error: "Invalid query parameters",
+            issues: result.error.format(),
+        });
+    }
+    const { professionId, profession, sector, span, state, lga, rating, page, limit, chargeFrom } = result.data;
+    const { id } = req.user;
+    let userLocation;
+    let distanceQuery = '';
+    let minRating = rating;
+    let offset = (page - 1) * limit;
+    if (span) {
+        userLocation = yield Models_1.Location.findOne({
+            where: {
+                userId: id
+            }
+        });
+        distanceQuery = `
           6371 * acos(
             cos(radians(${userLocation === null || userLocation === void 0 ? void 0 : userLocation.latitude})) * cos(radians([profile->user->location].[latitude])) *
             cos(radians([profile->user->location].[longitude]) - radians(${userLocation === null || userLocation === void 0 ? void 0 : userLocation.longitude})) +
             sin(radians(${userLocation === null || userLocation === void 0 ? void 0 : userLocation.latitude})) * sin(radians([profile->user->location].[latitude]))
           )
         `;
-        }
-        // const cooperates = await Cooperation.findAll({
-        //     attributes: [
-        //         'id',
-        //         'nameOfOrg',
-        //         'address',
-        //         'state',
-        //         'lga',
-        //     ],
-        //     include: [
-        //         {
-        //             model: Profession,
-        //             where: profession ? {
-        //                 title: {
-        //                     [Op.like]: `%${profession}%`
-        //                 }
-        //             } : undefined,
-        //             include: [{
-        //                 model: Sector,
-        //                 where: sector ? {
-        //                     title: {
-        //                         [Op.like]: `%${sector}%`
-        //                     }
-        //                 } : undefined
-        //             }]
-        //         },
-        //         {
-        //             model: Profile,
-        //             attributes: ['id', 'avatar'],
-        //             include: [{
-        //                 model: User,
-        //                 attributes: ['id', 'role'],
-        //             }]
-        //         }
-        //     ]
-        // });
-        // const reviewStats = await Review.findAll({
-        //     attributes: [
-        //         'professionalUserId',
-        //         [fn('AVG', col('rating')), 'averageRating'],
-        //         [fn('COUNT', col('id')), 'totalReviews']
-        //     ],
-        //     group: ['professionalUserId'],
-        //     raw: true
-        // });
-        //console.log('Review Stats:', reviewStats.map((stat) => stat.dataValues));
-        const cooperates = yield Models_1.Cooperation.findAll({
-            offset,
-            limit,
-            attributes: {
-                include: [
-                    [sequelize_1.default.fn('AVG', sequelize_1.default.col('Profile.User.professionalReviews.rating')), 'avgRating'],
-                    [sequelize_1.default.fn('COUNT', sequelize_1.default.col('Profile.User.professionalReviews.rating')), 'numRatings']
-                ]
-            },
-            include: [
-                {
-                    model: Models_1.Profile,
-                    attributes: ['id', 'firstName', 'lastName', 'avatar', 'verified', 'userId'],
-                    include: [
-                        {
-                            model: Models_1.User,
-                            attributes: {
-                                exclude: ['password', 'fcmToken']
-                            },
-                            include: [
-                                {
-                                    model: Models_1.Review,
-                                    as: 'professionalReviews',
-                                    attributes: []
-                                },
-                                {
-                                    model: Models_1.Location,
-                                    attributes: {
-                                        include: span ? [
-                                            [sequelize_1.default.literal(distanceQuery), 'distance']
-                                        ] : []
-                                    },
-                                    where: {
-                                        [Op.and]: [
-                                            span && sequelize_1.default.where(sequelize_1.default.literal(distanceQuery), { [Op.lte]: span }),
-                                            state && { state: { [Op.like]: `%${state}%` } },
-                                            lga && { lga: { [Op.like]: `%${lga}%` } }
-                                        ].filter(Boolean)
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    model: Models_1.Profession,
-                    where: profession ? { title: { [Op.like]: `%${profession}%` } } : undefined,
-                    include: [
-                        {
-                            model: Models_1.Sector,
-                            where: sector ? { title: { [Op.like]: `%${sector}%` } } : undefined
-                        }
-                    ]
-                }
-            ],
-            // group: [
-            //     'Professional.id',
-            //     'Profile.id',
-            //     'Profile.User.id',
-            //     'Profile.User.location.id',
-            //     'Profession.id',
-            //     'Profession.sector.id'
-            // ],
-            having: minRating
-                ? sequelize_1.default.where(sequelize_1.default.fn('AVG', sequelize_1.default.col('Profile.User.professionalReviews.rating')), { [Op.gte]: minRating })
-                : undefined,
-            order: [['id', 'ASC']],
-        });
-        return (0, modules_1.successResponse)(res, 'success', cooperates);
     }
-    catch (error) {
-        return (0, modules_1.errorResponse)(res, 'error', error);
-    }
+    const cooperates = yield db_1.default.query(`
+      SELECT [Cooperation.id]
+      ,[Cooperation.nameOfOrg]
+      ,[Cooperation.phone]
+      ,[Cooperation.address]
+      ,[Cooperation.state]
+      ,[Cooperation.lga]
+      ,[Cooperation.regNum]
+      ,[Cooperation.noOfEmployees]
+      ,[Cooperation.professionId]
+      ,[Cooperation.profileId]
+      ,[Cooperation.createdAt]
+      ,[Cooperation.updatedAt]
+      ,[profile->user->professionalReviews].[rating] AS [profile.user.professionalReviews.rating]
+      ,[profile->user->location].[id] AS [profile.user.location.id]
+      ,[profile->user->location].[address] AS [profile.user.location.address]
+      ,[profile->user->location].[lga] AS [profile.user.location.lga]
+      ,[profile->user->location].[state] AS [profile.user.location.state]
+      ,[profile->user->location].[latitude] AS [profile.user.location.latitude]
+      ,[profile->user->location].[longitude] AS [profile.user.location.longitude]
+      ,[profile->user->location].[zipcode] AS [profile.user.location.zipcode]
+      ,[profile->user->location].[userId] AS [profile.user.location.userId]
+      ,[profile->user->location].[createdAt] AS [profile.user.location.createdAt]
+      ,[profile->user->location].[updatedAt] AS [profile.user.location.updatedAt]
+      ${span ? `, (${distanceQuery}) AS [profile.user.location.distance]` : ''}
+      ,[profession].[id] AS [profession.id]
+      ,[profession].[title] AS [profession.title]
+      ,[profession].[image] AS [profession.image]
+      ,[profession].[sectorId] AS [profession.sectorId]
+      ,[profession->sector].[id] AS [profession.sector.id]
+      ,[profession->sector].[title] AS [profession.sector.title]
+      ,[profession->sector].[image] AS [profession.sector.image]
+      FROM [professionals] AS [Professional]
+      LEFT OUTER JOIN [profiles] AS [profile]
+          ON [Professional].[profileId] = [profile].[id]
+      LEFT OUTER JOIN (
+          [users] AS [profile->user]
+          LEFT OUTER JOIN [review] AS [profile->user->professionalReviews]
+              ON [profile->user].[id] = [profile->user->professionalReviews].[professionalUserId]
+          INNER JOIN [location] AS [profile->user->location]
+              ON [profile->user].[id] = [profile->user->location].[userId]
+              ${span || state || lga ? `
+              AND (
+                  ${span ? `(${distanceQuery} <= ${span})` : '1=1'}
+                  ${state ? ` AND [profile->user->location].[state] LIKE N'%${state}%'` : ''}
+                  ${lga ? ` AND [profile->user->location].[lga] LIKE N'%${lga}%'` : ''}
+              )` : ''}
+      ) ON [profile].[userId] = [profile->user].[id]
+      INNER JOIN [professions] AS [profession]
+          ON [Professional].[professionId] = [profession].[id]
+          ${profession ? `AND [profession].[title] LIKE N'%${profession}%'` : ''}
+      INNER JOIN [sectors] AS [profession->sector]
+          ON [profession].[sectorId] = [profession->sector].[id]
+          ${sector ? `AND [profession->sector].[title] LIKE N'%${sector}%'` : ''}
+
+          ${chargeFrom || professionId ? `WHERE ` : ''}
+      ${chargeFrom ? `[Professional].[chargeFrom] >= ${chargeFrom}` : ''}
+      ${professionId ? `[Professional].[professionId] = ${professionId}` : ''}
+
+      GROUP BY
+          [Professional].[id],
+          [Professional].[chargeFrom],
+          [Professional].[available],
+          [profile].[id],
+          [profile].[firstName],
+          [profile].[lastName],
+          [profile].[avatar],
+          [profile].[verified],
+          [profile].[userId],
+          [profile->user].[id],
+          [profile->user].[email],
+          [profile->user].[phone],
+          [profile->user].[status],
+          [profile->user].[role],
+          [profile->user].[createdAt],
+             [profile->user].[status] AS [profile.user.status], 
+             [profile->user].[role] AS [profile.user.role], 
+             [profile->user].[createdAt] AS [profile.user.createdAt], 
+             [profile->user].[updatedAt] AS [profile.user.updatedAt], 
+             [profile->user->location].[id] AS [profile.user.location.id], 
+             [profile->user->location].[address] AS [profile.user.location.address], 
+             [profile->user->location].[lga] AS [profile.user.location.lga], 
+             [profile->user->location].[state] AS [profile.user.location.state], 
+             [profile->user->location].[latitude] AS [profile.user.location.latitude], 
+             [profile->user->location].[longitude] AS [profile.user.location.longitude], 
+             [profile->user->location].[zipcode] AS [profile.user.location.zipcode], 
+             [profile->user->location].[userId] AS [profile.user.location.userId], 
+             [profile->user->location].[createdAt] AS [profile.user.location.createdAt],
+             [profile->user->location].[updatedAt] AS [profile.user.location.updatedAt],
+             ${span ? `(${distanceQuery}) AS [profile.user.location.distance],` : ''} 
+             [profession].[id] AS [profession.id], 
+             [profession].[title] AS [profession.title], 
+             [profession].[image] AS [profession.image], 
+             [profession].[sectorId] AS [profession.sectorId], 
+             [profession->sector].[id] AS [profession.sector.id],
+             [profession->sector].[title] AS [profession.sector.title],
+             [profession->sector].[image] AS [profession.sector.image] 
+      FROM [professionals] AS [Professional] 
+      LEFT OUTER JOIN [profiles] AS [profile] 
+          ON [Professional].[profileId] = [profile].[id] 
+      LEFT OUTER JOIN (
+          [users] AS [profile->user] 
+          LEFT OUTER JOIN [review] AS [profile->user->professionalReviews] 
+              ON [profile->user].[id] = [profile->user->professionalReviews].[professionalUserId] 
+          INNER JOIN [location] AS [profile->user->location] 
+              ON [profile->user].[id] = [profile->user->location].[userId] 
+              ${span || state || lga ? `
+              AND (
+                  ${span ? `(${distanceQuery} <= ${span})` : '1=1'}
+                  ${state ? ` AND [profile->user->location].[state] LIKE N'%${state}%'` : ''}
+                  ${lga ? ` AND [profile->user->location].[lga] LIKE N'%${lga}%'` : ''}
+              )` : ''}
+      ) ON [profile].[userId] = [profile->user].[id] 
+      INNER JOIN [professions] AS [profession] 
+          ON [Professional].[professionId] = [profession].[id] 
+          ${profession ? `AND [profession].[title] LIKE N'%${profession}%'` : ''} 
+      INNER JOIN [sectors] AS [profession->sector] 
+          ON [profession].[sectorId] = [profession->sector].[id] 
+          ${sector ? `AND [profession->sector].[title] LIKE N'%${sector}%'` : ''}
+  
+          ${chargeFrom || professionId ? `WHERE ` : ''}
+      ${chargeFrom ? `[Professional].[chargeFrom] >= ${chargeFrom}` : ''}
+      ${professionId ? `[Professional].[professionId] = ${professionId}` : ''}
+
+      GROUP BY 
+          [Professional].[id], 
+          [Professional].[chargeFrom], 
+          [Professional].[available], 
+          [profile].[id], 
+          [profile].[firstName], 
+          [profile].[lastName], 
+          [profile].[avatar], 
+          [profile].[verified], 
+          [profile].[userId], 
+          [profile->user].[id], 
+          [profile->user].[email], 
+          [profile->user].[phone], 
+          [profile->user].[status], 
+          [profile->user].[role], 
+          [profile->user].[createdAt], 
+          [profile->user].[updatedAt], 
+          [profile->user->location].[id], 
+          [profile->user->location].[address], 
+          [profile->user->location].[lga],
+           [profile->user->location].[state], 
+          [profile->user->location].[latitude],
+           [profile->user->location].[longitude], 
+          [profile->user->location].[zipcode], 
+          [profile->user->location].[userId], 
+          [profile->user->location].[createdAt],
+           [profile->user->location].[updatedAt], 
+          [profession].[id], [profession].[title],
+           [profession].[image], 
+          [profession].[sectorId], 
+          [profession->sector].[id], 
+          [profession->sector].[title], 
+          [profession->sector].[image] 
+  
+      ${minRating ? `HAVING AVG([profile->user->professionalReviews].[rating]) >= ${minRating}` : ''}
+      
+      ORDER BY [Professional].[id] ASC
+      OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY;
+    `, {
+        type: sequelize_1.QueryTypes.SELECT
+    });
+    const nestedCooperates = cooperates.map(modules_1.nestFlatKeys);
+    return (0, modules_1.successResponse)(res, 'success', nestedCooperates);
+    // } catch (error) {
+    //     return errorResponse(res, 'error', error);
+    // }
 });
 exports.getCooperates = getCooperates;

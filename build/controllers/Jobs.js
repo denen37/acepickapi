@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.payforJob = exports.generateInvoice = exports.respondToJob = exports.createJobOrder = exports.getJobById = exports.getJobs = exports.testApi = void 0;
+exports.payforJob = exports.generateInvoice = exports.respondToJob = exports.createJobOrder = exports.getJobById = exports.getLatestJob = exports.getJobs = exports.testApi = void 0;
 const modules_1 = require("../utils/modules");
 const crypto_1 = require("crypto");
 const Models_1 = require("../models/Models");
@@ -50,6 +50,31 @@ const getJobs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getJobs = getJobs;
+const getLatestJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    let { id, role } = req.user;
+    let whereCondition;
+    if (role === enum_1.UserRole.CLIENT) {
+        whereCondition = { clientId: id };
+    }
+    else {
+        whereCondition = { professionalId: id };
+    }
+    try {
+        const job = yield Models_1.Job.findOne({
+            where: whereCondition,
+            order: [['createdAt', 'DESC']],
+            include: [Models_1.Material]
+        });
+        if (!job) {
+            return (0, modules_1.handleResponse)(res, 404, false, 'No job found');
+        }
+        return (0, modules_1.successResponse)(res, "success", job);
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, "error", error);
+    }
+});
+exports.getLatestJob = getLatestJob;
 const getJobById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { id } = req.params;
     try {

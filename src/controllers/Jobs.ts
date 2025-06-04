@@ -47,6 +47,36 @@ export const getJobs = async (req: Request, res: Response) => {
     }
 }
 
+
+export const getLatestJob = async (req: Request, res: Response) => {
+    let { id, role } = req.user;
+
+    let whereCondition: { [key: string]: any; }
+
+    if (role === UserRole.CLIENT) {
+        whereCondition = { clientId: id }
+    } else {
+        whereCondition = { professionalId: id }
+    }
+
+    try {
+        const job = await Job.findOne({
+            where: whereCondition,
+            order: [['createdAt', 'DESC']],
+            include: [Material]
+        })
+
+        if (!job) {
+            return handleResponse(res, 404, false, 'No job found');
+        }
+
+        return successResponse(res, "success", job)
+    } catch (error) {
+        return errorResponse(res, "error", error)
+    }
+}
+
+
 export const getJobById = async (req: Request, res: Response) => {
     let { id } = req.params;
 
