@@ -407,3 +407,4 @@
 2025-06-05 16:00:33	GET - /.well-known/appspecific/com.chrome.devtools.json
 2025-06-05 16:01:02	GET - /.well-known/appspecific/com.chrome.devtools.json
 2025-06-05 17:26:15	POST - /api/auth/login
+2025-06-05 19:19:12	GET - /api/jobs/latest

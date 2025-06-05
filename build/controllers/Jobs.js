@@ -173,6 +173,9 @@ const createJobOrder = (req, res) => __awaiter(void 0, void 0, void 0, function*
     if (job.dataValues.professional.fcmToken) {
         yield (0, notification_1.sendPushNotification)(job.dataValues.professional.fcmToken, 'New job created', `A new job has been created: ${job.dataValues.title}`, null);
     }
+    let onlineProfessional = yield Models_1.OnlineUser.findOne({
+        where: { userId: job.dataValues.professionalId }
+    });
     return (0, modules_1.successResponse)(res, "Successful", { jobResponse, emailSendId: msgStat.messageId });
 });
 exports.createJobOrder = createJobOrder;

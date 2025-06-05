@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import { successResponse, errorResponse, handleResponse } from "../utils/modules"
 import { randomUUID } from "crypto";
-import { Job, User, Material, Dispute, Profile, Professional, Wallet } from "../models/Models"
+import { Job, User, Material, Dispute, Profile, Professional, Wallet, OnlineUser } from "../models/Models"
 import { JobMode, JobStatus, PayStatus, UserRole } from "../enum"
 import { sendEmail } from "../services/gmail";
 import { jobResponseEmail, jobCreatedEmail, jobDisputeEmail } from "../utils/messages";
@@ -9,6 +9,7 @@ import { jobStatusQuerySchema } from "../validation/query";
 import { jobCostingSchema, jobPostSchema, paymentSchema } from "../validation/body";
 import { jobIdParamSchema } from "../validation/param";
 import { sendPushNotification } from "../services/notification";
+import socket from "../chat";
 
 
 export const testApi = async (req: Request, res: Response) => {
@@ -207,6 +208,10 @@ export const createJobOrder = async (req: Request, res: Response) => {
             null
         );
     }
+
+    let onlineProfessional = await OnlineUser.findOne({
+        where: { userId: job.dataValues.professionalId }
+    })
 
     return successResponse(res, "Successful", { jobResponse, emailSendId: msgStat.messageId });
 }
