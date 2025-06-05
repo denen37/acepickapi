@@ -92,7 +92,7 @@ const getLatestJob = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
     try {
         const job = yield Models_1.Job.findOne({
-            where: whereCondition,
+            where: Object.assign(Object.assign({}, whereCondition), { status: enum_1.JobStatus.PENDING, accepted: false }),
             order: [['createdAt', 'DESC']],
             include: [Models_1.Material]
         });
@@ -194,6 +194,12 @@ const respondToJob = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         yield job.update({
             accepted,
         });
+        if (accepted) {
+            job.status = enum_1.JobStatus.PENDING;
+        }
+        else {
+            job.status = enum_1.JobStatus.REJECTED;
+        }
         job.save();
         const professional = yield Models_1.User.findOne({
             where: { id: job.professionalId },
