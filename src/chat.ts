@@ -1,5 +1,6 @@
 import config from './config/configSetup';
 import { Server } from 'socket.io';
+import { socketAuthorize } from './middlewares/authorize';
 
 const chatSocket = (httpServer: any) => {
     const io = new Server(httpServer, {
@@ -9,23 +10,11 @@ const chatSocket = (httpServer: any) => {
         },
     });
 
-    // io.use(async (socket, next) => {
-    //     const token = socket.handshake.auth.token;
+    io.use(async (socket, next) => {
 
-    //     console.log('Session id', socket.handshake.auth.sessionId);
+        socketAuthorize(socket, next);
 
-    //     try {
-    //         const response = await authenticateParamToken(token);
-
-    //         socket.user = response.payload;
-    //     } catch (error) {
-    //         logger.error(error.message);
-
-    //         return next(new Error('Authentication error'));
-    //     }
-
-    //     next();
-    // });
+    });
 
     io.on('connection', async (socket) => {
         console.log('a user connected', socket.id);

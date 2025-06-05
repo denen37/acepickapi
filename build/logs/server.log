@@ -403,3 +403,6 @@
 2025-06-05 15:06:10	GET - /socket.io
 2025-06-05 15:06:15	GET - /socket.io
 2025-06-05 15:15:53	GET - /.well-known/appspecific/com.chrome.devtools.json
+2025-06-05 16:00:29	GET - /.well-known/appspecific/com.chrome.devtools.json
+2025-06-05 16:00:33	GET - /.well-known/appspecific/com.chrome.devtools.json
+2025-06-05 16:01:02	GET - /.well-known/appspecific/com.chrome.devtools.json

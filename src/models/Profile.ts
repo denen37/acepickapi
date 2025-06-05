@@ -41,7 +41,7 @@ export class Profile extends Model {
     avatar!: string;
 
 
-    @AllowNull(false)
+    @AllowNull(true)
     @Column(DataType.DATEONLY)
     birthDate!: Date;
 

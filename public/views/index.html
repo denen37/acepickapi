@@ -33,10 +33,16 @@
 
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script>
-        const socket = io();
+        const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjgzZGYxZmNkLTdlOTMtNDM5NS04Yjk1LWM0YmFjMmIzZTMxNiIsImVtYWlsIjoiYXdhcmFicmFoYW0zN0BnbWFpbC5jb20iLCJyb2xlIjoicHJvZmVzc2lvbmFsIiwiaWF0IjoxNzQ5MDMyMDkwfQ.m39fEVsU-YvBbuAo8BxhlzHf2qbNX0gGjpvF6NJPZCs'
+        const socket = io({
+            auth: {
+                token
+            }
+        });
         const form = document.getElementById('form');
         const input = document.getElementById('input');
         const messages = document.getElementById('messages');
+
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();

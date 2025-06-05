@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const socket_io_1 = require("socket.io");
+const authorize_1 = require("./middlewares/authorize");
 const chatSocket = (httpServer) => {
     const io = new socket_io_1.Server(httpServer, {
         cors: {
@@ -17,18 +18,9 @@ const chatSocket = (httpServer) => {
             credentials: true,
         },
     });
-    // io.use(async (socket, next) => {
-    //     const token = socket.handshake.auth.token;
-    //     console.log('Session id', socket.handshake.auth.sessionId);
-    //     try {
-    //         const response = await authenticateParamToken(token);
-    //         socket.user = response.payload;
-    //     } catch (error) {
-    //         logger.error(error.message);
-    //         return next(new Error('Authentication error'));
-    //     }
-    //     next();
-    // });
+    io.use((socket, next) => __awaiter(void 0, void 0, void 0, function* () {
+        (0, authorize_1.socketAuthorize)(socket, next);
+    }));
     io.on('connection', (socket) => __awaiter(void 0, void 0, void 0, function* () {
         console.log('a user connected', socket.id);
         socket.on('disconnect', () => __awaiter(void 0, void 0, void 0, function* () {

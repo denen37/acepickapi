@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isAuthorized = void 0;
+exports.socketAuthorize = exports.isAuthorized = void 0;
 const configSetup_1 = __importDefault(require("../config/configSetup"));
 const modules_1 = require("../utils/modules");
 const jsonwebtoken_1 = require("jsonwebtoken");
@@ -43,3 +43,19 @@ const isAuthorized = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
     next();
 });
 exports.isAuthorized = isAuthorized;
+const socketAuthorize = (socket, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const token = (_a = socket.handshake.auth) === null || _a === void 0 ? void 0 : _a.token;
+    if (!token) {
+        return next(new Error('Unauthorized'));
+    }
+    try {
+        const decoded = (0, jsonwebtoken_1.verify)(token, configSetup_1.default.TOKEN_SECRET);
+        socket.user = decoded;
+        next();
+    }
+    catch (error) {
+        next(new Error('Unauthorized'));
+    }
+});
+exports.socketAuthorize = socketAuthorize;
