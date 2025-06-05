@@ -405,7 +405,8 @@ export const payforJob = async (req: Request, res: Response) => {
         return handleResponse(res, 400, false, 'Job has already been paid for')
     }
 
-    let response;
+
+
     // try {
     //     response = await axios.post(`${config.PAYMENT_BASE_URL}/pay-api/debit-wallet`, {
     //         amount,

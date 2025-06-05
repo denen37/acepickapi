@@ -17,6 +17,7 @@ import { Job } from './Job'
 import { Review } from './Review'
 import { Dispute } from './Dispute'
 import { Material } from './Material'
+import { Transaction } from './Transaction'
 
 export {
     User,
@@ -37,5 +38,6 @@ export {
     Job,
     Review,
     Dispute,
-    Material
+    Material,
+    Transaction
 }

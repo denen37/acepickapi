@@ -59,9 +59,18 @@ export enum JobStatus {
 }
 
 
-
 export enum PaidFor {
     WORKMANSHIP = 'workmanship',
     MATERIAL = 'material',
     BOTH = 'both'
+}
+
+export enum TransactionStatus {
+    SUCCESS = 'success',
+    FAILED = 'failed',
+}
+
+export enum TransactionType {
+    DEBIT = 'debit',
+    CREDIT = 'credit'
 }

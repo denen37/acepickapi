@@ -8,6 +8,7 @@ import { UserRole } from "../enum";
 import { allowRoles } from "../middlewares/allowRoles";
 import { findPersonsNearby, sendEmailTest, sendSMSTest, testNotification } from "../controllers/test";
 import { updateLocation } from "../controllers/location";
+import { getClient } from "../controllers/client";
 
 const routes = Router();
 
@@ -17,11 +18,13 @@ routes.post("/sectors", createSector);
 routes.put("/sectors/:id", updateSector);
 routes.delete("/sectors/:id", deleteSector);
 
-routes.get("/professions", getProfessions)
-routes.get("/professions/:id", getProfessionById)
-routes.post("/professions", createProfession)
-routes.put("/professions/:id", updateProfession)
-routes.delete("professions/:id", deleteProfession)
+routes.get("/clients/:id", allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), getClient);
+
+routes.get("/professions", getProfessions);
+routes.get("/professions/:id", getProfessionById);
+routes.post("/professions", createProfession);
+routes.put("/professions/:id", updateProfession);
+routes.delete("/professions/:id", deleteProfession);
 
 routes.get("/professionals", getProfessionals);
 routes.get('/professionals/:professionalId', getProfessionalById); // Allow any role to get professional by userId

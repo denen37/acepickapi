@@ -313,7 +313,6 @@ const payforJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (job.payStatus === enum_1.PayStatus.PAID) {
         return (0, modules_1.handleResponse)(res, 400, false, 'Job has already been paid for');
     }
-    let response;
     // try {
     //     response = await axios.post(`${config.PAYMENT_BASE_URL}/pay-api/debit-wallet`, {
     //         amount,

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Material = exports.Dispute = exports.Review = exports.Job = exports.Director = exports.Sector = exports.Profession = exports.Wallet = exports.VoiceRecording = exports.Cooperation = exports.Verify = exports.Professional = exports.Portfolio = exports.Location = exports.Experience = exports.Education = exports.Certification = exports.Profile = exports.User = void 0;
+exports.Transaction = exports.Material = exports.Dispute = exports.Review = exports.Job = exports.Director = exports.Sector = exports.Profession = exports.Wallet = exports.VoiceRecording = exports.Cooperation = exports.Verify = exports.Professional = exports.Portfolio = exports.Location = exports.Experience = exports.Education = exports.Certification = exports.Profile = exports.User = void 0;
 const User_1 = require("./User");
 Object.defineProperty(exports, "User", { enumerable: true, get: function () { return User_1.User; } });
 const Certification_1 = require("./Certification");
@@ -39,3 +39,5 @@ const Dispute_1 = require("./Dispute");
 Object.defineProperty(exports, "Dispute", { enumerable: true, get: function () { return Dispute_1.Dispute; } });
 const Material_1 = require("./Material");
 Object.defineProperty(exports, "Material", { enumerable: true, get: function () { return Material_1.Material; } });
+const Transaction_1 = require("./Transaction");
+Object.defineProperty(exports, "Transaction", { enumerable: true, get: function () { return Transaction_1.Transaction; } });
