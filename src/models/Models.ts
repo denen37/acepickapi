@@ -18,6 +18,7 @@ import { Review } from './Review'
 import { Dispute } from './Dispute'
 import { Material } from './Material'
 import { Transaction } from './Transaction'
+import { OnlineUser } from './OnlineUser'
 
 export {
     User,
@@ -39,5 +40,6 @@ export {
     Review,
     Dispute,
     Material,
-    Transaction
+    Transaction,
+    OnlineUser
 }

@@ -93,7 +93,11 @@ export const getLatestJob = async (req: Request, res: Response) => {
 
     try {
         const job = await Job.findOne({
-            where: whereCondition,
+            where: {
+                ...whereCondition,
+                status: JobStatus.PENDING,
+                accepted: false
+            },
             order: [['createdAt', 'DESC']],
             include: [Material]
         })
@@ -231,6 +235,12 @@ export const respondToJob = async (req: Request, res: Response) => {
         await job.update({
             accepted,
         })
+
+        if (accepted) {
+            job.status = JobStatus.PENDING;
+        } else {
+            job.status = JobStatus.REJECTED;
+        }
 
         job.save();
 

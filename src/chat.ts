@@ -1,6 +1,7 @@
 import config from './config/configSetup';
 import { Server } from 'socket.io';
 import { socketAuthorize } from './middlewares/authorize';
+import { OnlineUser } from './models/OnlineUser';
 
 const chatSocket = (httpServer: any) => {
     const io = new Server(httpServer, {
@@ -19,9 +20,30 @@ const chatSocket = (httpServer: any) => {
     io.on('connection', async (socket) => {
         console.log('a user connected', socket.id);
 
-        socket.on('disconnect', async () => {
+        const [onlineuser, created] = await OnlineUser.findOrCreate({
+            where: { userId: socket.user.id },
+            defaults: {
+                socketId: socket.id,
+                lastActive: new Date(),
+                isOnline: true,
+            }
+        })
 
+        if (!created) {
+            onlineuser.socketId = socket.id;
+            onlineuser.lastActive = new Date();
+            onlineuser.isOnline = true;
+            await onlineuser.save();
+        }
+
+        socket.on('disconnect', async () => {
             console.log('A user disconnected', socket.id);
+            const onlineUser = await OnlineUser.findOne({ where: { userId: socket.user.id } });
+            if (onlineUser) {
+                onlineUser.isOnline = false;
+                onlineUser.lastActive = new Date();
+                await onlineUser.save();
+            }
         })
     });
 
