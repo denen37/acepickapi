@@ -5,7 +5,7 @@ const allowRoles = (...roles) => {
     return (req, res, next) => {
         const user = req.user;
         console.log('user', user);
-        if (user && roles.includes(user.role)) {
+        if (user && (roles.includes(user.role) || roles.includes('*'))) {
             next();
         }
         else {
