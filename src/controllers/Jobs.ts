@@ -9,8 +9,7 @@ import { jobStatusQuerySchema } from "../validation/query";
 import { jobCostingSchema, jobPostSchema, paymentSchema } from "../validation/body";
 import { jobIdParamSchema } from "../validation/param";
 import { sendPushNotification } from "../services/notification";
-import socket from "../chat";
-
+import { getIO } from '../chat';
 
 export const testApi = async (req: Request, res: Response) => {
     return successResponse(res, "success", "Your Api is working!")
@@ -200,18 +199,25 @@ export const createJobOrder = async (req: Request, res: Response) => {
     )
 
     //send notification to the prof
+    console.log('notification token', job.dataValues.professional.fcmToken);
     if (job.dataValues.professional.fcmToken) {
         await sendPushNotification(
             job.dataValues.professional.fcmToken,
             'New job created',
             `A new job has been created: ${job.dataValues.title}`,
-            null
+            {}
         );
     }
 
     let onlineProfessional = await OnlineUser.findOne({
         where: { userId: job.dataValues.professionalId }
     })
+
+    const io = getIO();
+
+    if (onlineProfessional?.isOnline) {
+        io.to(onlineProfessional?.socketId).emit('JOB_CREATED', { text: 'This a new Job', data: job });
+    }
 
     return successResponse(res, "Successful", { jobResponse, emailSendId: msgStat.messageId });
 }
@@ -276,12 +282,13 @@ export const respondToJob = async (req: Request, res: Response) => {
         )
 
         //send notification to the prof
+        console.log('notification token', job.dataValues.client.fcmToken);
         if (job.dataValues.client.fcmToken) {
             await sendPushNotification(
                 job.dataValues.client.fcmToken,
                 'Job response',
                 `Your job has been ${accepted ? 'accepted' : 'rejected'} by the professional: ${job.dataValues.professional.profile.firstName} ${job.dataValues.professional.profile.lastName}`,
-                null
+                {}
             );
         }
 

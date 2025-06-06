@@ -12,8 +12,7 @@ import auth from './routes/auth';
 import profiles from './routes/profiles';
 import general from './routes/general';
 import "reflect-metadata";
-import initSocket from './chat';
-import chatSocket from './chat';
+import { initSocket } from './chat';
 
 const app = express();
 const server = createServer(app);
@@ -36,7 +35,7 @@ app.use("/api/auth/", auth);
 app.use('/api/', general);
 
 // consumeJobEvents();
-chatSocket(server);
+initSocket(server);
 
 
 db.sync().then(() => {

@@ -3,8 +3,10 @@ import { Server } from 'socket.io';
 import { socketAuthorize } from './middlewares/authorize';
 import { OnlineUser } from './models/OnlineUser';
 
-const chatSocket = (httpServer: any) => {
-    const io = new Server(httpServer, {
+let io: Server;
+
+export const initSocket = (httpServer: any) => {
+    io = new Server(httpServer, {
         cors: {
             origin: '*',
             credentials: true,
@@ -50,4 +52,10 @@ const chatSocket = (httpServer: any) => {
     return io;
 }
 
-export default chatSocket;
+export const getIO = (): Server => {
+    if (!io) {
+        throw new Error('Socket.io not initialized!');
+    }
+    return io;
+};
+

@@ -20,6 +20,7 @@ const query_1 = require("../validation/query");
 const body_1 = require("../validation/body");
 const param_1 = require("../validation/param");
 const notification_1 = require("../services/notification");
+const chat_1 = require("../chat");
 const testApi = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     return (0, modules_1.successResponse)(res, "success", "Your Api is working!");
 });
@@ -170,12 +171,17 @@ const createJobOrder = (req, res) => __awaiter(void 0, void 0, void 0, function*
     //send an email to the prof
     const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.professional.email, (0, messages_1.jobCreatedEmail)(job.dataValues).title, (0, messages_1.jobCreatedEmail)(job.dataValues).body, job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName);
     //send notification to the prof
+    console.log('notification token', job.dataValues.professional.fcmToken);
     if (job.dataValues.professional.fcmToken) {
-        yield (0, notification_1.sendPushNotification)(job.dataValues.professional.fcmToken, 'New job created', `A new job has been created: ${job.dataValues.title}`, null);
+        yield (0, notification_1.sendPushNotification)(job.dataValues.professional.fcmToken, 'New job created', `A new job has been created: ${job.dataValues.title}`, {});
     }
     let onlineProfessional = yield Models_1.OnlineUser.findOne({
         where: { userId: job.dataValues.professionalId }
     });
+    const io = (0, chat_1.getIO)();
+    if (onlineProfessional === null || onlineProfessional === void 0 ? void 0 : onlineProfessional.isOnline) {
+        io.to(onlineProfessional === null || onlineProfessional === void 0 ? void 0 : onlineProfessional.socketId).emit('JOB_CREATED', { text: 'This a new Job', data: job });
+    }
     return (0, modules_1.successResponse)(res, "Successful", { jobResponse, emailSendId: msgStat.messageId });
 });
 exports.createJobOrder = createJobOrder;
@@ -221,8 +227,9 @@ const respondToJob = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         //'User'
         );
         //send notification to the prof
+        console.log('notification token', job.dataValues.client.fcmToken);
         if (job.dataValues.client.fcmToken) {
-            yield (0, notification_1.sendPushNotification)(job.dataValues.client.fcmToken, 'Job response', `Your job has been ${accepted ? 'accepted' : 'rejected'} by the professional: ${job.dataValues.professional.profile.firstName} ${job.dataValues.professional.profile.lastName}`, null);
+            yield (0, notification_1.sendPushNotification)(job.dataValues.client.fcmToken, 'Job response', `Your job has been ${accepted ? 'accepted' : 'rejected'} by the professional: ${job.dataValues.professional.profile.firstName} ${job.dataValues.professional.profile.lastName}`, {});
         }
         return (0, modules_1.successResponse)(res, 'success', { message: 'Job respsonse updated', emailSendstatus: Boolean(msgStat.messageId) });
     }

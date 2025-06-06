@@ -9,11 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getIO = exports.initSocket = void 0;
 const socket_io_1 = require("socket.io");
 const authorize_1 = require("./middlewares/authorize");
 const OnlineUser_1 = require("./models/OnlineUser");
-const chatSocket = (httpServer) => {
-    const io = new socket_io_1.Server(httpServer, {
+let io;
+const initSocket = (httpServer) => {
+    io = new socket_io_1.Server(httpServer, {
         cors: {
             origin: '*',
             credentials: true,
@@ -50,4 +52,11 @@ const chatSocket = (httpServer) => {
     }));
     return io;
 };
-exports.default = chatSocket;
+exports.initSocket = initSocket;
+const getIO = () => {
+    if (!io) {
+        throw new Error('Socket.io not initialized!');
+    }
+    return io;
+};
+exports.getIO = getIO;
