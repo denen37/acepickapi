@@ -417,39 +417,52 @@ export const updateInvoice = async (req: Request, res: Response) => {
 
     await job.save();
 
-    if (materials) {
-        const created = await Material.bulkCreate(
-            materials.map((material) => {
-                return !material.id ? {
+    if (materials && materials.length > 0) {
+        // Filter materials without id (new ones) for bulkCreate
+        const newMaterials = materials.filter(material => !material.id);
+        let created: Material[] = [];
+
+        if (newMaterials.length > 0) {
+            created = await Material.bulkCreate(
+                newMaterials.map(material => ({
                     ...material,
                     subTotal: material.price * material.quantity,
                     jobId,
-                } : {}
-            })
-        );
+                }))
+            );
+        }
 
-        materials.forEach(async (mat, index) => {
+        // Update existing materials
+        const updatePromises = [];
+        for (const mat of materials) {
             if (mat.id) {
-                const updated = await Material.update({
-                    ...mat,
-                    subTotal: mat.price * mat.quantity,
-                    jobId,
-                }, {
-                    where: { id: mat.id }
-                })
+                updatePromises.push(
+                    Material.update(
+                        {
+                            ...mat,
+                            subTotal: mat.price * mat.quantity,
+                            jobId,
+                        },
+                        {
+                            where: { id: mat.id }
+                        }
+                    )
+                );
             }
-        })
+        }
+        await Promise.all(updatePromises);
 
-
-
+        // Mark job as having materials and set total cost
         job.isMaterial = true;
-
         job.materialsCost = materials.reduce((acc, mat) => acc + mat.price * mat.quantity, 0);
 
-        // job.materials = updated;
+        await job.save();
+
+        // Optional: assign created/updated materials to job
+        //job.materials = [...created, ...materials.filter(mat => mat.id)];
     }
 
-    return successResponse(res, 'success', job);
+    return successResponse(res, 'success', { message: 'Job updated successfully', job });
 }
 
 export const viewInvoice = async (req: Request, res: Response) => {

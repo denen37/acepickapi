@@ -318,22 +318,31 @@ const updateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         workmanship
     });
     yield job.save();
-    if (materials) {
-        const created = yield Models_1.Material.bulkCreate(materials.map((material) => {
-            return !material.id ? Object.assign(Object.assign({}, material), { subTotal: material.price * material.quantity, jobId }) : {};
-        }));
-        materials.forEach((mat, index) => __awaiter(void 0, void 0, void 0, function* () {
+    if (materials && materials.length > 0) {
+        // Filter materials without id (new ones) for bulkCreate
+        const newMaterials = materials.filter(material => !material.id);
+        let created = [];
+        if (newMaterials.length > 0) {
+            created = yield Models_1.Material.bulkCreate(newMaterials.map(material => (Object.assign(Object.assign({}, material), { subTotal: material.price * material.quantity, jobId }))));
+        }
+        // Update existing materials
+        const updatePromises = [];
+        for (const mat of materials) {
             if (mat.id) {
-                const updated = yield Models_1.Material.update(Object.assign(Object.assign({}, mat), { subTotal: mat.price * mat.quantity, jobId }), {
+                updatePromises.push(Models_1.Material.update(Object.assign(Object.assign({}, mat), { subTotal: mat.price * mat.quantity, jobId }), {
                     where: { id: mat.id }
-                });
+                }));
             }
-        }));
+        }
+        yield Promise.all(updatePromises);
+        // Mark job as having materials and set total cost
         job.isMaterial = true;
         job.materialsCost = materials.reduce((acc, mat) => acc + mat.price * mat.quantity, 0);
-        // job.materials = updated;
+        yield job.save();
+        // Optional: assign created/updated materials to job
+        //job.materials = [...created, ...materials.filter(mat => mat.id)];
     }
-    return (0, modules_1.successResponse)(res, 'success', job);
+    return (0, modules_1.successResponse)(res, 'success', { message: 'Job updated successfully', job });
 });
 exports.updateInvoice = updateInvoice;
 const viewInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
