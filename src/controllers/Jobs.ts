@@ -538,109 +538,113 @@ export const payforJob = async (req: Request, res: Response) => {
     const { amount, paidFor, pin, jobId } = result.data;
 
 
-    //try {
+    try {
 
-    const job = await Job.findByPk(jobId);
-    if (!job) {
-        return handleResponse(res, 404, false, 'Job not found');
+        const job = await Job.findByPk(jobId);
+        if (!job) {
+            return handleResponse(res, 404, false, 'Job not found');
+        }
+
+        if (job.payStatus === PayStatus.PAID) {
+            return handleResponse(res, 400, false, 'Job has already been paid for')
+        }
+
+
+
+        // try {
+        //     response = await axios.post(`${config.PAYMENT_BASE_URL}/pay-api/debit-wallet`, {
+        //         amount,
+        //         pin,
+        //         reason: 'job payment',
+        //         jobId
+        //     }, {
+        //         headers: {
+        //             Authorization: req.headers.authorization,
+        //         }
+        //     });
+        // } catch (error: any) {
+        //     // axios error - get meaningful message from backend
+        //     const errData = error.response?.data || {};
+        //     const errMessage = errData.message || error.message || 'Payment failed';
+        //     return handleResponse(res, 400, false, errMessage, errData.data);
+        // }
+
+
+        //if (response.data.status) {
+        job.payStatus = PayStatus.PAID;
+
+        job.paidFor = paidFor;
+
+        job.paymentRef = randomUUID();
+
+        job.status = JobStatus.ONGOING;
+
+        await job.save();
+
+        if (job.payStatus === PayStatus.PAID) {
+            const updatedProfessionalProfile = await Profile.update({
+                totalJobsOngoing: (job.professional.profile.totalJobsOngoing || 0) + 1,
+            }, {
+                where: { userId: job.professionalId }
+            })
+
+
+            const updatedClientProfile = await Profile.update({
+                totalJobsOngoing: (job.professional.profile.totalJobsOngoing || 0) + 1,
+            }, {
+                where: { userId: job.clientId }
+            })
+        }
+
+        return successResponse(res, 'success', { message: 'Job payment successful' });
+        //   }
+
+
+    } catch (error: any) {
+        return errorResponse(res, 'error', { message: error.message, error });
     }
-
-    if (job.payStatus === PayStatus.PAID) {
-        return handleResponse(res, 400, false, 'Job has already been paid for')
-    }
-
-
-
-    // try {
-    //     response = await axios.post(`${config.PAYMENT_BASE_URL}/pay-api/debit-wallet`, {
-    //         amount,
-    //         pin,
-    //         reason: 'job payment',
-    //         jobId
-    //     }, {
-    //         headers: {
-    //             Authorization: req.headers.authorization,
-    //         }
-    //     });
-    // } catch (error: any) {
-    //     // axios error - get meaningful message from backend
-    //     const errData = error.response?.data || {};
-    //     const errMessage = errData.message || error.message || 'Payment failed';
-    //     return handleResponse(res, 400, false, errMessage, errData.data);
-    // }
-
-
-    //if (response.data.status) {
-    job.payStatus = PayStatus.PAID;
-
-    job.paidFor = paidFor;
-
-    job.paymentRef = randomUUID();
-
-    job.status = JobStatus.ONGOING;
-
-    await job.save();
-
-    if (job.payStatus === PayStatus.PAID) {
-        const updatedProfessionalProfile = await Profile.update({
-            totalJobsOngoing: (job.professional.profile.totalJobsOngoing || 0) + 1,
-        }, {
-            where: { userId: job.professionalId }
-        })
-
-
-        const updatedClientProfile = await Profile.update({
-            totalJobsOngoing: (job.professional.profile.totalJobsOngoing || 0) + 1,
-        }, {
-            where: { userId: job.clientId }
-        })
-    }
-
-    return successResponse(res, 'success', { message: 'Job payment successful' });
-    //   }
-
-    //return handleResponse(res, 400, false, 'Payment failed', response.data.data);
-    // } catch (error: any) {
-    //     return errorResponse(res, 'error', { message: error.message, error });
-    // }
 };
 
 export const completeJob = async (req: Request, res: Response) => {
     const { jobId } = req.params;
 
     try {
-        const job = await Job.findByPk(jobId)
+        const job = await Job.findOne({
+            where: {
+                id: jobId,
+                //professionalId: req.user.id, 
+                status: JobStatus.ONGOING
+            },
+            include: [{
+                model: User,
+                as: 'professional',
+                include: [Profile]
+            }, {
+                model: User,
+                as: 'client',
+                include: [Profile]
+            }]
+        })
 
         if (!job) {
-            return handleResponse(res, 404, false, 'Job does not exist');
+            return handleResponse(res, 404, false, 'Job does not exist / Job already completed');
         }
 
         job.status = JobStatus.COMPLETED
 
         await job.save()
 
-        //Update professional profile metrics
-        const professionalProfile = await Profile.findOne({
-            where: { userId: job.professionalId }
-        })
+
+        job.professional.profile.totalJobsCompleted = (job.professional.profile?.totalJobsCompleted || 0) + 1;
+
+        await job.professional.profile.save();
+        // }
 
 
-        if (professionalProfile) {
-            professionalProfile.totalJobsCompleted = (professionalProfile?.totalJobsCompleted || 0) + 1;
+        job.client.profile.totalJobsCompleted = (job.client.profile?.totalJobsCompleted || 0) + 1;
 
-            await professionalProfile?.save();
-        }
+        await job.client.profile?.save();
 
-        //Update client profile metrics
-        const clientProfile = await Profile.findOne({
-            where: { userId: job.clientId }
-        })
-
-        if (clientProfile) {
-            clientProfile.totalJobsCompleted = (clientProfile?.totalJobsCompleted || 0) + 1;
-
-            await clientProfile?.save();
-        }
 
         //send an email to the client
         const emailTosend = completeJobEmail(job.dataValues);
@@ -677,10 +681,25 @@ export const approveJob = async (req: Request, res: Response) => {
     const { jobId } = req.params;
 
     try {
-        const job = await Job.findByPk(jobId)
+        const job = await Job.findOne({
+            where: {
+                id: jobId,
+                //clientId: req.user.id, 
+                status: JobStatus.COMPLETED
+            },
+            include: [{
+                model: User,
+                as: 'professional',
+                include: [Profile, Wallet]
+            }, {
+                model: User,
+                as: 'client',
+                include: [Profile]
+            }]
+        })
 
         if (!job) {
-            return handleResponse(res, 404, false, 'Job does not exist');
+            return handleResponse(res, 404, false, 'Job does not exist / Job already approved');
         }
 
         if (job.status !== JobStatus.COMPLETED) {
@@ -688,43 +707,26 @@ export const approveJob = async (req: Request, res: Response) => {
         }
 
         job.status = JobStatus.APPROVED;
+        job.approved = true;
 
         await job.save();
 
-        //Update professional profile metrics
-        const professionalProfile = await Profile.findOne({
-            where: { userId: job.professionalId }
-        })
 
-        if (professionalProfile) {
-            professionalProfile.totalJobsApproved = (professionalProfile?.totalJobsApproved || 0) + 1;
+        job.professional.profile.totalJobsApproved = (job.professional.profile?.totalJobsApproved || 0) + 1;
 
-            await professionalProfile?.save();
-        }
+        await job.professional.profile.save();
 
-        //Update client profile metrics
-        const clientProfile = await Profile.findOne({
-            where: { userId: job.clientId }
-        })
+        job.client.profile.totalJobsApproved = (job.client.profile?.totalJobsApproved || 0) + 1;
 
-        if (clientProfile) {
-            clientProfile.totalJobsApproved = (clientProfile?.totalJobsApproved || 0) + 1;
+        await job.client.profile?.save();
 
-            await clientProfile?.save();
-        }
 
-        //credit job client
+        if (job.professional.wallet) {
+            job.professional.wallet.previousBalance = job.professional.wallet.currentBalance || 0;
 
-        const professionalWallet = await Wallet.findOne({
-            where: { userId: job.professionalId }
-        })
+            job.professional.wallet.currentBalance = (job.professional.wallet.currentBalance || 0) + job.workmanship + job.materialsCost;
 
-        if (professionalWallet) {
-            professionalWallet.previousBalance = professionalWallet.currentBalance || 0;
-
-            professionalWallet.currentBalance = (professionalWallet.currentBalance || 0) + job.workmanship;
-
-            await professionalWallet.save();
+            await job.professional.wallet.save();
         }
 
         //send an email to the professional
@@ -750,7 +752,7 @@ export const approveJob = async (req: Request, res: Response) => {
         }
 
 
-        return successResponse(res, 'success', 'Job approved sucessfully')
+        return successResponse(res, 'success', { message: 'Job approved sucessfully', emailSendStatus: Boolean(msgStat) })
     } catch (error: any) {
         return errorResponse(res, 'error', error.message)
     }
@@ -762,14 +764,22 @@ export const disputeJob = async (req: Request, res: Response) => {
     const { reason, description } = req.body;
 
     try {
-        const job = await Job.findByPk(jobId, {
-            include: [
-                {
-                    model: User,
-                    as: 'professional'
-                }
-            ]
-        });
+        const job = await Job.findOne({
+            where: {
+                id: jobId,
+                //professionalId: req.user.id, 
+                status: JobStatus.COMPLETED
+            },
+            include: [{
+                model: User,
+                as: 'professional',
+                include: [Profile]
+            }, {
+                model: User,
+                as: 'client',
+                include: [Profile]
+            }]
+        })
 
         if (!job) {
             return handleResponse(res, 404, false, 'Job does not exist');
@@ -784,26 +794,17 @@ export const disputeJob = async (req: Request, res: Response) => {
         await job.save()
 
 
-        //Update professional profile metrics
-        const professionalProfile = await Profile.findOne({
-            where: { userId: job.professionalId }
-        })
+        if (job.professional.profile) {
+            job.professional.profile.totalDisputes = (job.professional.profile?.totalDisputes || 0) + 1;
 
-        if (professionalProfile) {
-            professionalProfile.totalDisputes = (professionalProfile?.totalDisputes || 0) + 1;
-
-            await professionalProfile?.save();
+            await job.professional.profile?.save();
         }
 
-        //Update client profile metrics
-        const clientProfile = await Profile.findOne({
-            where: { userId: job.clientId }
-        })
 
-        if (clientProfile) {
-            clientProfile.totalDisputes = (clientProfile?.totalDisputes || 0) + 1;
+        if (job.client.profile) {
+            job.client.profile.totalDisputes = (job.client.profile?.totalDisputes || 0) + 1;
 
-            await clientProfile?.save();
+            await job.client.profile?.save();
         }
 
         const dispute = await Dispute.create({
@@ -838,7 +839,7 @@ export const disputeJob = async (req: Request, res: Response) => {
         }
 
 
-        return successResponse(res, 'success', { dispute, emailSendId: msgStat.messageId })
+        return successResponse(res, 'success', { dispute, emailSendStatus: Boolean(msgStat.messageId) })
     } catch (error: any) {
         return errorResponse(res, 'error', error.message)
     }

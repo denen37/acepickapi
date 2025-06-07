@@ -389,82 +389,87 @@ const payforJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
     const { amount, paidFor, pin, jobId } = result.data;
-    //try {
-    const job = yield Models_1.Job.findByPk(jobId);
-    if (!job) {
-        return (0, modules_1.handleResponse)(res, 404, false, 'Job not found');
-    }
-    if (job.payStatus === enum_1.PayStatus.PAID) {
-        return (0, modules_1.handleResponse)(res, 400, false, 'Job has already been paid for');
-    }
-    // try {
-    //     response = await axios.post(`${config.PAYMENT_BASE_URL}/pay-api/debit-wallet`, {
-    //         amount,
-    //         pin,
-    //         reason: 'job payment',
-    //         jobId
-    //     }, {
-    //         headers: {
-    //             Authorization: req.headers.authorization,
-    //         }
-    //     });
-    // } catch (error: any) {
-    //     // axios error - get meaningful message from backend
-    //     const errData = error.response?.data || {};
-    //     const errMessage = errData.message || error.message || 'Payment failed';
-    //     return handleResponse(res, 400, false, errMessage, errData.data);
-    // }
-    //if (response.data.status) {
-    job.payStatus = enum_1.PayStatus.PAID;
-    job.paidFor = paidFor;
-    job.paymentRef = (0, crypto_1.randomUUID)();
-    job.status = enum_1.JobStatus.ONGOING;
-    yield job.save();
-    if (job.payStatus === enum_1.PayStatus.PAID) {
-        const updatedProfessionalProfile = yield Models_1.Profile.update({
-            totalJobsOngoing: (job.professional.profile.totalJobsOngoing || 0) + 1,
-        }, {
-            where: { userId: job.professionalId }
-        });
-        const updatedClientProfile = yield Models_1.Profile.update({
-            totalJobsOngoing: (job.professional.profile.totalJobsOngoing || 0) + 1,
-        }, {
-            where: { userId: job.clientId }
-        });
-    }
-    return (0, modules_1.successResponse)(res, 'success', { message: 'Job payment successful' });
-    //   }
-    //return handleResponse(res, 400, false, 'Payment failed', response.data.data);
-    // } catch (error: any) {
-    //     return errorResponse(res, 'error', { message: error.message, error });
-    // }
-});
-exports.payforJob = payforJob;
-const completeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { jobId } = req.params;
     try {
         const job = yield Models_1.Job.findByPk(jobId);
         if (!job) {
-            return (0, modules_1.handleResponse)(res, 404, false, 'Job does not exist');
+            return (0, modules_1.handleResponse)(res, 404, false, 'Job not found');
+        }
+        if (job.payStatus === enum_1.PayStatus.PAID) {
+            return (0, modules_1.handleResponse)(res, 400, false, 'Job has already been paid for');
+        }
+        // try {
+        //     response = await axios.post(`${config.PAYMENT_BASE_URL}/pay-api/debit-wallet`, {
+        //         amount,
+        //         pin,
+        //         reason: 'job payment',
+        //         jobId
+        //     }, {
+        //         headers: {
+        //             Authorization: req.headers.authorization,
+        //         }
+        //     });
+        // } catch (error: any) {
+        //     // axios error - get meaningful message from backend
+        //     const errData = error.response?.data || {};
+        //     const errMessage = errData.message || error.message || 'Payment failed';
+        //     return handleResponse(res, 400, false, errMessage, errData.data);
+        // }
+        //if (response.data.status) {
+        job.payStatus = enum_1.PayStatus.PAID;
+        job.paidFor = paidFor;
+        job.paymentRef = (0, crypto_1.randomUUID)();
+        job.status = enum_1.JobStatus.ONGOING;
+        yield job.save();
+        if (job.payStatus === enum_1.PayStatus.PAID) {
+            const updatedProfessionalProfile = yield Models_1.Profile.update({
+                totalJobsOngoing: (job.professional.profile.totalJobsOngoing || 0) + 1,
+            }, {
+                where: { userId: job.professionalId }
+            });
+            const updatedClientProfile = yield Models_1.Profile.update({
+                totalJobsOngoing: (job.professional.profile.totalJobsOngoing || 0) + 1,
+            }, {
+                where: { userId: job.clientId }
+            });
+        }
+        return (0, modules_1.successResponse)(res, 'success', { message: 'Job payment successful' });
+        //   }
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', { message: error.message, error });
+    }
+});
+exports.payforJob = payforJob;
+const completeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c;
+    const { jobId } = req.params;
+    try {
+        const job = yield Models_1.Job.findOne({
+            where: {
+                id: jobId,
+                //professionalId: req.user.id, 
+                status: enum_1.JobStatus.ONGOING
+            },
+            include: [{
+                    model: Models_1.User,
+                    as: 'professional',
+                    include: [Models_1.Profile]
+                }, {
+                    model: Models_1.User,
+                    as: 'client',
+                    include: [Models_1.Profile]
+                }]
+        });
+        if (!job) {
+            return (0, modules_1.handleResponse)(res, 404, false, 'Job does not exist / Job already completed');
         }
         job.status = enum_1.JobStatus.COMPLETED;
         yield job.save();
-        //Update professional profile metrics
-        const professionalProfile = yield Models_1.Profile.findOne({
-            where: { userId: job.professionalId }
-        });
-        if (professionalProfile) {
-            professionalProfile.totalJobsCompleted = ((professionalProfile === null || professionalProfile === void 0 ? void 0 : professionalProfile.totalJobsCompleted) || 0) + 1;
-            yield (professionalProfile === null || professionalProfile === void 0 ? void 0 : professionalProfile.save());
-        }
-        //Update client profile metrics
-        const clientProfile = yield Models_1.Profile.findOne({
-            where: { userId: job.clientId }
-        });
-        if (clientProfile) {
-            clientProfile.totalJobsCompleted = ((clientProfile === null || clientProfile === void 0 ? void 0 : clientProfile.totalJobsCompleted) || 0) + 1;
-            yield (clientProfile === null || clientProfile === void 0 ? void 0 : clientProfile.save());
-        }
+        job.professional.profile.totalJobsCompleted = (((_a = job.professional.profile) === null || _a === void 0 ? void 0 : _a.totalJobsCompleted) || 0) + 1;
+        yield job.professional.profile.save();
+        // }
+        job.client.profile.totalJobsCompleted = (((_b = job.client.profile) === null || _b === void 0 ? void 0 : _b.totalJobsCompleted) || 0) + 1;
+        yield ((_c = job.client.profile) === null || _c === void 0 ? void 0 : _c.save());
         //send an email to the client
         const emailTosend = (0, messages_1.completeJobEmail)(job.dataValues);
         const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.client.email, emailTosend.title, emailTosend.body, job.dataValues.client.profile.firstName + ' ' + job.dataValues.client.profile.lastName
@@ -482,41 +487,42 @@ const completeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.completeJob = completeJob;
 const approveJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c;
     const { jobId } = req.params;
     try {
-        const job = yield Models_1.Job.findByPk(jobId);
+        const job = yield Models_1.Job.findOne({
+            where: {
+                id: jobId,
+                //clientId: req.user.id, 
+                status: enum_1.JobStatus.COMPLETED
+            },
+            include: [{
+                    model: Models_1.User,
+                    as: 'professional',
+                    include: [Models_1.Profile, Models_1.Wallet]
+                }, {
+                    model: Models_1.User,
+                    as: 'client',
+                    include: [Models_1.Profile]
+                }]
+        });
         if (!job) {
-            return (0, modules_1.handleResponse)(res, 404, false, 'Job does not exist');
+            return (0, modules_1.handleResponse)(res, 404, false, 'Job does not exist / Job already approved');
         }
         if (job.status !== enum_1.JobStatus.COMPLETED) {
             return (0, modules_1.handleResponse)(res, 404, false, `You cannot approve a/an ${job.status} job`);
         }
         job.status = enum_1.JobStatus.APPROVED;
+        job.approved = true;
         yield job.save();
-        //Update professional profile metrics
-        const professionalProfile = yield Models_1.Profile.findOne({
-            where: { userId: job.professionalId }
-        });
-        if (professionalProfile) {
-            professionalProfile.totalJobsApproved = ((professionalProfile === null || professionalProfile === void 0 ? void 0 : professionalProfile.totalJobsApproved) || 0) + 1;
-            yield (professionalProfile === null || professionalProfile === void 0 ? void 0 : professionalProfile.save());
-        }
-        //Update client profile metrics
-        const clientProfile = yield Models_1.Profile.findOne({
-            where: { userId: job.clientId }
-        });
-        if (clientProfile) {
-            clientProfile.totalJobsApproved = ((clientProfile === null || clientProfile === void 0 ? void 0 : clientProfile.totalJobsApproved) || 0) + 1;
-            yield (clientProfile === null || clientProfile === void 0 ? void 0 : clientProfile.save());
-        }
-        //credit job client
-        const professionalWallet = yield Models_1.Wallet.findOne({
-            where: { userId: job.professionalId }
-        });
-        if (professionalWallet) {
-            professionalWallet.previousBalance = professionalWallet.currentBalance || 0;
-            professionalWallet.currentBalance = (professionalWallet.currentBalance || 0) + job.workmanship;
-            yield professionalWallet.save();
+        job.professional.profile.totalJobsApproved = (((_a = job.professional.profile) === null || _a === void 0 ? void 0 : _a.totalJobsApproved) || 0) + 1;
+        yield job.professional.profile.save();
+        job.client.profile.totalJobsApproved = (((_b = job.client.profile) === null || _b === void 0 ? void 0 : _b.totalJobsApproved) || 0) + 1;
+        yield ((_c = job.client.profile) === null || _c === void 0 ? void 0 : _c.save());
+        if (job.professional.wallet) {
+            job.professional.wallet.previousBalance = job.professional.wallet.currentBalance || 0;
+            job.professional.wallet.currentBalance = (job.professional.wallet.currentBalance || 0) + job.workmanship + job.materialsCost;
+            yield job.professional.wallet.save();
         }
         //send an email to the professional
         const emailTosend = (0, messages_1.approveJobEmail)(job.dataValues);
@@ -527,7 +533,7 @@ const approveJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (job.dataValues.client.fcmToken) {
             yield (0, notification_1.sendPushNotification)(job.dataValues.professional.fcmToken, 'Job Approved', `Your job on ${job.dataValues.title} has been Approved by ${job.client.profile.firstName} ${job.client.profile.lastName}`, {});
         }
-        return (0, modules_1.successResponse)(res, 'success', 'Job approved sucessfully');
+        return (0, modules_1.successResponse)(res, 'success', { message: 'Job approved sucessfully', emailSendStatus: Boolean(msgStat) });
     }
     catch (error) {
         return (0, modules_1.errorResponse)(res, 'error', error.message);
@@ -535,16 +541,25 @@ const approveJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.approveJob = approveJob;
 const disputeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d;
     const jobId = req.params.jobId;
     const { reason, description } = req.body;
     try {
-        const job = yield Models_1.Job.findByPk(jobId, {
-            include: [
-                {
+        const job = yield Models_1.Job.findOne({
+            where: {
+                id: jobId,
+                //professionalId: req.user.id, 
+                status: enum_1.JobStatus.COMPLETED
+            },
+            include: [{
                     model: Models_1.User,
-                    as: 'professional'
-                }
-            ]
+                    as: 'professional',
+                    include: [Models_1.Profile]
+                }, {
+                    model: Models_1.User,
+                    as: 'client',
+                    include: [Models_1.Profile]
+                }]
         });
         if (!job) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Job does not exist');
@@ -554,21 +569,13 @@ const disputeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         }
         job.status = enum_1.JobStatus.DISPUTED;
         yield job.save();
-        //Update professional profile metrics
-        const professionalProfile = yield Models_1.Profile.findOne({
-            where: { userId: job.professionalId }
-        });
-        if (professionalProfile) {
-            professionalProfile.totalDisputes = ((professionalProfile === null || professionalProfile === void 0 ? void 0 : professionalProfile.totalDisputes) || 0) + 1;
-            yield (professionalProfile === null || professionalProfile === void 0 ? void 0 : professionalProfile.save());
+        if (job.professional.profile) {
+            job.professional.profile.totalDisputes = (((_a = job.professional.profile) === null || _a === void 0 ? void 0 : _a.totalDisputes) || 0) + 1;
+            yield ((_b = job.professional.profile) === null || _b === void 0 ? void 0 : _b.save());
         }
-        //Update client profile metrics
-        const clientProfile = yield Models_1.Profile.findOne({
-            where: { userId: job.clientId }
-        });
-        if (clientProfile) {
-            clientProfile.totalDisputes = ((clientProfile === null || clientProfile === void 0 ? void 0 : clientProfile.totalDisputes) || 0) + 1;
-            yield (clientProfile === null || clientProfile === void 0 ? void 0 : clientProfile.save());
+        if (job.client.profile) {
+            job.client.profile.totalDisputes = (((_c = job.client.profile) === null || _c === void 0 ? void 0 : _c.totalDisputes) || 0) + 1;
+            yield ((_d = job.client.profile) === null || _d === void 0 ? void 0 : _d.save());
         }
         const dispute = yield Models_1.Dispute.create({
             reason,
@@ -586,7 +593,7 @@ const disputeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (job.dataValues.client.fcmToken) {
             yield (0, notification_1.sendPushNotification)(job.dataValues.professional.fcmToken, 'Job Disputed', `Your job on ${job.dataValues.title} has been disputed by ${job.client.profile.firstName} ${job.client.profile.lastName}`, {});
         }
-        return (0, modules_1.successResponse)(res, 'success', { dispute, emailSendId: msgStat.messageId });
+        return (0, modules_1.successResponse)(res, 'success', { dispute, emailSendStatus: Boolean(msgStat.messageId) });
     }
     catch (error) {
         return (0, modules_1.errorResponse)(res, 'error', error.message);
