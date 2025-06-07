@@ -413,3 +413,14 @@
 2025-06-05 20:41:02	POST - /api/jobs
 2025-06-05 20:42:56	POST - /api/jobs
 2025-06-06 20:46:47	GET - /api/jobs/22
+2025-06-06 20:54:41	GET - /api/jobs/22
+2025-06-06 21:59:59	GET - /api/jobs/invoice/3
+2025-06-06 22:14:41	GET - /api/jobs/3
+2025-06-06 22:15:16	PUT - /api/jobs/3
+2025-06-06 22:16:09	PUT - /api/jobs/invoice/3
+2025-06-06 22:22:50	PUT - /api/jobs/invoice/3
+2025-06-06 22:23:39	GET - /api/jobs/invoice/3
+2025-06-06 22:23:53	GET - /api/jobs/invoice/3
+2025-06-06 22:25:03	GET - /api/jobs/invoice/3
+2025-06-06 22:26:50	PUT - /api/jobs/invoice/3
+2025-06-06 22:40:31	PUT - /api/jobs/invoice/3

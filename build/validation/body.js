@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateLocationSchema = exports.paymentSchema = exports.jobCostingSchema = exports.jobPostSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.updateLocationSchema = exports.paymentSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobPostSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../enum"); // adjust the path
 const enum_2 = require("../enum");
@@ -136,6 +136,13 @@ const materialSchema = zod_1.z.object({
     unit: zod_1.z.string().max(20).optional().or(zod_1.z.literal("").transform(() => undefined)),
     price: zod_1.z.number().int().positive("Price must be a positive integer"),
 });
+const materialUpdateSchema = zod_1.z.object({
+    id: zod_1.z.number().int().positive().optional(),
+    description: zod_1.z.string().min(1, "Description is required"),
+    quantity: zod_1.z.number().int().positive("Quantity must be a positive integer"),
+    unit: zod_1.z.string().max(20).optional().or(zod_1.z.literal("").transform(() => undefined)),
+    price: zod_1.z.number().int().positive("Price must be a positive integer"),
+});
 // Full request body schema with optional `materials`
 exports.jobCostingSchema = zod_1.z.object({
     jobId: zod_1.z.number().int().positive("Job ID must be a positive integer"),
@@ -143,6 +150,12 @@ exports.jobCostingSchema = zod_1.z.object({
     durationValue: zod_1.z.number().int().positive("Duration value must be a positive integer"),
     workmanship: zod_1.z.number().int().nonnegative("Workmanship must be a non-negative integer"),
     materials: zod_1.z.array(materialSchema).optional(),
+});
+exports.jobCostingUpdateSchema = zod_1.z.object({
+    durationUnit: zod_1.z.string().min(1, "Duration unit is required").optional(),
+    durationValue: zod_1.z.number().int().positive("Duration value must be a positive integer").optional(),
+    workmanship: zod_1.z.number().int().nonnegative("Workmanship must be a non-negative integer").optional(),
+    materials: zod_1.z.array(materialUpdateSchema).optional(),
 });
 exports.paymentSchema = zod_1.z.object({
     amount: zod_1.z.number().positive("Amount must be a positive number"),

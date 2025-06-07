@@ -141,7 +141,7 @@ __decorate([
     (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DECIMAL(10, 2)),
     __metadata("design:type", Number)
-], Job.prototype, "materials", void 0);
+], Job.prototype, "materialsCost", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Default)(0),
@@ -171,7 +171,7 @@ __decorate([
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.INTEGER),
-    __metadata("design:type", String)
+    __metadata("design:type", Number)
 ], Job.prototype, "durationValue", void 0);
 __decorate([
     (0, sequelize_typescript_1.Default)(enum_1.JobStatus.PENDING),
@@ -211,7 +211,7 @@ __decorate([
 __decorate([
     (0, sequelize_typescript_1.HasMany)(() => Models_1.Material, { onDelete: 'CASCADE' }),
     __metadata("design:type", Array)
-], Job.prototype, "material", void 0);
+], Job.prototype, "materials", void 0);
 exports.Job = Job = __decorate([
     (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'jobs' })
 ], Job);

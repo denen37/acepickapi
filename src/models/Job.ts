@@ -223,14 +223,13 @@ export class Job extends Model {
 
     @AllowNull(true)
     @Column(DataType.DECIMAL(10, 2))
-    materials!: number
+    materialsCost!: number
+
 
     @AllowNull(true)
     @Default(0)
     @Column(DataType.INTEGER)
     numOfJobs!: number
-
-
 
 
     @AllowNull(true)
@@ -256,7 +255,7 @@ export class Job extends Model {
 
     @AllowNull(true)
     @Column(DataType.INTEGER)
-    durationValue!: string
+    durationValue!: number
 
     @Default(JobStatus.PENDING)
     @AllowNull(false)
@@ -307,5 +306,5 @@ export class Job extends Model {
 
 
     @HasMany(() => Material, { onDelete: 'CASCADE' })
-    material!: Material[];
+    materials!: Material[];
 }

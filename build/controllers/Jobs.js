@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.disputeJob = exports.approveJob = exports.completeJob = exports.payforJob = exports.viewInvoice = exports.generateInvoice = exports.respondToJob = exports.createJobOrder = exports.getJobById = exports.getLatestJob = exports.getJobs = exports.testApi = void 0;
+exports.disputeJob = exports.approveJob = exports.completeJob = exports.payforJob = exports.viewInvoice = exports.updateInvoice = exports.generateInvoice = exports.respondToJob = exports.createJobOrder = exports.getJobById = exports.getLatestJob = exports.getJobs = exports.testApi = void 0;
 const modules_1 = require("../utils/modules");
 const crypto_1 = require("crypto");
 const Models_1 = require("../models/Models");
@@ -264,6 +264,9 @@ const generateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function
         if (!job) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Job not found');
         }
+        if (job.workmanship) {
+            return (0, modules_1.handleResponse)(res, 400, false, 'Invoice already generated');
+        }
         yield job.update({
             durationUnit,
             durationValue,
@@ -274,7 +277,7 @@ const generateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function
                 return Object.assign(Object.assign({}, mat), { subTotal: mat.price * mat.quantity, jobId });
             });
             job.isMaterial = true;
-            job.materials = materials.reduce((acc, mat) => acc + mat.price * mat.quantity, 0);
+            job.materialsCost = materials.reduce((acc, mat) => acc + mat.price * mat.quantity, 0);
             const mats = yield Models_1.Material.bulkCreate(Object.assign(newMat));
             yield job.save();
             //send an email to the client
@@ -292,12 +295,53 @@ const generateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.generateInvoice = generateInvoice;
+const updateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { jobId } = req.params;
+    const result = body_1.jobCostingUpdateSchema.safeParse(req.body);
+    if (!result.success) {
+        return res.status(400).json({
+            error: "Invalid input",
+            issues: result.error.format(),
+        });
+    }
+    const { durationUnit, durationValue, workmanship, materials } = result.data;
+    const job = yield Models_1.Job.findByPk(jobId);
+    if (!job) {
+        return (0, modules_1.handleResponse)(res, 404, false, 'Job not found');
+    }
+    if (job.payStatus === enum_1.PayStatus.PAID) {
+        return (0, modules_1.handleResponse)(res, 404, false, 'Job has already been paid');
+    }
+    yield job.update({
+        durationUnit,
+        durationValue,
+        workmanship
+    });
+    yield job.save();
+    if (materials) {
+        const created = yield Models_1.Material.bulkCreate(materials.map((material) => {
+            return !material.id ? Object.assign(Object.assign({}, material), { subTotal: material.price * material.quantity, jobId }) : {};
+        }));
+        materials.forEach((mat, index) => __awaiter(void 0, void 0, void 0, function* () {
+            if (mat.id) {
+                const updated = yield Models_1.Material.update(Object.assign(Object.assign({}, mat), { subTotal: mat.price * mat.quantity, jobId }), {
+                    where: { id: mat.id }
+                });
+            }
+        }));
+        job.isMaterial = true;
+        job.materialsCost = materials.reduce((acc, mat) => acc + mat.price * mat.quantity, 0);
+        // job.materials = updated;
+    }
+    return (0, modules_1.successResponse)(res, 'success', job);
+});
+exports.updateInvoice = updateInvoice;
 const viewInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
     const { jobId } = req.params;
     try {
         const invoice = yield Models_1.Job.findByPk(jobId, {
-            attributes: ['id', 'title', 'description', 'status', 'workmanship', 'materials', 'createdAt', 'updatedAt'],
+            attributes: ['id', 'title', 'description', 'status', 'workmanship', 'materialsCost', 'createdAt', 'updatedAt'],
             include: [
                 {
                     model: Models_1.Material

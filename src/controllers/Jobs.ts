@@ -6,7 +6,7 @@ import { JobMode, JobStatus, PayStatus, UserRole } from "../enum"
 import { sendEmail } from "../services/gmail";
 import { jobResponseEmail, jobCreatedEmail, jobDisputeEmail } from "../utils/messages";
 import { jobStatusQuerySchema } from "../validation/query";
-import { jobCostingSchema, jobPostSchema, paymentSchema } from "../validation/body";
+import { jobCostingSchema, jobCostingUpdateSchema, jobPostSchema, paymentSchema } from "../validation/body";
 import { jobIdParamSchema } from "../validation/param";
 import { sendPushNotification } from "../services/notification";
 import { getIO } from '../chat';
@@ -331,6 +331,10 @@ export const generateInvoice = async (req: Request, res: Response) => {
             return handleResponse(res, 404, false, 'Job not found');
         }
 
+        if (job.workmanship) {
+            return handleResponse(res, 400, false, 'Invoice already generated');
+        }
+
         await job.update({
             durationUnit,
             durationValue,
@@ -349,7 +353,7 @@ export const generateInvoice = async (req: Request, res: Response) => {
 
             job.isMaterial = true;
 
-            job.materials = materials.reduce((acc, mat) => acc + mat.price * mat.quantity, 0);
+            job.materialsCost = materials.reduce((acc, mat) => acc + mat.price * mat.quantity, 0);
 
 
             const mats = await Material.bulkCreate(Object.assign(newMat));
@@ -380,13 +384,81 @@ export const generateInvoice = async (req: Request, res: Response) => {
     }
 }
 
+export const updateInvoice = async (req: Request, res: Response) => {
+    const { jobId } = req.params;
+
+
+    const result = jobCostingUpdateSchema.safeParse(req.body);
+
+    if (!result.success) {
+        return res.status(400).json({
+            error: "Invalid input",
+            issues: result.error.format(),
+        });
+    }
+
+    const { durationUnit, durationValue, workmanship, materials } = result.data;
+
+    const job = await Job.findByPk(jobId);
+
+    if (!job) {
+        return handleResponse(res, 404, false, 'Job not found')
+    }
+
+    if (job.payStatus === PayStatus.PAID) {
+        return handleResponse(res, 404, false, 'Job has already been paid')
+    }
+
+    await job.update({
+        durationUnit,
+        durationValue,
+        workmanship
+    });
+
+    await job.save();
+
+    if (materials) {
+        const created = await Material.bulkCreate(
+            materials.map((material) => {
+                return !material.id ? {
+                    ...material,
+                    subTotal: material.price * material.quantity,
+                    jobId,
+                } : {}
+            })
+        );
+
+        materials.forEach(async (mat, index) => {
+            if (mat.id) {
+                const updated = await Material.update({
+                    ...mat,
+                    subTotal: mat.price * mat.quantity,
+                    jobId,
+                }, {
+                    where: { id: mat.id }
+                })
+            }
+        })
+
+
+
+        job.isMaterial = true;
+
+        job.materialsCost = materials.reduce((acc, mat) => acc + mat.price * mat.quantity, 0);
+
+        // job.materials = updated;
+    }
+
+    return successResponse(res, 'success', job);
+}
+
 export const viewInvoice = async (req: Request, res: Response) => {
     const { id } = req.user;
     const { jobId } = req.params;
 
     try {
         const invoice = await Job.findByPk(jobId, {
-            attributes: ['id', 'title', 'description', 'status', 'workmanship', 'materials', 'createdAt', 'updatedAt'],
+            attributes: ['id', 'title', 'description', 'status', 'workmanship', 'materialsCost', 'createdAt', 'updatedAt'],
             include: [
                 {
                     model: Material

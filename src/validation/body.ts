@@ -154,6 +154,14 @@ const materialSchema = z.object({
     price: z.number().int().positive("Price must be a positive integer"),
 });
 
+const materialUpdateSchema = z.object({
+    id: z.number().int().positive().optional(),
+    description: z.string().min(1, "Description is required"),
+    quantity: z.number().int().positive("Quantity must be a positive integer"),
+    unit: z.string().max(20).optional().or(z.literal("").transform(() => undefined)),
+    price: z.number().int().positive("Price must be a positive integer"),
+});
+
 // Full request body schema with optional `materials`
 export const jobCostingSchema = z.object({
     jobId: z.number().int().positive("Job ID must be a positive integer"),
@@ -161,6 +169,13 @@ export const jobCostingSchema = z.object({
     durationValue: z.number().int().positive("Duration value must be a positive integer"),
     workmanship: z.number().int().nonnegative("Workmanship must be a non-negative integer"),
     materials: z.array(materialSchema).optional(),
+});
+
+export const jobCostingUpdateSchema = z.object({
+    durationUnit: z.string().min(1, "Duration unit is required").optional(),
+    durationValue: z.number().int().positive("Duration value must be a positive integer").optional(),
+    workmanship: z.number().int().nonnegative("Workmanship must be a non-negative integer").optional(),
+    materials: z.array(materialUpdateSchema).optional(),
 });
 
 
