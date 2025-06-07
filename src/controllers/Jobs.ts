@@ -4,7 +4,7 @@ import { randomUUID } from "crypto";
 import { Job, User, Material, Dispute, Profile, Professional, Wallet, OnlineUser } from "../models/Models"
 import { JobMode, JobStatus, PayStatus, UserRole } from "../enum"
 import { sendEmail } from "../services/gmail";
-import { jobResponseEmail, jobCreatedEmail, jobDisputeEmail } from "../utils/messages";
+import { jobResponseEmail, jobCreatedEmail, jobDisputeEmail, invoiceGeneratedEmail, invoiceUpdatedEmail, completeJobEmail, approveJobEmail, disputedJobEmail } from "../utils/messages";
 import { jobStatusQuerySchema } from "../validation/query";
 import { jobCostingSchema, jobCostingUpdateSchema, jobPostSchema, paymentSchema } from "../validation/body";
 import { jobIdParamSchema } from "../validation/param";
@@ -361,6 +361,15 @@ export const generateInvoice = async (req: Request, res: Response) => {
             await job.save();
 
             //send an email to the client
+            const emailTosend = invoiceGeneratedEmail(job.dataValues);
+
+            const msgStat = await sendEmail(
+                job.dataValues.client.email,
+                emailTosend.title,
+                emailTosend.body,
+                job.dataValues.client.profile.firstName + ' ' + job.dataValues.client.profile.lastName
+                //'User'
+            )
 
 
             //Send notification to the client
@@ -369,7 +378,7 @@ export const generateInvoice = async (req: Request, res: Response) => {
                     job.dataValues.client.fcmToken,
                     'Invoice generated',
                     `An invoice has been generated for your job: ${job.dataValues.title}`,
-                    null
+                    {}
                 );
             }
 
@@ -454,13 +463,41 @@ export const updateInvoice = async (req: Request, res: Response) => {
 
         // Mark job as having materials and set total cost
         job.isMaterial = true;
-        job.materialsCost = materials.reduce((acc, mat) => acc + mat.price * mat.quantity, 0);
+
+        const allMaterials = await Material.findAll({ where: { jobId } });
+
+        job.materialsCost = allMaterials.reduce((acc, mat) => acc + mat.price * mat.quantity, 0);
+
+        job.materials = allMaterials;
 
         await job.save();
 
         // Optional: assign created/updated materials to job
         //job.materials = [...created, ...materials.filter(mat => mat.id)];
     }
+
+    //send an email to the client
+    const emailTosend = invoiceUpdatedEmail(job.dataValues);
+
+    const msgStat = await sendEmail(
+        job.dataValues.client.email,
+        emailTosend.title,
+        emailTosend.body,
+        job.dataValues.client.profile.firstName + ' ' + job.dataValues.client.profile.lastName
+        //'User'
+    )
+
+
+    //Send notification to the client
+    if (job.dataValues.client.fcmToken) {
+        await sendPushNotification(
+            job.dataValues.client.fcmToken,
+            'Invoice Updated',
+            `An invoice has been updated for your job: ${job.dataValues.title}`,
+            {}
+        );
+    }
+
 
     return successResponse(res, 'success', { message: 'Job updated successfully', job });
 }
@@ -605,8 +642,31 @@ export const completeJob = async (req: Request, res: Response) => {
             await clientProfile?.save();
         }
 
+        //send an email to the client
+        const emailTosend = completeJobEmail(job.dataValues);
 
-        return successResponse(res, 'success', 'Job completed sucessfully')
+        const msgStat = await sendEmail(
+            job.dataValues.client.email,
+            emailTosend.title,
+            emailTosend.body,
+            job.dataValues.client.profile.firstName + ' ' + job.dataValues.client.profile.lastName
+            //'User'
+        )
+
+
+        //Send notification to the client
+        if (job.dataValues.client.fcmToken) {
+            await sendPushNotification(
+                job.dataValues.client.fcmToken,
+                'Job Completed',
+                `Your job on ${job.dataValues.title} has been completed by ${job.professional.profile.firstName} ${job.professional.profile.lastName}`,
+                {}
+            );
+        }
+
+
+
+        return successResponse(res, 'success', { message: 'Job completed sucessfully', emailSendStatus: Boolean(msgStat) })
     } catch (error: any) {
         return errorResponse(res, 'error', error.message)
     }
@@ -666,6 +726,29 @@ export const approveJob = async (req: Request, res: Response) => {
 
             await professionalWallet.save();
         }
+
+        //send an email to the professional
+        const emailTosend = approveJobEmail(job.dataValues);
+
+        const msgStat = await sendEmail(
+            job.dataValues.professional.email,
+            emailTosend.title,
+            emailTosend.body,
+            job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName
+            //'User'
+        )
+
+
+        //Send notification to the professional
+        if (job.dataValues.client.fcmToken) {
+            await sendPushNotification(
+                job.dataValues.professional.fcmToken,
+                'Job Approved',
+                `Your job on ${job.dataValues.title} has been Approved by ${job.client.profile.firstName} ${job.client.profile.lastName}`,
+                {}
+            );
+        }
+
 
         return successResponse(res, 'success', 'Job approved sucessfully')
     } catch (error: any) {
@@ -732,12 +815,28 @@ export const disputeJob = async (req: Request, res: Response) => {
         })
 
 
+        //send an email to the professional
+        const emailTosend = disputedJobEmail(job.dataValues, dispute);
+
         const msgStat = await sendEmail(
-            job.dataValues.prof.email,
-            jobDisputeEmail(job.dataValues, dispute).title,
-            jobDisputeEmail(job.dataValues, dispute).body,
-            job.dataValues.prof.profile.fullName
+            job.dataValues.professional.email,
+            emailTosend.title,
+            emailTosend.body,
+            job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName
+            //'User'
         )
+
+
+        //Send notification to the professional
+        if (job.dataValues.client.fcmToken) {
+            await sendPushNotification(
+                job.dataValues.professional.fcmToken,
+                'Job Disputed',
+                `Your job on ${job.dataValues.title} has been disputed by ${job.client.profile.firstName} ${job.client.profile.lastName}`,
+                {}
+            );
+        }
+
 
         return successResponse(res, 'success', { dispute, emailSendId: msgStat.messageId })
     } catch (error: any) {

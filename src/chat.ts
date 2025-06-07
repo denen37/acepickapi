@@ -2,6 +2,7 @@ import config from './config/configSetup';
 import { Server } from 'socket.io';
 import { socketAuthorize } from './middlewares/authorize';
 import { OnlineUser } from './models/OnlineUser';
+import { emitLatestJob } from './controllers/socket/jobs';
 
 let io: Server;
 
@@ -37,6 +38,9 @@ export const initSocket = (httpServer: any) => {
             onlineuser.isOnline = true;
             await onlineuser.save();
         }
+
+        //emit latest job
+        await emitLatestJob(io, socket);
 
         socket.on('disconnect', async () => {
             console.log('A user disconnected', socket.id);

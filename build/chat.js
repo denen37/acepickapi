@@ -13,6 +13,7 @@ exports.getIO = exports.initSocket = void 0;
 const socket_io_1 = require("socket.io");
 const authorize_1 = require("./middlewares/authorize");
 const OnlineUser_1 = require("./models/OnlineUser");
+const jobs_1 = require("./controllers/socket/jobs");
 let io;
 const initSocket = (httpServer) => {
     io = new socket_io_1.Server(httpServer, {
@@ -40,6 +41,8 @@ const initSocket = (httpServer) => {
             onlineuser.isOnline = true;
             yield onlineuser.save();
         }
+        //emit latest job
+        yield (0, jobs_1.emitLatestJob)(io, socket);
         socket.on('disconnect', () => __awaiter(void 0, void 0, void 0, function* () {
             console.log('A user disconnected', socket.id);
             const onlineUser = yield OnlineUser_1.OnlineUser.findOne({ where: { userId: socket.user.id } });

@@ -3,7 +3,7 @@ import { createSector, deleteSector, getSectors, getSectorsMetrics, updateSector
 import { createProfession, deleteProfession, getProfessionById, getProfessions, updateProfession } from "../controllers/professions";
 import { getProfessionalById, getProfessionals } from "../controllers/professionals";
 import { getCooperates } from "../controllers/cooperates";
-import { createJobOrder, generateInvoice, getJobById, getJobs, getLatestJob, payforJob, respondToJob, updateInvoice, viewInvoice } from "../controllers/Jobs";
+import { approveJob, completeJob, createJobOrder, disputeJob, generateInvoice, getJobById, getJobs, getLatestJob, payforJob, respondToJob, updateInvoice, viewInvoice } from "../controllers/Jobs";
 import { UserRole } from "../enum";
 import { allowRoles } from "../middlewares/allowRoles";
 import { findPersonsNearby, sendEmailTest, sendSMSTest, testNotification } from "../controllers/test";
@@ -41,6 +41,9 @@ routes.post('/jobs/invoice', allowRoles(UserRole.PROFESSIONAL), generateInvoice)
 routes.put('/jobs/invoice/:jobId', allowRoles(UserRole.PROFESSIONAL), updateInvoice);
 routes.get('/jobs/invoice/:jobId', allowRoles(UserRole.PROFESSIONAL, UserRole.CLIENT), viewInvoice);
 routes.post('/jobs/payment', allowRoles(UserRole.CLIENT), payforJob);
+routes.post('/jobs/complete/:jobId', allowRoles(UserRole.PROFESSIONAL), completeJob);
+routes.post('/jobs/approve/:jobId', allowRoles(UserRole.CLIENT), approveJob);
+routes.post('/jobs/dispute/:jobId', allowRoles(UserRole.CLIENT), disputeJob);
 
 routes.post('/notification-test', testNotification);
 routes.post('/send-sms', sendSMSTest)

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.jobDisputeEmail = exports.jobResponseEmail = exports.jobCreatedEmail = exports.forgotPasswordEmail = exports.sendOTPEmail = exports.sendOTPPhone = exports.registerEmail = void 0;
+exports.disputedJobEmail = exports.approveJobEmail = exports.completeJobEmail = exports.invoiceUpdatedEmail = exports.invoiceGeneratedEmail = exports.jobDisputeEmail = exports.jobResponseEmail = exports.jobCreatedEmail = exports.forgotPasswordEmail = exports.sendOTPEmail = exports.sendOTPPhone = exports.registerEmail = void 0;
 const registerEmail = (user) => {
     var _a, _b;
     return {
@@ -99,3 +99,83 @@ const jobDisputeEmail = (job, dispute) => {
     };
 };
 exports.jobDisputeEmail = jobDisputeEmail;
+const invoiceGeneratedEmail = (job) => {
+    var _a;
+    return {
+        title: `Invoice generated: ${job.title}`,
+        body: `An invoice has been generated for job ${job.title} by ${job.professional.profile.firstName} ${job.professional.profile.lastName}
+        <h3>Summary</h3>
+        <p><b>Job title: </b>${job.title}</p>
+        <p><b>Job description: </b>${job.description}</p>
+        <p><b>Job location: </b>${job.fullAddress}</p>
+
+        <p><b>Workmanship: </b>${job.workmanship}</p>
+        <p><b>Cost of materials: </b>${(_a = job.materialsCost) !== null && _a !== void 0 ? _a : 'N/A'}</p>
+        <p><b>Date: </b>${job.updatedAt}</p>
+        <br>
+        <p>Log into the platform to view full details</p>
+        `
+    };
+};
+exports.invoiceGeneratedEmail = invoiceGeneratedEmail;
+const invoiceUpdatedEmail = (job) => {
+    var _a;
+    return {
+        title: `Invoice updated: ${job.title}`,
+        body: `An invoice has been updated for job ${job.title} by ${job.professional.profile.firstName} ${job.professional.profile.lastName}
+        <h3>Summary</h3>
+        <p><b>Job title: </b>${job.title}</p>
+                <p><b>Job description: </b>${job.description}</p>
+        <p><b>Job location: </b>${job.fullAddress}</p>
+
+        <p><b>Workmanship: </b>${job.workmanship}</p>
+        <p><b>Cost of materials: </b>${(_a = job.materialsCost) !== null && _a !== void 0 ? _a : 'N/A'}
+        </p>
+                    <p><b>Date: </b>${job.updatedAt}</p>
+        <br>
+        <p>Log into the platform to view full details</p>
+        `
+    };
+};
+exports.invoiceUpdatedEmail = invoiceUpdatedEmail;
+const completeJobEmail = (job) => {
+    return {
+        title: `Job Completed`,
+        body: `Your job ${job.title} has been completed by ${job.client.profile.firstName} ${job.client.profile.lastName}
+        <h3>Summary</h3>
+        <p><b>Job title: </b>${job.title}</p>
+                <p><b>Job description: </b>${job.description}</p>
+        <p><b>Job location: </b>${job.fullAddress}</p>
+
+            `
+    };
+};
+exports.completeJobEmail = completeJobEmail;
+const approveJobEmail = (job) => {
+    return {
+        title: `Job Approved`,
+        body: `Your job ${job.title} has been approved by ${job.professional.profile.firstName} ${job.professional.profile.lastName}
+        <h3>Summary</h3>
+        <p><b>Job title: </b>${job.title}</p>
+        <p><b>Job description: </b>${job.description}</p>
+        <p><b>Job location: </b>${job.fullAddress}</p>
+            `
+    };
+};
+exports.approveJobEmail = approveJobEmail;
+const disputedJobEmail = (job, dispute) => {
+    return {
+        title: `Job Disputed`,
+        body: `Your job ${job.title} has been disputed by ${job.client.profile.firstName} ${job.client.profile.lastName}
+        <h3>Summary</h3>
+        <p><b>Job title: </b>${job.title}</p>
+        <p><b>Job description: </b>${job.description}</p>
+        <p><b>Job location: </b>${job.fullAddress}</p>
+
+        <h3>Dispute</h3>
+        <p><b>Dispute title: </b>${dispute.reason}</p>
+        <p><b>Dispute description: </b>${dispute.description}</p>
+            `
+    };
+};
+exports.disputedJobEmail = disputedJobEmail;
