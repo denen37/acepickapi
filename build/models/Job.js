@@ -122,12 +122,6 @@ __decorate([
     __metadata("design:type", String)
 ], Job.prototype, "payStatus", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Default)(enum_1.PaidFor.WORKMANSHIP),
-    (0, sequelize_typescript_1.AllowNull)(false),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(enum_1.PaidFor.WORKMANSHIP, enum_1.PaidFor.MATERIAL, enum_1.PaidFor.BOTH)),
-    __metadata("design:type", String)
-], Job.prototype, "paidFor", void 0);
-__decorate([
     (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.UUID),
     __metadata("design:type", String)

@@ -1,10 +1,15 @@
 import { Request, Response } from "express"
-import { Transaction } from "../models/Transaction";
-import { Wallet } from "../models/Wallet";
 import bcrypt from "bcryptjs"
 import { errorResponse, handleResponse, successResponse } from "../utils/modules";
-import { TransactionType } from "../enum";
+import { JobStatus, PayStatus, TransactionType } from "../enum";
 import { v4 as uuidv4 } from 'uuid';
+import { paymentSchema, pinSchema } from "../validation/body";
+import { Job, Wallet, Transaction, User, Profile } from "../models/Models";
+import { randomUUID } from "crypto";
+import { jobPaymentEmail } from "../utils/messages";
+import { sendEmail } from "../services/gmail";
+import { sendPushNotification } from "../services/notification";
+import z from "zod";
 
 export const createWallet = async (req: Request, res: Response) => {
     const { id } = req.user;
@@ -14,7 +19,8 @@ export const createWallet = async (req: Request, res: Response) => {
         const wallet = await Wallet.create({
             userId: id,
             currency: currency,
-            balance: 0,
+            currentBalance: 0,
+            previousBalance: 0
         });
 
         return successResponse(res, "success", wallet);
@@ -29,7 +35,9 @@ export const viewWallet = async (req: Request, res: Response) => {
     try {
         const wallet = await Wallet.findOne({
             where: { userId: id },
-            attributes: ["balance", "currency", "userId"],
+            attributes: {
+                exclude: ['pin']
+            },
         });
 
         if (!wallet) {
@@ -45,10 +53,38 @@ export const viewWallet = async (req: Request, res: Response) => {
 export const debitWallet = async (req: Request, res: Response) => {
     const { id, role } = req.user;
 
-    const { amount, pin, reason, jobId } = req.body;
+    // Usage example
+    const result = paymentSchema.safeParse(req.body);
 
-    if (!amount) {
-        return handleResponse(res, 400, false, 'Amount is required')
+    if (!result.success) {
+        return res.status(400).json({ errors: result.error.format() });
+    }
+
+    const { amount, pin, reason, jobId } = result.data;
+
+
+    const job = await Job.findByPk(jobId, {
+        include: [
+            {
+                model: User,
+                as: 'client',
+                include: [Profile]
+            },
+            {
+                model: User,
+                as: 'professional',
+                include: [Profile]
+            }
+        ]
+    });
+
+
+    if (!job) {
+        return handleResponse(res, 404, false, 'Job not found');
+    }
+
+    if (job.payStatus === PayStatus.PAID) {
+        return handleResponse(res, 400, false, 'Job has already been paid for')
     }
 
     try {
@@ -70,7 +106,7 @@ export const debitWallet = async (req: Request, res: Response) => {
 
         let prevBalance = Number(wallet.currentBalance);
 
-        console.log('prevBalance', prevBalance, typeof prevBalance, 'amount', amount, typeof amount);
+        //console.log('prevBalance', prevBalance, typeof prevBalance, 'amount', amount, typeof amount);
 
         if (prevBalance < amount) {
             return handleResponse(res, 400, false, 'Insufficient balance')
@@ -85,17 +121,56 @@ export const debitWallet = async (req: Request, res: Response) => {
 
         await wallet.save();
 
+
+        job.payStatus = PayStatus.PAID;
+
+        job.paymentRef = randomUUID();
+
+        job.status = JobStatus.ONGOING;
+
+        await job.save();
+
+        job.client.profile.totalJobsOngoing = Number(job.client.profile.totalJobsOngoing || 0) + 1;
+
+        job.professional.profile.totalJobsOngoing = Number(job.professional.profile.totalJobsOngoing || 0) + 1;
+
+        await job.client.profile.save();
+
+        await job.professional.profile.save();
+
+
         const transaction = await Transaction.create({
             userId: id,
             jobId: jobId || null,
             amount: amount,
-            reference: uuidv4(),
+            reference: job.paymentRef,
             status: 'success',
             channel: 'wallet',
             timestamp: Date.now(),
             description: reason || 'Wallet payment',
             type: TransactionType.DEBIT,
         })
+
+        const emailTosend = jobPaymentEmail(job);
+
+        const msgStat = await sendEmail(
+            job.dataValues.professional.email,
+            emailTosend.title,
+            emailTosend.body,
+            job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName
+            //'User'
+        )
+
+        //Send notification to the client
+        if (job.dataValues.professional.fcmToken) {
+            await sendPushNotification(
+                job.dataValues.professional.fcmToken,
+                'Job Payment',
+                `Your Job: ${job.dataValues.title} has been paid}`,
+                {}
+            );
+        }
+
 
         return successResponse(res, 'success', transaction)
 
@@ -107,11 +182,20 @@ export const debitWallet = async (req: Request, res: Response) => {
 export const setPin = async (req: Request, res: Response) => {
     const { id, role } = req.user;
 
-    const { pin } = req.body;
 
-    if (!pin || pin.length < 5) {
-        return handleResponse(res, 400, false, 'Pin must be at least 5 characters')
+    const pinSchema = z.object({
+        pin: z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
+    })
+
+    const result = pinSchema.safeParse(req.body);
+
+    if (!result.success) {
+        return res.status(400).json({ errors: result.error.format() });
     }
+
+
+    const { pin } = result.data;
+
 
     try {
         const wallet = await Wallet.findOne({ where: { userId: id } });
@@ -138,11 +222,15 @@ export const setPin = async (req: Request, res: Response) => {
 export const resetPin = async (req: Request, res: Response) => {
     const { id, role } = req.user;
 
-    const { newPin, newPinconfirm } = req.body;
 
-    if (newPin !== newPinconfirm) {
-        return handleResponse(res, 400, false, 'New pin and confirm pin do not match')
+    // Usage example
+    const result = pinSchema.safeParse(req.body);
+
+    if (!result.success) {
+        return res.status(400).json({ errors: result.error.format() });
     }
+
+    const { newPin, newPinconfirm } = result.data;
 
     try {
         const wallet = await Wallet.findOne({ where: { userId: id } });

@@ -186,3 +186,15 @@ export const disputedJobEmail = (job: Job, dispute: Dispute) => {
             `
     }
 }
+
+export const jobPaymentEmail = (job: Job) => {
+    return {
+        title: `Job Payment`,
+        body: `Your job ${job.title} has been paid by ${job.client.profile.firstName} ${job.client.profile.lastName}
+        <h3>Summary</h3>
+        <p><b>Job title: </b>${job.title}</p>
+        <p><b>Job description: </b>${job.description}</p>
+        <p><b>Job location: </b>${job.fullAddress}
+        `
+    }
+}

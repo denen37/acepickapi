@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateLocationSchema = exports.paymentSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobPostSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.pinSchema = exports.paymentSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobPostSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../enum"); // adjust the path
 const enum_2 = require("../enum");
@@ -157,12 +157,12 @@ exports.jobCostingUpdateSchema = zod_1.z.object({
     workmanship: zod_1.z.number().int().nonnegative("Workmanship must be a non-negative integer").optional(),
     materials: zod_1.z.array(materialUpdateSchema).optional(),
 });
-exports.paymentSchema = zod_1.z.object({
-    amount: zod_1.z.number().positive("Amount must be a positive number"),
-    paidFor: zod_1.z.string().min(1, "paidFor is required"),
-    pin: zod_1.z.string().length(4, "PIN must be exactly 4 characters"),
-    jobId: zod_1.z.number().int().positive("Job ID must be a positive integer"),
-});
+// export const paymentSchema = z.object({
+//     amount: z.number().positive("Amount must be a positive number"),
+//     paidFor: z.string().min(1, "paidFor is required"),
+//     pin: z.string().length(4, "PIN must be exactly 4 characters"),
+//     jobId: z.number().int().positive("Job ID must be a positive integer"),
+// });
 exports.updateLocationSchema = zod_1.z.object({
     address: zod_1.z.string().optional(),
     lga: zod_1.z.string().optional(),
@@ -171,4 +171,27 @@ exports.updateLocationSchema = zod_1.z.object({
     longitude: zod_1.z.number().optional(),
     zipcode: zod_1.z.number().int().optional(),
     //userId: z.string().uuid({ message: "Invalid UUID for userId" }),
+});
+exports.bankDetailsSchema = zod_1.z.object({
+    accountName: zod_1.z.string().min(1, 'Account name is required'),
+    bank: zod_1.z.string().min(1, 'Bank is required'),
+    bankCode: zod_1.z.string().min(1, 'Bank code is required'),
+    accountNumber: zod_1.z
+        .string()
+        .regex(/^\d{10}$/, 'Account number must be exactly 10 digits'),
+});
+exports.paymentSchema = zod_1.z.object({
+    amount: zod_1.z.number().positive('Amount must be a positive number'),
+    pin: zod_1.z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
+    reason: zod_1.z.string().min(1, 'Reason is required'),
+    jobId: zod_1.z.number().int().positive("Job ID must be a positive integer"),
+});
+exports.pinSchema = zod_1.z
+    .object({
+    newPin: zod_1.z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
+    newPinconfirm: zod_1.z.string().regex(/^\d{4}$/, 'Confirm PIN must be exactly 4 digits'),
+})
+    .refine((data) => data.newPin === data.newPinconfirm, {
+    message: "PINs do not match",
+    path: ['newPinconfirm'], // Error will show under `newPinconfirm`
 });

@@ -3,12 +3,16 @@ import { createSector, deleteSector, getSectors, getSectorsMetrics, updateSector
 import { createProfession, deleteProfession, getProfessionById, getProfessions, updateProfession } from "../controllers/professions";
 import { getProfessionalById, getProfessionals } from "../controllers/professionals";
 import { getCooperates } from "../controllers/cooperates";
-import { approveJob, completeJob, createJobOrder, disputeJob, generateInvoice, getJobById, getJobs, getLatestJob, payforJob, respondToJob, updateInvoice, viewInvoice } from "../controllers/Jobs";
+import { approveJob, completeJob, createJobOrder, disputeJob, generateInvoice, getJobById, getJobs, getLatestJob, respondToJob, updateInvoice, viewInvoice } from "../controllers/Jobs";
 import { UserRole } from "../enum";
 import { allowRoles } from "../middlewares/allowRoles";
 import { findPersonsNearby, sendEmailTest, sendSMSTest, testNotification } from "../controllers/test";
 import { updateLocation } from "../controllers/location";
 import { getClient } from "../controllers/client";
+import { addAccount, deleteAccount, getAccounts, getBanks, updateAccount } from "../controllers/account";
+import { createWallet, creditWallet, debitWallet, resetPin, setPin, viewWallet } from "../controllers/wallet";
+import { getAllTransactions, getTransactionById } from "../controllers/transactions";
+import { initiatePayment, initiateTransfer, verifyPayment } from "../controllers/payment";
 
 const routes = Router();
 
@@ -40,16 +44,39 @@ routes.put('/jobs/response/:jobId', allowRoles(UserRole.PROFESSIONAL), respondTo
 routes.post('/jobs/invoice', allowRoles(UserRole.PROFESSIONAL), generateInvoice);
 routes.put('/jobs/invoice/:jobId', allowRoles(UserRole.PROFESSIONAL), updateInvoice);
 routes.get('/jobs/invoice/:jobId', allowRoles(UserRole.PROFESSIONAL, UserRole.CLIENT), viewInvoice);
-routes.post('/jobs/payment', allowRoles(UserRole.CLIENT), payforJob);
+//routes.post('/jobs/payment', allowRoles(UserRole.CLIENT), payforJob);
 routes.post('/jobs/complete/:jobId', allowRoles(UserRole.PROFESSIONAL), completeJob);
 routes.post('/jobs/approve/:jobId', allowRoles(UserRole.CLIENT), approveJob);
 routes.post('/jobs/dispute/:jobId', allowRoles(UserRole.CLIENT), disputeJob);
 
 routes.post('/notification-test', testNotification);
-routes.post('/send-sms', sendSMSTest)
-routes.post('/send-email', sendEmailTest)
-routes.post('/nearest-person', findPersonsNearby)
+routes.post('/send-sms', sendSMSTest);
+routes.post('/send-email', sendEmailTest);
+routes.post('/nearest-person', findPersonsNearby);
 
 routes.put('/location', updateLocation);
+
+
+routes.get('/accounts/banks', allowRoles(UserRole.PROFESSIONAL), getBanks);
+routes.post('/accounts', allowRoles(UserRole.PROFESSIONAL), addAccount);
+routes.get('/accounts', allowRoles(UserRole.PROFESSIONAL), getAccounts);
+routes.put('/accounts/:recipientCode', allowRoles(UserRole.PROFESSIONAL), updateAccount);
+routes.delete('/accounts/:recipientCode', allowRoles(UserRole.PROFESSIONAL), deleteAccount);
+
+routes.post('/create-wallet', /*allowRoles(UserRole.SEEKER),*/ createWallet);
+routes.get('/view-wallet', /*allowRoles(UserRole.SEEKER),*/ viewWallet);
+routes.post('/debit-wallet', /*allowRoles(UserRole.SEEKER),*/ debitWallet);
+routes.post('/credit-wallet', /*allowRoles(UserRole.SEEKER),*/ creditWallet);
+routes.post('/set-pin', /*allowRoles(UserRole.SEEKER),*/ setPin);
+routes.post('/reset-pin', resetPin);
+
+routes.get('/transactions', /*allowRoles(UserRole.SEEKER, UserRole.PROVIDER),*/ getAllTransactions);
+routes.get('/transactions/:id', /*allowRoles(UserRole.SEEKER, UserRole.PROVIDER),*/ getTransactionById);
+
+
+routes.post('/payments/initiate', /*allowRoles(UserRole.SEEKER),*/ initiatePayment);
+routes.post('/payments/verify/:ref', /*allowRoles(UserRole.SEEKER),*/ verifyPayment);
+routes.post('/transfer/initiate', /*allowRoles(UserRole.PROVIDER),*/ initiateTransfer);
+
 
 export default routes;

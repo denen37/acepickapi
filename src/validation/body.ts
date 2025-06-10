@@ -179,12 +179,12 @@ export const jobCostingUpdateSchema = z.object({
 });
 
 
-export const paymentSchema = z.object({
-    amount: z.number().positive("Amount must be a positive number"),
-    paidFor: z.string().min(1, "paidFor is required"),
-    pin: z.string().length(4, "PIN must be exactly 4 characters"),
-    jobId: z.number().int().positive("Job ID must be a positive integer"),
-});
+// export const paymentSchema = z.object({
+//     amount: z.number().positive("Amount must be a positive number"),
+//     paidFor: z.string().min(1, "paidFor is required"),
+//     pin: z.string().length(4, "PIN must be exactly 4 characters"),
+//     jobId: z.number().int().positive("Job ID must be a positive integer"),
+// });
 
 
 export const updateLocationSchema = z.object({
@@ -196,6 +196,35 @@ export const updateLocationSchema = z.object({
     zipcode: z.number().int().optional(),
     //userId: z.string().uuid({ message: "Invalid UUID for userId" }),
 });
+
+export const bankDetailsSchema = z.object({
+    accountName: z.string().min(1, 'Account name is required'),
+    bank: z.string().min(1, 'Bank is required'),
+    bankCode: z.string().min(1, 'Bank code is required'),
+    accountNumber: z
+        .string()
+        .regex(/^\d{10}$/, 'Account number must be exactly 10 digits'),
+});
+
+
+export const paymentSchema = z.object({
+    amount: z.number().positive('Amount must be a positive number'),
+    pin: z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
+    reason: z.string().min(1, 'Reason is required'),
+    jobId: z.number().int().positive("Job ID must be a positive integer"),
+});
+
+
+export const pinSchema = z
+    .object({
+        newPin: z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
+        newPinconfirm: z.string().regex(/^\d{4}$/, 'Confirm PIN must be exactly 4 digits'),
+    })
+    .refine((data) => data.newPin === data.newPinconfirm, {
+        message: "PINs do not match",
+        path: ['newPinconfirm'], // Error will show under `newPinconfirm`
+    });
+
 
 
 

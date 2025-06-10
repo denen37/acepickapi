@@ -56,10 +56,10 @@ const getConfig = () => {
         OTP_EXPIRY_TIME: Number(process.env.OTP_EXPIRY_TIME || 5),
         TOKEN_SECRET: process.env.TOKEN_SECRET || 'supersecret',
         REDIS_INSTANCE_URL: process.env.REDIS_INSTANCE_URL,
-        PAYSTACK_SECRET: process.env.PAYSTACK_SECRET,
         SMS_API_KEY: process.env.SMS_API_KEY,
         SMS_SENDER_ID: process.env.SMS_SENDER_ID,
         AZURE_STORAGE_CONNECTION_STRING: process.env.AZURE_STORAGE_CONNECTION_STRING,
+        PAYSTACK_SECRET_KEY: process.env.PAYSTACK_SECRET_KEY,
         PUBLIC_ROUTES: [
             '/api',
             '/',

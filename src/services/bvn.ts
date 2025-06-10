@@ -53,7 +53,7 @@ export const verifyTransaction = async (reference: String) => {
 
         {
             headers: {
-                "Authorization": `Bearer ${config.PAYSTACK_SECRET},`
+                "Authorization": `Bearer ${config.PAYSTACK_SECRET_KEY},`
                 // "accept": "application/json",
                 // 'Content-Type': ['application/json', 'application/json']
             }

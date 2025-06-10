@@ -74,3 +74,9 @@ export enum TransactionType {
     DEBIT = 'debit',
     CREDIT = 'credit'
 }
+
+export enum TransferStatus {
+    SUCCESS = 'success',
+    FAILED = 'failed',
+    PENDING = 'pending'
+}

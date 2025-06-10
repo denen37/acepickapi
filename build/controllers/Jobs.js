@@ -9,9 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.disputeJob = exports.approveJob = exports.completeJob = exports.payforJob = exports.viewInvoice = exports.updateInvoice = exports.generateInvoice = exports.respondToJob = exports.createJobOrder = exports.getJobById = exports.getLatestJob = exports.getJobs = exports.testApi = void 0;
+exports.disputeJob = exports.approveJob = exports.completeJob = exports.viewInvoice = exports.updateInvoice = exports.generateInvoice = exports.respondToJob = exports.createJobOrder = exports.getJobById = exports.getLatestJob = exports.getJobs = exports.testApi = void 0;
 const modules_1 = require("../utils/modules");
-const crypto_1 = require("crypto");
 const Models_1 = require("../models/Models");
 const enum_1 = require("../enum");
 const gmail_1 = require("../services/gmail");
@@ -379,67 +378,64 @@ const viewInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.viewInvoice = viewInvoice;
-const payforJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { id } = req.user;
-    const result = body_1.paymentSchema.safeParse(req.body);
-    if (!result.success) {
-        return res.status(400).json({
-            error: "Invalid input",
-            issues: result.error.format(),
-        });
-    }
-    const { amount, paidFor, pin, jobId } = result.data;
-    try {
-        const job = yield Models_1.Job.findByPk(jobId);
-        if (!job) {
-            return (0, modules_1.handleResponse)(res, 404, false, 'Job not found');
-        }
-        if (job.payStatus === enum_1.PayStatus.PAID) {
-            return (0, modules_1.handleResponse)(res, 400, false, 'Job has already been paid for');
-        }
-        // try {
-        //     response = await axios.post(`${config.PAYMENT_BASE_URL}/pay-api/debit-wallet`, {
-        //         amount,
-        //         pin,
-        //         reason: 'job payment',
-        //         jobId
-        //     }, {
-        //         headers: {
-        //             Authorization: req.headers.authorization,
-        //         }
-        //     });
-        // } catch (error: any) {
-        //     // axios error - get meaningful message from backend
-        //     const errData = error.response?.data || {};
-        //     const errMessage = errData.message || error.message || 'Payment failed';
-        //     return handleResponse(res, 400, false, errMessage, errData.data);
-        // }
-        //if (response.data.status) {
-        job.payStatus = enum_1.PayStatus.PAID;
-        job.paidFor = paidFor;
-        job.paymentRef = (0, crypto_1.randomUUID)();
-        job.status = enum_1.JobStatus.ONGOING;
-        yield job.save();
-        if (job.payStatus === enum_1.PayStatus.PAID) {
-            const updatedProfessionalProfile = yield Models_1.Profile.update({
-                totalJobsOngoing: (job.professional.profile.totalJobsOngoing || 0) + 1,
-            }, {
-                where: { userId: job.professionalId }
-            });
-            const updatedClientProfile = yield Models_1.Profile.update({
-                totalJobsOngoing: (job.professional.profile.totalJobsOngoing || 0) + 1,
-            }, {
-                where: { userId: job.clientId }
-            });
-        }
-        return (0, modules_1.successResponse)(res, 'success', { message: 'Job payment successful' });
-        //   }
-    }
-    catch (error) {
-        return (0, modules_1.errorResponse)(res, 'error', { message: error.message, error });
-    }
-});
-exports.payforJob = payforJob;
+// export const payforJob = async (req: Request, res: Response) => {
+//     const { id } = req.user;
+//     const result = paymentSchema.safeParse(req.body);
+//     if (!result.success) {
+//         return res.status(400).json({
+//             error: "Invalid input",
+//             issues: result.error.format(),
+//         });
+//     }
+//     const { amount, paidFor, pin, jobId } = result.data;
+//     try {
+//         const job = await Job.findByPk(jobId);
+//         if (!job) {
+//             return handleResponse(res, 404, false, 'Job not found');
+//         }
+//         if (job.payStatus === PayStatus.PAID) {
+//             return handleResponse(res, 400, false, 'Job has already been paid for')
+//         }
+//         // try {
+//         //     response = await axios.post(`${config.PAYMENT_BASE_URL}/pay-api/debit-wallet`, {
+//         //         amount,
+//         //         pin,
+//         //         reason: 'job payment',
+//         //         jobId
+//         //     }, {
+//         //         headers: {
+//         //             Authorization: req.headers.authorization,
+//         //         }
+//         //     });
+//         // } catch (error: any) {
+//         //     // axios error - get meaningful message from backend
+//         //     const errData = error.response?.data || {};
+//         //     const errMessage = errData.message || error.message || 'Payment failed';
+//         //     return handleResponse(res, 400, false, errMessage, errData.data);
+//         // }
+//         //if (response.data.status) {
+//         job.payStatus = PayStatus.PAID;
+//         job.paymentRef = randomUUID();
+//         job.status = JobStatus.ONGOING;
+//         await job.save();
+//         if (job.payStatus === PayStatus.PAID) {
+//             const updatedProfessionalProfile = await Profile.update({
+//                 totalJobsOngoing: (job.professional.profile.totalJobsOngoing || 0) + 1,
+//             }, {
+//                 where: { userId: job.professionalId }
+//             })
+//             const updatedClientProfile = await Profile.update({
+//                 totalJobsOngoing: (job.professional.profile.totalJobsOngoing || 0) + 1,
+//             }, {
+//                 where: { userId: job.clientId }
+//             })
+//         }
+//         return successResponse(res, 'success', { message: 'Job payment successful' });
+//         //   }
+//     } catch (error: any) {
+//         return errorResponse(res, 'error', { message: error.message, error });
+//     }
+// };
 const completeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
     const { jobId } = req.params;

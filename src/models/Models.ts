@@ -19,6 +19,8 @@ import { Dispute } from './Dispute'
 import { Material } from './Material'
 import { Transaction } from './Transaction'
 import { OnlineUser } from './OnlineUser'
+import { Account } from './Account'
+import { Transfer } from './Transfer'
 
 export {
     User,
@@ -41,5 +43,7 @@ export {
     Dispute,
     Material,
     Transaction,
-    OnlineUser
+    OnlineUser,
+    Account,
+    Transfer
 }

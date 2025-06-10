@@ -204,10 +204,10 @@ export class Job extends Model {
 
 
 
-    @Default(PaidFor.WORKMANSHIP)
-    @AllowNull(false)
-    @Column(DataType.ENUM(PaidFor.WORKMANSHIP, PaidFor.MATERIAL, PaidFor.BOTH))
-    paidFor!: string
+    // @Default(PaidFor.WORKMANSHIP)
+    // @AllowNull(false)
+    // @Column(DataType.ENUM(PaidFor.WORKMANSHIP, PaidFor.MATERIAL, PaidFor.BOTH))
+    // paidFor!: string
 
 
     @AllowNull(true)

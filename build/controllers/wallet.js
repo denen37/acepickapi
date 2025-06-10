@@ -13,20 +13,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.creditWallet = exports.resetPin = exports.setPin = exports.debitWallet = exports.viewWallet = exports.createWallet = void 0;
-const Transaction_1 = require("../models/Transaction");
-const Wallet_1 = require("../models/Wallet");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const modules_1 = require("../utils/modules");
 const enum_1 = require("../enum");
-const uuid_1 = require("uuid");
+const body_1 = require("../validation/body");
+const Models_1 = require("../models/Models");
+const crypto_1 = require("crypto");
+const messages_1 = require("../utils/messages");
+const gmail_1 = require("../services/gmail");
+const notification_1 = require("../services/notification");
+const zod_1 = __importDefault(require("zod"));
 const createWallet = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
     const { currency = 'NGN' } = req.body;
     try {
-        const wallet = yield Wallet_1.Wallet.create({
+        const wallet = yield Models_1.Wallet.create({
             userId: id,
             currency: currency,
-            balance: 0,
+            currentBalance: 0,
+            previousBalance: 0
         });
         return (0, modules_1.successResponse)(res, "success", wallet);
     }
@@ -38,9 +43,11 @@ exports.createWallet = createWallet;
 const viewWallet = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
     try {
-        const wallet = yield Wallet_1.Wallet.findOne({
+        const wallet = yield Models_1.Wallet.findOne({
             where: { userId: id },
-            attributes: ["balance", "currency", "userId"],
+            attributes: {
+                exclude: ['pin']
+            },
         });
         if (!wallet) {
             return (0, modules_1.handleResponse)(res, 404, false, "Wallet not found");
@@ -54,12 +61,34 @@ const viewWallet = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.viewWallet = viewWallet;
 const debitWallet = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, role } = req.user;
-    const { amount, pin, reason, jobId } = req.body;
-    if (!amount) {
-        return (0, modules_1.handleResponse)(res, 400, false, 'Amount is required');
+    // Usage example
+    const result = body_1.paymentSchema.safeParse(req.body);
+    if (!result.success) {
+        return res.status(400).json({ errors: result.error.format() });
+    }
+    const { amount, pin, reason, jobId } = result.data;
+    const job = yield Models_1.Job.findByPk(jobId, {
+        include: [
+            {
+                model: Models_1.User,
+                as: 'client',
+                include: [Models_1.Profile]
+            },
+            {
+                model: Models_1.User,
+                as: 'professional',
+                include: [Models_1.Profile]
+            }
+        ]
+    });
+    if (!job) {
+        return (0, modules_1.handleResponse)(res, 404, false, 'Job not found');
+    }
+    if (job.payStatus === enum_1.PayStatus.PAID) {
+        return (0, modules_1.handleResponse)(res, 400, false, 'Job has already been paid for');
     }
     try {
-        const wallet = yield Wallet_1.Wallet.findOne({ where: { userId: id } });
+        const wallet = yield Models_1.Wallet.findOne({ where: { userId: id } });
         if (!wallet) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Wallet not found');
         }
@@ -71,7 +100,7 @@ const debitWallet = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             return (0, modules_1.handleResponse)(res, 400, false, 'Incorrect pin');
         }
         let prevBalance = Number(wallet.currentBalance);
-        console.log('prevBalance', prevBalance, typeof prevBalance, 'amount', amount, typeof amount);
+        //console.log('prevBalance', prevBalance, typeof prevBalance, 'amount', amount, typeof amount);
         if (prevBalance < amount) {
             return (0, modules_1.handleResponse)(res, 400, false, 'Insufficient balance');
         }
@@ -81,17 +110,33 @@ const debitWallet = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             previousBalance: prevBalance
         });
         yield wallet.save();
-        const transaction = yield Transaction_1.Transaction.create({
+        job.payStatus = enum_1.PayStatus.PAID;
+        job.paymentRef = (0, crypto_1.randomUUID)();
+        job.status = enum_1.JobStatus.ONGOING;
+        yield job.save();
+        job.client.profile.totalJobsOngoing = Number(job.client.profile.totalJobsOngoing || 0) + 1;
+        job.professional.profile.totalJobsOngoing = Number(job.professional.profile.totalJobsOngoing || 0) + 1;
+        yield job.client.profile.save();
+        yield job.professional.profile.save();
+        const transaction = yield Models_1.Transaction.create({
             userId: id,
             jobId: jobId || null,
             amount: amount,
-            reference: (0, uuid_1.v4)(),
+            reference: job.paymentRef,
             status: 'success',
             channel: 'wallet',
             timestamp: Date.now(),
             description: reason || 'Wallet payment',
             type: enum_1.TransactionType.DEBIT,
         });
+        const emailTosend = (0, messages_1.jobPaymentEmail)(job);
+        const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.professional.email, emailTosend.title, emailTosend.body, job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName
+        //'User'
+        );
+        //Send notification to the client
+        if (job.dataValues.professional.fcmToken) {
+            yield (0, notification_1.sendPushNotification)(job.dataValues.professional.fcmToken, 'Job Payment', `Your Job: ${job.dataValues.title} has been paid}`, {});
+        }
         return (0, modules_1.successResponse)(res, 'success', transaction);
     }
     catch (error) {
@@ -101,12 +146,16 @@ const debitWallet = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.debitWallet = debitWallet;
 const setPin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, role } = req.user;
-    const { pin } = req.body;
-    if (!pin || pin.length < 5) {
-        return (0, modules_1.handleResponse)(res, 400, false, 'Pin must be at least 5 characters');
+    const pinSchema = zod_1.default.object({
+        pin: zod_1.default.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
+    });
+    const result = pinSchema.safeParse(req.body);
+    if (!result.success) {
+        return res.status(400).json({ errors: result.error.format() });
     }
+    const { pin } = result.data;
     try {
-        const wallet = yield Wallet_1.Wallet.findOne({ where: { userId: id } });
+        const wallet = yield Models_1.Wallet.findOne({ where: { userId: id } });
         if (!wallet) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Wallet not found');
         }
@@ -123,12 +172,14 @@ const setPin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.setPin = setPin;
 const resetPin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, role } = req.user;
-    const { newPin, newPinconfirm } = req.body;
-    if (newPin !== newPinconfirm) {
-        return (0, modules_1.handleResponse)(res, 400, false, 'New pin and confirm pin do not match');
+    // Usage example
+    const result = body_1.pinSchema.safeParse(req.body);
+    if (!result.success) {
+        return res.status(400).json({ errors: result.error.format() });
     }
+    const { newPin, newPinconfirm } = result.data;
     try {
-        const wallet = yield Wallet_1.Wallet.findOne({ where: { userId: id } });
+        const wallet = yield Models_1.Wallet.findOne({ where: { userId: id } });
         if (!wallet) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Wallet not found');
         }
@@ -147,7 +198,7 @@ const creditWallet = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const { id } = req.user;
         const { amount, userId } = req.body;
-        const wallet = yield Wallet_1.Wallet.findOne({ where: { userId: userId ? userId : id } });
+        const wallet = yield Models_1.Wallet.findOne({ where: { userId: userId ? userId : id } });
         if (!wallet) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Wallet not found');
         }

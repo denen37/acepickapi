@@ -51,7 +51,7 @@ exports.verifyBvn = verifyBvn;
 const verifyTransaction = (reference) => __awaiter(void 0, void 0, void 0, function* () {
     const response = yield axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
         headers: {
-            "Authorization": `Bearer ${configSetup_1.default.PAYSTACK_SECRET},`
+            "Authorization": `Bearer ${configSetup_1.default.PAYSTACK_SECRET_KEY},`
             // "accept": "application/json",
             // 'Content-Type': ['application/json', 'application/json']
         }
