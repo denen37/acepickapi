@@ -1,5 +1,5 @@
 import { QueryInterface } from 'sequelize';
-import { UserStatus, UserRole } from '../enum';
+import { UserStatus, UserRole } from '../utils/enum';
 import bcrypt from 'bcryptjs';
 
 module.exports = {

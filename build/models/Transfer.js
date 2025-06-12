@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Transfer = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
 // import { User } from './Models'
-const enum_1 = require("../enum");
+const enum_1 = require("../utils/enum");
 let Transfer = class Transfer extends sequelize_typescript_1.Model {
 };
 exports.Transfer = Transfer;

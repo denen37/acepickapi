@@ -2,14 +2,15 @@ import { Request, Response } from "express"
 import { successResponse, errorResponse, handleResponse } from "../utils/modules"
 import { randomUUID } from "crypto";
 import { Job, User, Material, Dispute, Profile, Professional, Wallet, OnlineUser } from "../models/Models"
-import { JobMode, JobStatus, PayStatus, UserRole } from "../enum"
+import { JobMode, JobStatus, PayStatus, UserRole } from "../utils/enum"
 import { sendEmail } from "../services/gmail";
-import { jobResponseEmail, jobCreatedEmail, jobDisputeEmail, invoiceGeneratedEmail, invoiceUpdatedEmail, completeJobEmail, approveJobEmail, disputedJobEmail } from "../utils/messages";
+import { jobResponseEmail, jobCreatedEmail, jobDisputeEmail, invoiceGeneratedEmail, invoiceUpdatedEmail, completeJobEmail, approveJobEmail, disputedJobEmail, jobUpdatedEmail, jobCancelledEmail } from "../utils/messages";
 import { jobStatusQuerySchema } from "../validation/query";
-import { jobCostingSchema, jobCostingUpdateSchema, jobPostSchema, paymentSchema } from "../validation/body";
+import { jobCostingSchema, jobCostingUpdateSchema, jobPostSchema, jobUpdateSchema, paymentSchema } from "../validation/body";
 import { jobIdParamSchema } from "../validation/param";
 import { sendPushNotification } from "../services/notification";
 import { getIO } from '../chat';
+import { Emit } from "../utils/events";
 
 export const testApi = async (req: Request, res: Response) => {
     return successResponse(res, "success", "Your Api is working!")
@@ -209,17 +210,150 @@ export const createJobOrder = async (req: Request, res: Response) => {
         );
     }
 
-    let onlineProfessional = await OnlineUser.findOne({
+    let onlineUser = await OnlineUser.findOne({
         where: { userId: job.dataValues.professionalId }
     })
 
     const io = getIO();
 
-    if (onlineProfessional?.isOnline) {
-        io.to(onlineProfessional?.socketId).emit('JOB_CREATED', { text: 'This a new Job', data: job });
+    if (onlineUser?.isOnline) {
+        io.to(onlineUser?.socketId).emit(Emit.JOB_CREATED, { text: 'This a new Job', data: job });
     }
 
     return successResponse(res, "Successful", { jobResponse, emailSendId: msgStat.messageId });
+}
+
+export const updateJob = async (req: Request, res: Response) => {
+    try {
+        const result = jobUpdateSchema.safeParse(req.body);
+
+        if (!result.success) {
+            return res.status(400).json({
+                error: "Invalid route parameter",
+                issues: result.error.format(),
+            });
+        }
+
+        const job = await Job.findByPk(result.data.jobId, {
+            include: [
+                {
+                    model: User,
+                    as: 'professional',
+                    include: [Profile]
+                }, {
+                    model: User,
+                    as: 'client',
+                    include: [Profile]
+                }
+            ]
+        });
+
+        if (!job) {
+            return handleResponse(res, 404, false, "Job not found");
+        }
+
+        if (job.accepted) {
+            return handleResponse(res, 404, false, "Job already accepted");
+        }
+
+        await job.update(result.data);
+
+        //send email to professional
+        const emailToSend = await jobUpdatedEmail(job.dataValues);
+
+        const msgId = await sendEmail(
+            job.professional.email,
+            emailToSend.title,
+            emailToSend.body,
+            job.professional.profile.firstName
+        )
+
+        if (job.professional.fcmToken) {
+            await sendPushNotification(
+                job.dataValues.client.fcmToken,
+                'Job Updated',
+                `Your job has been updated by ${job.dataValues.professional.profile.firstName} ${job.dataValues.professional.profile.lastName}`,
+                {}
+            );
+        }
+
+        let onlineUser = await OnlineUser.findOne({
+            where: { userId: job.dataValues.professionalId }
+        })
+
+        const io = getIO();
+
+        if (onlineUser?.isOnline) {
+            io.to(onlineUser?.socketId).emit(Emit.JOB_UPDATED, { text: 'Your job has been updated', data: job });
+        }
+
+        return successResponse(res, "Successful", { job });
+    } catch (error) {
+        return errorResponse(res, 'error', "Error updating job");
+    }
+}
+
+export const cancelJob = async (req: Request, res: Response) => {
+    const { jobId } = req.params;
+
+    try {
+        const job = await Job.findByPk(jobId, {
+            include: [
+                {
+                    model: User,
+                    as: 'client',
+                    include: [Profile]
+                }, {
+                    model: User,
+                    as: 'professional',
+                    include: [Profile]
+                }
+            ]
+        });
+
+        if (!job) {
+            return errorResponse(res, 'error', "Job not found");
+        }
+
+        await job.update({ status: JobStatus.CANCELLED });
+        // Send email to client
+        const emailToSend = await jobCancelledEmail(job.dataValues);
+
+        const msgId = await sendEmail(
+            job.professional.email,
+            emailToSend.title,
+            emailToSend.body,
+            job.professional.profile.firstName
+        )
+
+        if (job.professional.fcmToken) {
+            await sendPushNotification(
+                job.dataValues.client.fcmToken,
+                'Job Cancelled',
+                `Your job has been cancelled by ${job.dataValues.professional.profile.firstName} ${job.dataValues.professional.profile.lastName}`,
+                {}
+            );
+        }
+
+        let onlineUser = await OnlineUser.findOne({
+            where: { userId: job.dataValues.professionalId }
+        })
+
+        const io = getIO();
+
+        if (onlineUser?.isOnline) {
+            io.to(onlineUser?.socketId).emit(Emit.JOB_CANCELLED, { text: 'Your job has been cancelled by client', data: job });
+        }
+
+        await job.destroy();
+
+        await job.save();
+
+        return successResponse(res, 'success', "Job deleted successfully")
+
+    } catch (error) {
+        return errorResponse(res, 'error', "Error cancelling job");
+    }
 }
 
 export const respondToJob = async (req: Request, res: Response) => {
@@ -282,7 +416,6 @@ export const respondToJob = async (req: Request, res: Response) => {
         )
 
         //send notification to the prof
-        console.log('notification token', job.dataValues.client.fcmToken);
         if (job.dataValues.client.fcmToken) {
             await sendPushNotification(
                 job.dataValues.client.fcmToken,
@@ -291,6 +424,17 @@ export const respondToJob = async (req: Request, res: Response) => {
                 {}
             );
         }
+
+        let onlineUser = await OnlineUser.findOne({
+            where: { userId: job.professionalId }
+        })
+
+        const io = getIO();
+
+        if (onlineUser?.isOnline) {
+            io.to(onlineUser?.socketId).emit(Emit.JOB_RESPONSE, { text: `$Your Job has been ${accepted ? 'accepted' : 'rejected'}`, data: job });
+        }
+
 
         return successResponse(res, 'success', { message: 'Job respsonse updated', emailSendstatus: Boolean(msgStat.messageId) })
     } catch (error) {
@@ -380,6 +524,16 @@ export const generateInvoice = async (req: Request, res: Response) => {
                     `An invoice has been generated for your job: ${job.dataValues.title}`,
                     {}
                 );
+            }
+
+            let onlineUser = await OnlineUser.findOne({
+                where: { userId: job.clientId }
+            })
+
+            const io = getIO();
+
+            if (onlineUser?.isOnline) {
+                io.to(onlineUser?.socketId).emit(Emit.INVOICE_GENERATED, { text: `An invoice has been generated`, data: { job, materials } });
             }
 
             return successResponse(res, 'success', { message: 'Invoice generated' })
@@ -496,6 +650,17 @@ export const updateInvoice = async (req: Request, res: Response) => {
             `An invoice has been updated for your job: ${job.dataValues.title}`,
             {}
         );
+    }
+
+
+    let onlineUser = await OnlineUser.findOne({
+        where: { userId: job.clientId }
+    })
+
+    const io = getIO();
+
+    if (onlineUser?.isOnline) {
+        io.to(onlineUser?.socketId).emit(Emit.INVOICE_UPDATED, { text: `An invoice has been updated`, data: { job } });
     }
 
 
@@ -669,6 +834,17 @@ export const completeJob = async (req: Request, res: Response) => {
 
 
 
+        let onlineUser = await OnlineUser.findOne({
+            where: { userId: job.clientId }
+        })
+
+        const io = getIO();
+
+        if (onlineUser?.isOnline) {
+            io.to(onlineUser?.socketId).emit(Emit.JOB_COMPLETED, { text: `Your job has completed`, data: { job } });
+        }
+
+
         return successResponse(res, 'success', { message: 'Job completed sucessfully', emailSendStatus: Boolean(msgStat) })
     } catch (error: any) {
         return errorResponse(res, 'error', error.message)
@@ -748,6 +924,17 @@ export const approveJob = async (req: Request, res: Response) => {
                 `Your job on ${job.dataValues.title} has been Approved by ${job.client.profile.firstName} ${job.client.profile.lastName}`,
                 {}
             );
+        }
+
+
+        let onlineUser = await OnlineUser.findOne({
+            where: { userId: job.professionalId },
+        })
+
+        const io = getIO();
+
+        if (onlineUser?.isOnline) {
+            io.to(onlineUser?.socketId).emit(Emit.JOB_APPROVED, { text: `Your job has approved`, data: { job } });
         }
 
 
@@ -835,6 +1022,17 @@ export const disputeJob = async (req: Request, res: Response) => {
                 `Your job on ${job.dataValues.title} has been disputed by ${job.client.profile.firstName} ${job.client.profile.lastName}`,
                 {}
             );
+        }
+
+
+        let onlineUser = await OnlineUser.findOne({
+            where: { userId: job.professionalId },
+        })
+
+        const io = getIO();
+
+        if (onlineUser?.isOnline) {
+            io.to(onlineUser?.socketId).emit(Emit.JOB_DISPUTED, { text: `Your job has been disputed`, data: { job } });
         }
 
 

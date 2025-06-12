@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Profile, User, Location } from '../models/Models'
 import { errorResponse, handleResponse, successResponse } from "../utils/modules";
-import { UserRole } from "../enum";
+import { UserRole } from "../utils/enum";
 
 
 export const getClient = async (req: Request, res: Response) => {

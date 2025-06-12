@@ -65,11 +65,22 @@ export const forgotPasswordEmail = (code: string): Message => {
 
 
 export const jobCreatedEmail = (job: Job): Message => {
-    console.log('fullName', `${job.client.profile.firstName} ${job.client.profile.lastName}`);
     return {
         title: `Job created: ${job.title}`,
         body: `You have a new job from ${job.client.profile.firstName} ${job.client.profile.lastName}
         <p><b>Job title: </b>${job.title}</p>
+        <p><b>Job description: </b>${job.description}</p>
+        <p><b>Job location: </b>${job.fullAddress}</p>
+
+        Log into your account to accept or decline the job offer.
+        `
+    }
+}
+
+export const jobUpdatedEmail = (job: Job): Message => {
+    return {
+        title: `Job Updated`,
+        body: `The job ${job.title} has updated by ${job.client.profile.firstName} ${job.client.profile.lastName}
         <p><b>Job description: </b>${job.description}</p>
         <p><b>Job location: </b>${job.fullAddress}</p>
 
@@ -191,6 +202,18 @@ export const jobPaymentEmail = (job: Job) => {
     return {
         title: `Job Payment`,
         body: `Your job ${job.title} has been paid by ${job.client.profile.firstName} ${job.client.profile.lastName}
+        <h3>Summary</h3>
+        <p><b>Job title: </b>${job.title}</p>
+        <p><b>Job description: </b>${job.description}</p>
+        <p><b>Job location: </b>${job.fullAddress}
+        `
+    }
+}
+
+export const jobCancelledEmail = (job: Job) => {
+    return {
+        title: `Job Cancelled`,
+        body: `Your job ${job.title} has been cancelled by ${job.client.profile.firstName} ${job.client.profile.lastName}
         <h3>Summary</h3>
         <p><b>Job title: </b>${job.title}</p>
         <p><b>Job description: </b>${job.description}</p>

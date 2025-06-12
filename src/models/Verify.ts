@@ -1,5 +1,5 @@
 import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index } from 'sequelize-typescript';
-import { VerificationType } from '../enum';
+import { VerificationType } from '../utils/enum';
 
 @Table({ updatedAt: false, tableName: 'verify' })
 export class Verify extends Model {

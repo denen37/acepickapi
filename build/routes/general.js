@@ -6,7 +6,7 @@ const professions_1 = require("../controllers/professions");
 const professionals_1 = require("../controllers/professionals");
 const cooperates_1 = require("../controllers/cooperates");
 const Jobs_1 = require("../controllers/Jobs");
-const enum_1 = require("../enum");
+const enum_1 = require("../utils/enum");
 const allowRoles_1 = require("../middlewares/allowRoles");
 const test_1 = require("../controllers/test");
 const location_1 = require("../controllers/location");
@@ -42,6 +42,8 @@ routes.get('/jobs/invoice/:jobId', (0, allowRoles_1.allowRoles)(enum_1.UserRole.
 routes.post('/jobs/complete/:jobId', (0, allowRoles_1.allowRoles)(enum_1.UserRole.PROFESSIONAL), Jobs_1.completeJob);
 routes.post('/jobs/approve/:jobId', (0, allowRoles_1.allowRoles)(enum_1.UserRole.CLIENT), Jobs_1.approveJob);
 routes.post('/jobs/dispute/:jobId', (0, allowRoles_1.allowRoles)(enum_1.UserRole.CLIENT), Jobs_1.disputeJob);
+routes.post('/jobs/cancel/:jobId', (0, allowRoles_1.allowRoles)(enum_1.UserRole.CLIENT), Jobs_1.cancelJob);
+routes.put('jobs/update/:jobId', (0, allowRoles_1.allowRoles)(enum_1.UserRole.CLIENT), Jobs_1.updateJob);
 routes.post('/notification-test', test_1.testNotification);
 routes.post('/send-sms', test_1.sendSMSTest);
 routes.post('/send-email', test_1.sendEmailTest);

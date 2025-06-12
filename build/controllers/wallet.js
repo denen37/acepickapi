@@ -15,7 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.creditWallet = exports.resetPin = exports.setPin = exports.debitWallet = exports.viewWallet = exports.createWallet = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const modules_1 = require("../utils/modules");
-const enum_1 = require("../enum");
+const enum_1 = require("../utils/enum");
 const body_1 = require("../validation/body");
 const Models_1 = require("../models/Models");
 const crypto_1 = require("crypto");

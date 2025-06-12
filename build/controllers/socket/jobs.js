@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.emitLatestJob = void 0;
-const enum_1 = require("../../enum");
+const enum_1 = require("../../utils/enum");
 const Models_1 = require("../../models/Models");
 const emitLatestJob = (io, socket) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, role } = socket.user;

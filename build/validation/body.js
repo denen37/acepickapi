@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.pinSchema = exports.paymentSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobPostSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.pinSchema = exports.paymentSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
-const enum_1 = require("../enum"); // adjust the path
-const enum_2 = require("../enum");
+const enum_1 = require("../utils/enum"); // adjust the path
+const enum_2 = require("../utils/enum");
 const otpBaseSchema = zod_1.z.object({
     type: zod_1.z.nativeEnum(enum_2.VerificationType),
     reason: zod_1.z.nativeEnum(enum_1.OTPReason),
@@ -127,6 +127,14 @@ exports.jobPostSchema = zod_1.z.object({
     address: zod_1.z.string().min(1, "Address is required"),
     numOfJobs: zod_1.z.number().int().positive("Number of jobs must be a positive integer").optional(),
     professionalId: zod_1.z.string().uuid("Professional ID must be a valid UUID"),
+    mode: zod_1.z.nativeEnum(enum_1.JobMode).optional(),
+});
+exports.jobUpdateSchema = zod_1.z.object({
+    jobId: zod_1.z.number().int().positive("Job ID must be a positive integer").optional(),
+    title: zod_1.z.string().min(1, "Title is required").optional(),
+    description: zod_1.z.string().min(1, "Description is required").optional(),
+    address: zod_1.z.string().min(1, "Address is required").optional(),
+    numOfJobs: zod_1.z.number().int().positive("Number of jobs must be a positive integer").optional(),
     mode: zod_1.z.nativeEnum(enum_1.JobMode).optional(),
 });
 // Define the schema for a single Material

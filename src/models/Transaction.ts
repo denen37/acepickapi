@@ -1,5 +1,5 @@
 import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index, BelongsTo, ForeignKey, PrimaryKey, AutoIncrement } from 'sequelize-typescript';
-import { TransactionStatus, TransactionType } from '../enum';
+import { TransactionStatus, TransactionType } from '../utils/enum';
 // import { User } from './Models';
 
 

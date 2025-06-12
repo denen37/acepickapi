@@ -4,7 +4,7 @@ import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNu
 // import { LanLog } from './LanLog';
 // import { User } from './User';
 import { User, Material, Dispute } from './Models'
-import { JobMode, JobStatus, PaidFor, PayStatus } from '../enum';
+import { JobMode, JobStatus, PaidFor, PayStatus } from '../utils/enum';
 // import { VoiceRecording } from './VoiceRecording';
 
 

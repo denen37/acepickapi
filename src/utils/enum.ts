@@ -54,7 +54,7 @@ export enum JobStatus {
     PENDING = 'PENDING',
     DECLINED = 'DECLINED',
     ONGOING = "ONGOING",
-    CANCEL = "CANCEL",
+    CANCELLED = "CANCELLED",
     REJECTED = "REJECTED",
 }
 

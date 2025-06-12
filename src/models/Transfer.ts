@@ -1,6 +1,6 @@
 import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index, BelongsTo, ForeignKey, PrimaryKey, AutoIncrement } from 'sequelize-typescript';
 // import { User } from './Models'
-import { TransferStatus } from '../enum';
+import { TransferStatus } from '../utils/enum';
 
 
 @Table({ timestamps: true, tableName: 'transfers' })

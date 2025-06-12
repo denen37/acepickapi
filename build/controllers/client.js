@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getClient = void 0;
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
-const enum_1 = require("../enum");
+const enum_1 = require("../utils/enum");
 const getClient = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { id } = req.params;
     // try {

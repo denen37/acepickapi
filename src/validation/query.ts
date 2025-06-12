@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { JobStatus } from "../enum";
+import { JobStatus } from "../utils/enum";
 
 export const jobStatusQuerySchema = z.object({
     status: z.nativeEnum(JobStatus).optional(),

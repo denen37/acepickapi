@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { JobMode, OTPReason, UserRole } from "../enum"; // adjust the path
-import { VerificationType } from "../enum";
+import { JobMode, OTPReason, UserRole } from "../utils/enum"; // adjust the path
+import { VerificationType } from "../utils/enum";
 
 
 const otpBaseSchema = z.object({
@@ -143,6 +143,15 @@ export const jobPostSchema = z.object({
     address: z.string().min(1, "Address is required"),
     numOfJobs: z.number().int().positive("Number of jobs must be a positive integer").optional(),
     professionalId: z.string().uuid("Professional ID must be a valid UUID"),
+    mode: z.nativeEnum(JobMode).optional(),
+});
+
+export const jobUpdateSchema = z.object({
+    jobId: z.number().int().positive("Job ID must be a positive integer").optional(),
+    title: z.string().min(1, "Title is required").optional(),
+    description: z.string().min(1, "Description is required").optional(),
+    address: z.string().min(1, "Address is required").optional(),
+    numOfJobs: z.number().int().positive("Number of jobs must be a positive integer").optional(),
     mode: z.nativeEnum(JobMode).optional(),
 });
 

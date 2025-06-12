@@ -17,7 +17,7 @@ const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
 const axios_1 = __importDefault(require("axios"));
-const enum_1 = require("../enum");
+const enum_1 = require("../utils/enum");
 const uuid_1 = require("uuid");
 const initiatePayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, email, role } = req.user;

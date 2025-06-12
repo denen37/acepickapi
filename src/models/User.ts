@@ -1,7 +1,7 @@
 import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index, BelongsTo, ForeignKey, PrimaryKey } from 'sequelize-typescript';
 import { v4 as uuidv4 } from 'uuid';
 import { Profile, Wallet, Location, Review } from './Models';
-import { UserRole, UserState, UserStatus } from '../enum';
+import { UserRole, UserState, UserStatus } from '../utils/enum';
 
 
 

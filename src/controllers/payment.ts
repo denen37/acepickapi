@@ -3,7 +3,7 @@ import { Transfer, Transaction, Wallet } from "../models/Models";
 import { errorResponse, handleResponse, successResponse } from "../utils/modules";
 import config from "../config/configSetup"
 import axios from 'axios'
-import { TransactionStatus, TransactionType } from "../enum";
+import { TransactionStatus, TransactionType } from "../utils/enum";
 import { v4 as uuidv4 } from 'uuid';
 
 

@@ -3,8 +3,8 @@ import { createSector, deleteSector, getSectors, getSectorsMetrics, updateSector
 import { createProfession, deleteProfession, getProfessionById, getProfessions, updateProfession } from "../controllers/professions";
 import { getProfessionalById, getProfessionals } from "../controllers/professionals";
 import { getCooperates } from "../controllers/cooperates";
-import { approveJob, completeJob, createJobOrder, disputeJob, generateInvoice, getJobById, getJobs, getLatestJob, respondToJob, updateInvoice, viewInvoice } from "../controllers/Jobs";
-import { UserRole } from "../enum";
+import { approveJob, cancelJob, completeJob, createJobOrder, disputeJob, generateInvoice, getJobById, getJobs, getLatestJob, respondToJob, updateInvoice, updateJob, viewInvoice } from "../controllers/Jobs";
+import { UserRole } from "../utils/enum";
 import { allowRoles } from "../middlewares/allowRoles";
 import { findPersonsNearby, sendEmailTest, sendSMSTest, testNotification } from "../controllers/test";
 import { updateLocation } from "../controllers/location";
@@ -48,6 +48,8 @@ routes.get('/jobs/invoice/:jobId', allowRoles(UserRole.PROFESSIONAL, UserRole.CL
 routes.post('/jobs/complete/:jobId', allowRoles(UserRole.PROFESSIONAL), completeJob);
 routes.post('/jobs/approve/:jobId', allowRoles(UserRole.CLIENT), approveJob);
 routes.post('/jobs/dispute/:jobId', allowRoles(UserRole.CLIENT), disputeJob);
+routes.post('/jobs/cancel/:jobId', allowRoles(UserRole.CLIENT), cancelJob);
+routes.put('jobs/update/:jobId', allowRoles(UserRole.CLIENT), updateJob);
 
 routes.post('/notification-test', testNotification);
 routes.post('/send-sms', sendSMSTest);

@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import bcrypt from "bcryptjs"
 import { errorResponse, handleResponse, successResponse } from "../utils/modules";
-import { JobStatus, PayStatus, TransactionType } from "../enum";
+import { JobStatus, PayStatus, TransactionType } from "../utils/enum";
 import { v4 as uuidv4 } from 'uuid';
 import { paymentSchema, pinSchema } from "../validation/body";
 import { Job, Wallet, Transaction, User, Profile } from "../models/Models";

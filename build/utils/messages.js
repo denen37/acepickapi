@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.jobPaymentEmail = exports.disputedJobEmail = exports.approveJobEmail = exports.completeJobEmail = exports.invoiceUpdatedEmail = exports.invoiceGeneratedEmail = exports.jobDisputeEmail = exports.jobResponseEmail = exports.jobCreatedEmail = exports.forgotPasswordEmail = exports.sendOTPEmail = exports.sendOTPPhone = exports.registerEmail = void 0;
+exports.jobCancelledEmail = exports.jobPaymentEmail = exports.disputedJobEmail = exports.approveJobEmail = exports.completeJobEmail = exports.invoiceUpdatedEmail = exports.invoiceGeneratedEmail = exports.jobDisputeEmail = exports.jobResponseEmail = exports.jobUpdatedEmail = exports.jobCreatedEmail = exports.forgotPasswordEmail = exports.sendOTPEmail = exports.sendOTPPhone = exports.registerEmail = void 0;
 const registerEmail = (user) => {
     var _a, _b;
     return {
@@ -61,7 +61,6 @@ const forgotPasswordEmail = (code) => {
 };
 exports.forgotPasswordEmail = forgotPasswordEmail;
 const jobCreatedEmail = (job) => {
-    console.log('fullName', `${job.client.profile.firstName} ${job.client.profile.lastName}`);
     return {
         title: `Job created: ${job.title}`,
         body: `You have a new job from ${job.client.profile.firstName} ${job.client.profile.lastName}
@@ -74,6 +73,18 @@ const jobCreatedEmail = (job) => {
     };
 };
 exports.jobCreatedEmail = jobCreatedEmail;
+const jobUpdatedEmail = (job) => {
+    return {
+        title: `Job Updated`,
+        body: `The job ${job.title} has updated by ${job.client.profile.firstName} ${job.client.profile.lastName}
+        <p><b>Job description: </b>${job.description}</p>
+        <p><b>Job location: </b>${job.fullAddress}</p>
+
+        Log into your account to accept or decline the job offer.
+        `
+    };
+};
+exports.jobUpdatedEmail = jobUpdatedEmail;
 const jobResponseEmail = (job) => {
     const response = job.accepted ? "accepted" : "declined";
     return {
@@ -191,3 +202,15 @@ const jobPaymentEmail = (job) => {
     };
 };
 exports.jobPaymentEmail = jobPaymentEmail;
+const jobCancelledEmail = (job) => {
+    return {
+        title: `Job Cancelled`,
+        body: `Your job ${job.title} has been cancelled by ${job.client.profile.firstName} ${job.client.profile.lastName}
+        <h3>Summary</h3>
+        <p><b>Job title: </b>${job.title}</p>
+        <p><b>Job description: </b>${job.description}</p>
+        <p><b>Job location: </b>${job.fullAddress}
+        `
+    };
+};
+exports.jobCancelledEmail = jobCancelledEmail;

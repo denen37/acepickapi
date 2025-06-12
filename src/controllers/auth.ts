@@ -3,7 +3,7 @@ import config from "../config/configSetup"
 import { Request, Response } from 'express';
 import axios from "axios";
 import { basename } from "path";
-import { VerificationType, UserState, UserStatus, UserRole, OTPReason } from "../enum";
+import { VerificationType, UserState, UserStatus, UserRole, OTPReason } from "../utils/enum";
 import { User, Director, Professional, Profession, Sector, Review, Wallet, Profile, Cooperation, Location, Verify } from "../models/Models"
 import { forgotPasswordEmail, registerEmail, sendOTPEmail } from "../utils/messages";
 import { otpRequestSchema, registerCoporateSchema, registrationProfSchema, registrationSchema, verifyOTPSchema } from "../validation/body";

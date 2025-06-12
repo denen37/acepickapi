@@ -16,7 +16,7 @@ const sequelize_typescript_1 = require("sequelize-typescript");
 // import { LanLog } from './LanLog';
 // import { User } from './User';
 const Models_1 = require("./Models");
-const enum_1 = require("../enum");
+const enum_1 = require("../utils/enum");
 // import { VoiceRecording } from './VoiceRecording';
 // export enum UserGender {
 // 	MALE = 'MALE',

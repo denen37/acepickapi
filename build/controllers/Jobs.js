@@ -9,10 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.disputeJob = exports.approveJob = exports.completeJob = exports.viewInvoice = exports.updateInvoice = exports.generateInvoice = exports.respondToJob = exports.createJobOrder = exports.getJobById = exports.getLatestJob = exports.getJobs = exports.testApi = void 0;
+exports.disputeJob = exports.approveJob = exports.completeJob = exports.viewInvoice = exports.updateInvoice = exports.generateInvoice = exports.respondToJob = exports.cancelJob = exports.updateJob = exports.createJobOrder = exports.getJobById = exports.getLatestJob = exports.getJobs = exports.testApi = void 0;
 const modules_1 = require("../utils/modules");
 const Models_1 = require("../models/Models");
-const enum_1 = require("../enum");
+const enum_1 = require("../utils/enum");
 const gmail_1 = require("../services/gmail");
 const messages_1 = require("../utils/messages");
 const query_1 = require("../validation/query");
@@ -20,6 +20,7 @@ const body_1 = require("../validation/body");
 const param_1 = require("../validation/param");
 const notification_1 = require("../services/notification");
 const chat_1 = require("../chat");
+const events_1 = require("../utils/events");
 const testApi = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     return (0, modules_1.successResponse)(res, "success", "Your Api is working!");
 });
@@ -174,16 +175,107 @@ const createJobOrder = (req, res) => __awaiter(void 0, void 0, void 0, function*
     if (job.dataValues.professional.fcmToken) {
         yield (0, notification_1.sendPushNotification)(job.dataValues.professional.fcmToken, 'New job created', `A new job has been created: ${job.dataValues.title}`, {});
     }
-    let onlineProfessional = yield Models_1.OnlineUser.findOne({
+    let onlineUser = yield Models_1.OnlineUser.findOne({
         where: { userId: job.dataValues.professionalId }
     });
     const io = (0, chat_1.getIO)();
-    if (onlineProfessional === null || onlineProfessional === void 0 ? void 0 : onlineProfessional.isOnline) {
-        io.to(onlineProfessional === null || onlineProfessional === void 0 ? void 0 : onlineProfessional.socketId).emit('JOB_CREATED', { text: 'This a new Job', data: job });
+    if (onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.isOnline) {
+        io.to(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.socketId).emit(events_1.Emit.JOB_CREATED, { text: 'This a new Job', data: job });
     }
     return (0, modules_1.successResponse)(res, "Successful", { jobResponse, emailSendId: msgStat.messageId });
 });
 exports.createJobOrder = createJobOrder;
+const updateJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = body_1.jobUpdateSchema.safeParse(req.body);
+        if (!result.success) {
+            return res.status(400).json({
+                error: "Invalid route parameter",
+                issues: result.error.format(),
+            });
+        }
+        const job = yield Models_1.Job.findByPk(result.data.jobId, {
+            include: [
+                {
+                    model: Models_1.User,
+                    as: 'professional',
+                    include: [Models_1.Profile]
+                }, {
+                    model: Models_1.User,
+                    as: 'client',
+                    include: [Models_1.Profile]
+                }
+            ]
+        });
+        if (!job) {
+            return (0, modules_1.handleResponse)(res, 404, false, "Job not found");
+        }
+        if (job.accepted) {
+            return (0, modules_1.handleResponse)(res, 404, false, "Job already accepted");
+        }
+        yield job.update(result.data);
+        //send email to professional
+        const emailToSend = yield (0, messages_1.jobUpdatedEmail)(job.dataValues);
+        const msgId = yield (0, gmail_1.sendEmail)(job.professional.email, emailToSend.title, emailToSend.body, job.professional.profile.firstName);
+        if (job.professional.fcmToken) {
+            yield (0, notification_1.sendPushNotification)(job.dataValues.client.fcmToken, 'Job Updated', `Your job has been updated by ${job.dataValues.professional.profile.firstName} ${job.dataValues.professional.profile.lastName}`, {});
+        }
+        let onlineUser = yield Models_1.OnlineUser.findOne({
+            where: { userId: job.dataValues.professionalId }
+        });
+        const io = (0, chat_1.getIO)();
+        if (onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.isOnline) {
+            io.to(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.socketId).emit(events_1.Emit.JOB_UPDATED, { text: 'Your job has been updated', data: job });
+        }
+        return (0, modules_1.successResponse)(res, "Successful", { job });
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', "Error updating job");
+    }
+});
+exports.updateJob = updateJob;
+const cancelJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { jobId } = req.params;
+    try {
+        const job = yield Models_1.Job.findByPk(jobId, {
+            include: [
+                {
+                    model: Models_1.User,
+                    as: 'client',
+                    include: [Models_1.Profile]
+                }, {
+                    model: Models_1.User,
+                    as: 'professional',
+                    include: [Models_1.Profile]
+                }
+            ]
+        });
+        if (!job) {
+            return (0, modules_1.errorResponse)(res, 'error', "Job not found");
+        }
+        yield job.update({ status: enum_1.JobStatus.CANCELLED });
+        // Send email to client
+        const emailToSend = yield (0, messages_1.jobCancelledEmail)(job.dataValues);
+        const msgId = yield (0, gmail_1.sendEmail)(job.professional.email, emailToSend.title, emailToSend.body, job.professional.profile.firstName);
+        if (job.professional.fcmToken) {
+            yield (0, notification_1.sendPushNotification)(job.dataValues.client.fcmToken, 'Job Cancelled', `Your job has been cancelled by ${job.dataValues.professional.profile.firstName} ${job.dataValues.professional.profile.lastName}`, {});
+        }
+        let onlineUser = yield Models_1.OnlineUser.findOne({
+            where: { userId: job.dataValues.professionalId }
+        });
+        const io = (0, chat_1.getIO)();
+        if (onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.isOnline) {
+            io.to(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.socketId).emit(events_1.Emit.JOB_CANCELLED, { text: 'Your job has been cancelled by client', data: job });
+        }
+        yield job.destroy();
+        yield job.save();
+        return (0, modules_1.successResponse)(res, 'success', "Job deleted successfully");
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', "Error cancelling job");
+    }
+});
+exports.cancelJob = cancelJob;
 const respondToJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = param_1.jobIdParamSchema.safeParse(req.params);
     if (!result.success) {
@@ -226,9 +318,15 @@ const respondToJob = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         //'User'
         );
         //send notification to the prof
-        console.log('notification token', job.dataValues.client.fcmToken);
         if (job.dataValues.client.fcmToken) {
             yield (0, notification_1.sendPushNotification)(job.dataValues.client.fcmToken, 'Job response', `Your job has been ${accepted ? 'accepted' : 'rejected'} by the professional: ${job.dataValues.professional.profile.firstName} ${job.dataValues.professional.profile.lastName}`, {});
+        }
+        let onlineUser = yield Models_1.OnlineUser.findOne({
+            where: { userId: job.professionalId }
+        });
+        const io = (0, chat_1.getIO)();
+        if (onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.isOnline) {
+            io.to(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.socketId).emit(events_1.Emit.JOB_RESPONSE, { text: `$Your Job has been ${accepted ? 'accepted' : 'rejected'}`, data: job });
         }
         return (0, modules_1.successResponse)(res, 'success', { message: 'Job respsonse updated', emailSendstatus: Boolean(msgStat.messageId) });
     }
@@ -287,6 +385,13 @@ const generateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function
             //Send notification to the client
             if (job.dataValues.client.fcmToken) {
                 yield (0, notification_1.sendPushNotification)(job.dataValues.client.fcmToken, 'Invoice generated', `An invoice has been generated for your job: ${job.dataValues.title}`, {});
+            }
+            let onlineUser = yield Models_1.OnlineUser.findOne({
+                where: { userId: job.clientId }
+            });
+            const io = (0, chat_1.getIO)();
+            if (onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.isOnline) {
+                io.to(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.socketId).emit(events_1.Emit.INVOICE_GENERATED, { text: `An invoice has been generated`, data: { job, materials } });
             }
             return (0, modules_1.successResponse)(res, 'success', { message: 'Invoice generated' });
         }
@@ -355,6 +460,13 @@ const updateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     //Send notification to the client
     if (job.dataValues.client.fcmToken) {
         yield (0, notification_1.sendPushNotification)(job.dataValues.client.fcmToken, 'Invoice Updated', `An invoice has been updated for your job: ${job.dataValues.title}`, {});
+    }
+    let onlineUser = yield Models_1.OnlineUser.findOne({
+        where: { userId: job.clientId }
+    });
+    const io = (0, chat_1.getIO)();
+    if (onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.isOnline) {
+        io.to(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.socketId).emit(events_1.Emit.INVOICE_UPDATED, { text: `An invoice has been updated`, data: { job } });
     }
     return (0, modules_1.successResponse)(res, 'success', { message: 'Job updated successfully', job });
 });
@@ -475,6 +587,13 @@ const completeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (job.dataValues.client.fcmToken) {
             yield (0, notification_1.sendPushNotification)(job.dataValues.client.fcmToken, 'Job Completed', `Your job on ${job.dataValues.title} has been completed by ${job.professional.profile.firstName} ${job.professional.profile.lastName}`, {});
         }
+        let onlineUser = yield Models_1.OnlineUser.findOne({
+            where: { userId: job.clientId }
+        });
+        const io = (0, chat_1.getIO)();
+        if (onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.isOnline) {
+            io.to(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.socketId).emit(events_1.Emit.JOB_COMPLETED, { text: `Your job has completed`, data: { job } });
+        }
         return (0, modules_1.successResponse)(res, 'success', { message: 'Job completed sucessfully', emailSendStatus: Boolean(msgStat) });
     }
     catch (error) {
@@ -528,6 +647,13 @@ const approveJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         //Send notification to the professional
         if (job.dataValues.client.fcmToken) {
             yield (0, notification_1.sendPushNotification)(job.dataValues.professional.fcmToken, 'Job Approved', `Your job on ${job.dataValues.title} has been Approved by ${job.client.profile.firstName} ${job.client.profile.lastName}`, {});
+        }
+        let onlineUser = yield Models_1.OnlineUser.findOne({
+            where: { userId: job.professionalId },
+        });
+        const io = (0, chat_1.getIO)();
+        if (onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.isOnline) {
+            io.to(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.socketId).emit(events_1.Emit.JOB_APPROVED, { text: `Your job has approved`, data: { job } });
         }
         return (0, modules_1.successResponse)(res, 'success', { message: 'Job approved sucessfully', emailSendStatus: Boolean(msgStat) });
     }
@@ -588,6 +714,13 @@ const disputeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         //Send notification to the professional
         if (job.dataValues.client.fcmToken) {
             yield (0, notification_1.sendPushNotification)(job.dataValues.professional.fcmToken, 'Job Disputed', `Your job on ${job.dataValues.title} has been disputed by ${job.client.profile.firstName} ${job.client.profile.lastName}`, {});
+        }
+        let onlineUser = yield Models_1.OnlineUser.findOne({
+            where: { userId: job.professionalId },
+        });
+        const io = (0, chat_1.getIO)();
+        if (onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.isOnline) {
+            io.to(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.socketId).emit(events_1.Emit.JOB_DISPUTED, { text: `Your job has been disputed`, data: { job } });
         }
         return (0, modules_1.successResponse)(res, 'success', { dispute, emailSendStatus: Boolean(msgStat.messageId) });
     }

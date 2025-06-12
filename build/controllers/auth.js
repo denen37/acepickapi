@@ -15,7 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.corperateReg = exports.deleteUsers = exports.updatePushToken = exports.login = exports.passwordChange = exports.registerCorperate = exports.registerProfessional = exports.register = exports.verifyOtp = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
 const modules_1 = require("../utils/modules");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
-const enum_1 = require("../enum");
+const enum_1 = require("../utils/enum");
 const Models_1 = require("../models/Models");
 const messages_1 = require("../utils/messages");
 const body_1 = require("../validation/body");

@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { JobStatus, UserRole } from "../../enum";
+import { JobStatus, UserRole } from "../../utils/enum";
 import { Job, Material } from "../../models/Models";
 
 export const emitLatestJob = async (io: Server, socket: Socket) => {

@@ -485,3 +485,4 @@
 2025-06-10 10:53:03	GET - /api/transactions
 2025-06-10 10:53:24	GET - /api/transactions
 2025-06-10 10:55:05	GET - /api/transactions/1
+2025-06-12 11:36:06	GET - /api/view-wallet
