@@ -183,6 +183,18 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             return (0, modules_1.handleResponse)(res, 404, false, "Enter a valid email");
         if (!(0, modules_1.validatePhone)(phone))
             return (0, modules_1.handleResponse)(res, 404, false, "Enter a valid phone number");
+        const existingEmail = yield Models_1.User.findOne({
+            where: { email }
+        });
+        if (existingEmail) {
+            return (0, modules_1.handleResponse)(res, 400, false, "Email already exist");
+        }
+        const existingPhone = yield Models_1.User.findOne({
+            where: { phone }
+        });
+        if (existingPhone) {
+            return (0, modules_1.handleResponse)(res, 400, false, "Phone already exist");
+        }
         const verifiedEmail = yield Models_1.Verify.findOne({
             where: { contact: email, verified: true }
         });

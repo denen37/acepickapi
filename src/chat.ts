@@ -1,56 +1,60 @@
-import config from './config/configSetup';
+// import config from './config/configSetup';
 import { Server } from 'socket.io';
 import { socketAuthorize } from './middlewares/authorize';
-import { OnlineUser } from './models/OnlineUser';
-import { emitLatestJob } from './controllers/socket/jobs';
+// import { OnlineUser } from './models/OnlineUser';
+import { Emit, Listen } from './utils/events';
+// import { emitLatestJob } from './controllers/socket/jobs';
+// import { ChatRoom } from './models/Models';
+// import { Op } from 'sequelize';
+import { ChatMessage, getContacts, getMsgs, getPrevChats, joinRoom, onConnect, onDisconnect, sendMessage, uploadFile } from './controllers/socket/chat';
 
 let io: Server;
 
 export const initSocket = (httpServer: any) => {
     io = new Server(httpServer, {
+        path: '/chat',
+        // cors: {
+        //     origin: '*',
+        //     credentials: true,
+        // },
+
         cors: {
-            origin: '*',
+            origin: "http://localhost:3000",
+            methods: ["GET", "POST"],
             credentials: true,
         },
+
     });
 
     io.use(async (socket, next) => {
-
-        socketAuthorize(socket, next);
-
+        console.log('Attempting to connect...')
+        await socketAuthorize(socket, next);
     });
 
-    io.on('connection', async (socket) => {
-        console.log('a user connected', socket.id);
+    io.on(Listen.CONNECTION, async (socket) => {
+        await onConnect(socket)
 
-        const [onlineuser, created] = await OnlineUser.findOrCreate({
-            where: { userId: socket.user.id },
-            defaults: {
-                socketId: socket.id,
-                lastActive: new Date(),
-                isOnline: true,
-            }
-        })
+        socket.on("offer", (offer: any) => socket.broadcast.emit("offer", offer));
 
-        if (!created) {
-            onlineuser.socketId = socket.id;
-            onlineuser.lastActive = new Date();
-            onlineuser.isOnline = true;
-            await onlineuser.save();
-        }
+        socket.on("answer", (answer: any) => socket.broadcast.emit("answer", answer));
 
-        //emit latest job
-        await emitLatestJob(io, socket);
+        socket.on("candidate", (candidate: any) => socket.broadcast.emit("candidate", candidate))
 
-        socket.on('disconnect', async () => {
-            console.log('A user disconnected', socket.id);
-            const onlineUser = await OnlineUser.findOne({ where: { userId: socket.user.id } });
-            if (onlineUser) {
-                onlineUser.isOnline = false;
-                onlineUser.lastActive = new Date();
-                await onlineUser.save();
-            }
-        })
+        socket.emit(Emit.CONNECTED, socket.id)
+
+        socket.on(Listen.UPLOAD_FILE, (data: any) => uploadFile(io, socket, data));
+
+        socket.on(Listen.SEND_MSG, async (data: ChatMessage) => await sendMessage(io, socket, data));
+
+        socket.on(Listen.DISCONNECT, () => onDisconnect(socket));
+
+        socket.on(Listen.GET_CONTACTS, () => getContacts(io, socket));
+
+        socket.on(Listen.JOIN_ROOM, (data: any) => joinRoom(io, socket, data))
+
+        socket.on(Listen.GET_MSGs, (data: any) => getMsgs(io, socket, data))
+
+        socket.on(Listen.PREV_CHATS, (data: any) => getPrevChats(io, socket, data))
     });
 
     return io;

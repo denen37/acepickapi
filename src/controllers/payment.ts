@@ -42,46 +42,56 @@ export const verifyPayment = async (req: Request, res: Response) => {
     const { id } = req.user
     const { ref } = req.params
 
-    const paystackResponse = await axios.get(
-        `https://api.paystack.co/transaction/verify/${ref}`,
-        {
-            headers: {
-                Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`,
-            },
+    try {
+
+        const paystackResponse = await axios.get(
+            `https://api.paystack.co/transaction/verify/${ref}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`,
+                },
+            }
+        );
+
+        const { data } = paystackResponse.data;
+
+        if (data.status === TransactionStatus.SUCCESS) {
+            const [transaction, created] = await Transaction.findOrCreate({
+                where: { reference: ref },
+                defaults: {
+                    userId: id,
+                    amount: data.amount / 100,
+                    reference: data.reference,
+                    status: data.status,
+                    channel: data.channel,
+                    currency: data.currency,
+                    timestamp: new Date(),
+                    description: 'Wallet topup',
+                    type: TransactionType.CREDIT,
+                }
+            })
+
+            if (created) {
+                const wallet = await Wallet.findOne({ where: { userId: id } })
+
+                if (wallet) {
+                    let prevAmount = Number(wallet.currentBalance);
+                    let newAmount = Number(transaction.amount);
+
+                    wallet.previousBalance = prevAmount;
+                    wallet.currentBalance = prevAmount + newAmount;
+
+                    await wallet.save()
+                }
+            }
+
+            return handleResponse(res, 200, true, "Payment sucessfully verified", { result: paystackResponse.data })
         }
-    );
 
-    const { data } = paystackResponse.data;
-
-    const transaction = await Transaction.create({
-        userId: id,
-        amount: data.amount / 100,
-        reference: data.reference,
-        status: data.status,
-        channel: data.channel,
-        currency: data.currency,
-        timestamp: data.paid_at,
-        description: 'Wallet topup',
-        type: TransactionType.CREDIT,
-    })
-
-    if (data.status === TransactionStatus.SUCCESS) {
-        const wallet = await Wallet.findOne({ where: { userId: id } })
-
-        if (wallet) {
-            let prevAmount = Number(wallet.currentBalance);
-            let newAmount = Number(transaction.amount);
-
-            wallet.previousBalance = prevAmount;
-            wallet.currentBalance = prevAmount + newAmount;
-
-            await wallet.save()
-        }
-
-        return successResponse(res, 'success', { transaction, wallet });
+        return handleResponse(res, 200, true, "Payment sucessfully verified", { result: paystackResponse.data })
+    } catch (error) {
+        return errorResponse(res, 'error', error);
     }
-
-    return successResponse(res, 'success', transaction);
 }
 
 

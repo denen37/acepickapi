@@ -397,5 +397,3 @@ export const getProfessionalById = async (req: Request, res: Response) => {
 
 
 
-
-

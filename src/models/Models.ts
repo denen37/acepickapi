@@ -21,6 +21,8 @@ import { Transaction } from './Transaction'
 import { OnlineUser } from './OnlineUser'
 import { Account } from './Account'
 import { Transfer } from './Transfer'
+import { ChatRoom } from './ChatRoom'
+import { Message } from './Message'
 
 export {
     User,
@@ -45,5 +47,7 @@ export {
     Transaction,
     OnlineUser,
     Account,
-    Transfer
+    Transfer,
+    ChatRoom,
+    Message
 }

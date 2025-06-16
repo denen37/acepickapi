@@ -45,35 +45,45 @@ exports.initiatePayment = initiatePayment;
 const verifyPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
     const { ref } = req.params;
-    const paystackResponse = yield axios_1.default.get(`https://api.paystack.co/transaction/verify/${ref}`, {
-        headers: {
-            Authorization: `Bearer ${configSetup_1.default.PAYSTACK_SECRET_KEY}`,
-        },
-    });
-    const { data } = paystackResponse.data;
-    const transaction = yield Models_1.Transaction.create({
-        userId: id,
-        amount: data.amount / 100,
-        reference: data.reference,
-        status: data.status,
-        channel: data.channel,
-        currency: data.currency,
-        timestamp: data.paid_at,
-        description: 'Wallet topup',
-        type: enum_1.TransactionType.CREDIT,
-    });
-    if (data.status === enum_1.TransactionStatus.SUCCESS) {
-        const wallet = yield Models_1.Wallet.findOne({ where: { userId: id } });
-        if (wallet) {
-            let prevAmount = Number(wallet.currentBalance);
-            let newAmount = Number(transaction.amount);
-            wallet.previousBalance = prevAmount;
-            wallet.currentBalance = prevAmount + newAmount;
-            yield wallet.save();
+    try {
+        const paystackResponse = yield axios_1.default.get(`https://api.paystack.co/transaction/verify/${ref}`, {
+            headers: {
+                Authorization: `Bearer ${configSetup_1.default.PAYSTACK_SECRET_KEY}`,
+            },
+        });
+        const { data } = paystackResponse.data;
+        if (data.status === enum_1.TransactionStatus.SUCCESS) {
+            const [transaction, created] = yield Models_1.Transaction.findOrCreate({
+                where: { reference: ref },
+                defaults: {
+                    userId: id,
+                    amount: data.amount / 100,
+                    reference: data.reference,
+                    status: data.status,
+                    channel: data.channel,
+                    currency: data.currency,
+                    timestamp: new Date(),
+                    description: 'Wallet topup',
+                    type: enum_1.TransactionType.CREDIT,
+                }
+            });
+            if (created) {
+                const wallet = yield Models_1.Wallet.findOne({ where: { userId: id } });
+                if (wallet) {
+                    let prevAmount = Number(wallet.currentBalance);
+                    let newAmount = Number(transaction.amount);
+                    wallet.previousBalance = prevAmount;
+                    wallet.currentBalance = prevAmount + newAmount;
+                    yield wallet.save();
+                }
+            }
+            return (0, modules_1.handleResponse)(res, 200, true, "Payment sucessfully verified", { result: paystackResponse.data });
         }
-        return (0, modules_1.successResponse)(res, 'success', { transaction, wallet });
+        return (0, modules_1.handleResponse)(res, 200, true, "Payment sucessfully verified", { result: paystackResponse.data });
     }
-    return (0, modules_1.successResponse)(res, 'success', transaction);
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error);
+    }
 });
 exports.verifyPayment = verifyPayment;
 const initiateTransfer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

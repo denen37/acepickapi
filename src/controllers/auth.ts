@@ -248,9 +248,27 @@ export const register = async (req: Request, res: Response): Promise<any> => {
 
         if (!validatePhone(phone)) return handleResponse(res, 404, false, "Enter a valid phone number");
 
+        const existingEmail = await User.findOne({
+            where: { email }
+        })
+
+        if (existingEmail) {
+            return handleResponse(res, 400, false, "Email already exist")
+        }
+
+        const existingPhone = await User.findOne({
+            where: { phone }
+        })
+
+        if (existingPhone) {
+            return handleResponse(res, 400, false, "Phone already exist")
+        }
+
+
         const verifiedEmail = await Verify.findOne({
             where: { contact: email, verified: true }
         });
+
 
         if (!verifiedEmail) return handleResponse(res, 404, false, "Email not verified");
 

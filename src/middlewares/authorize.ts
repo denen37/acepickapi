@@ -45,6 +45,7 @@ export const socketAuthorize = async (socket: Socket, next: (err?: ExtendedError
     try {
         const decoded = verify(token, config.TOKEN_SECRET);
         socket.user = decoded;
+
         next();
     } catch (error) {
         next(new Error('Unauthorized'));

@@ -27,6 +27,8 @@ type Config = {
     TOKEN_SECRET: string;
     AZURE_STORAGE_CONNECTION_STRING: string | undefined;
     PAYSTACK_SECRET_KEY: string | undefined;
+    CRYPTO_SECRET_KEY: string | undefined;
+    CRYPTO_IV: string | undefined;
 };
 
 const getConfig = (): Config => {
@@ -54,6 +56,8 @@ const getConfig = (): Config => {
         SMS_SENDER_ID: process.env.SMS_SENDER_ID,
         AZURE_STORAGE_CONNECTION_STRING: process.env.AZURE_STORAGE_CONNECTION_STRING,
         PAYSTACK_SECRET_KEY: process.env.PAYSTACK_SECRET_KEY,
+        CRYPTO_SECRET_KEY: process.env.CRYPTO_SECRET_KEY,
+        CRYPTO_IV: process.env.CRYPTO_IV,
         PUBLIC_ROUTES: [
             '/api',
             '/',
