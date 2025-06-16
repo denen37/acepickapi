@@ -57,7 +57,6 @@ __decorate([
 ], Transfer.prototype, "reference", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
-    sequelize_typescript_1.Unique,
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING(200)),
     __metadata("design:type", String)
 ], Transfer.prototype, "recipientCode", void 0);

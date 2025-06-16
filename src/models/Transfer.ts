@@ -50,7 +50,6 @@ export class Transfer extends Model {
 
 
     @AllowNull(false)
-    @Unique
     @Column(DataType.STRING(200))
     recipientCode!: string
 
