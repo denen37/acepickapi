@@ -510,3 +510,7 @@
 2025-06-16 18:32:25	POST - /api/payments/verify/gg9rwzvjcw
 2025-06-16 18:54:10	POST - /api/payments/verify/gg9rwzvjcw
 2025-06-16 18:55:08	POST - /api/payments/verify/9ldgo6khsr
+2025-06-16 20:26:28	POST - /api/reset-pin
+2025-06-16 21:02:28	POST - /api/forgot-pin
+2025-06-16 21:03:49	POST - /api/forgot-pin
+2025-06-16 21:06:21	POST - /api/reset-pin

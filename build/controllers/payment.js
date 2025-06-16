@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.initiateTransfer = exports.verifyPayment = exports.initiatePayment = void 0;
+exports.verifyTransfer = exports.initiateTransfer = exports.verifyPayment = exports.initiatePayment = void 0;
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
@@ -112,3 +112,8 @@ const initiateTransfer = (req, res) => __awaiter(void 0, void 0, void 0, functio
     return (0, modules_1.successResponse)(res, 'success', response.data.data);
 });
 exports.initiateTransfer = initiateTransfer;
+const verifyTransfer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(req.body);
+    return (0, modules_1.successResponse)(res, 'success', req.body);
+});
+exports.verifyTransfer = verifyTransfer;

@@ -224,15 +224,26 @@ export const paymentSchema = z.object({
 });
 
 
-export const pinSchema = z
+export const pinResetSchema = z
     .object({
         newPin: z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
-        newPinconfirm: z.string().regex(/^\d{4}$/, 'Confirm PIN must be exactly 4 digits'),
+        oldPin: z.string().regex(/^\d{4}$/, 'Confirm PIN must be exactly 4 digits'),
     })
-    .refine((data) => data.newPin === data.newPinconfirm, {
+// .refine((data) => data.newPin === data.newPinconfirm, {
+//     message: "PINs do not match",
+//     path: ['newPinconfirm'], // Error will show under `newPinconfirm`
+// });
+
+export const pinForgotSchema = z
+    .object({
+        newPin: z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
+        newPinConfirm: z.string().regex(/^\d{4}$/, 'Confirm PIN must be exactly 4 digits'),
+    })
+    .refine((data) => data.newPin === data.newPinConfirm, {
         message: "PINs do not match",
         path: ['newPinconfirm'], // Error will show under `newPinconfirm`
     });
+
 
 
 

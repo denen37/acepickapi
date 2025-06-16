@@ -10,9 +10,9 @@ import { findPersonsNearby, sendEmailTest, sendSMSTest, testNotification } from 
 import { updateLocation } from "../controllers/location";
 import { getClient } from "../controllers/client";
 import { addAccount, deleteAccount, getAccounts, getBanks, updateAccount } from "../controllers/account";
-import { createWallet, creditWallet, debitWallet, resetPin, setPin, viewWallet } from "../controllers/wallet";
+import { createWallet, creditWallet, debitWallet, forgotPin, resetPin, setPin, viewWallet } from "../controllers/wallet";
 import { getAllTransactions, getTransactionById } from "../controllers/transactions";
-import { initiatePayment, initiateTransfer, verifyPayment } from "../controllers/payment";
+import { initiatePayment, initiateTransfer, verifyPayment, verifyTransfer } from "../controllers/payment";
 
 const routes = Router();
 
@@ -71,6 +71,7 @@ routes.post('/debit-wallet', /*allowRoles(UserRole.SEEKER),*/ debitWallet);
 routes.post('/credit-wallet', /*allowRoles(UserRole.SEEKER),*/ creditWallet);
 routes.post('/set-pin', /*allowRoles(UserRole.SEEKER),*/ setPin);
 routes.post('/reset-pin', resetPin);
+routes.post('/forgot-pin', forgotPin);
 
 routes.get('/transactions', /*allowRoles(UserRole.SEEKER, UserRole.PROVIDER),*/ getAllTransactions);
 routes.get('/transactions/:id', /*allowRoles(UserRole.SEEKER, UserRole.PROVIDER),*/ getTransactionById);
@@ -79,6 +80,7 @@ routes.get('/transactions/:id', /*allowRoles(UserRole.SEEKER, UserRole.PROVIDER)
 routes.post('/payments/initiate', /*allowRoles(UserRole.SEEKER),*/ initiatePayment);
 routes.post('/payments/verify/:ref', /*allowRoles(UserRole.SEEKER),*/ verifyPayment);
 routes.post('/transfer/initiate', /*allowRoles(UserRole.PROVIDER),*/ initiateTransfer);
+routes.post('/transfer/paystack/webhook', verifyTransfer)
 
 
 export default routes;

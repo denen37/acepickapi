@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.creditWallet = exports.resetPin = exports.setPin = exports.debitWallet = exports.viewWallet = exports.createWallet = void 0;
+exports.creditWallet = exports.forgotPin = exports.resetPin = exports.setPin = exports.debitWallet = exports.viewWallet = exports.createWallet = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const modules_1 = require("../utils/modules");
 const enum_1 = require("../utils/enum");
@@ -173,15 +173,23 @@ exports.setPin = setPin;
 const resetPin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, role } = req.user;
     // Usage example
-    const result = body_1.pinSchema.safeParse(req.body);
+    const result = body_1.pinResetSchema.safeParse(req.body);
     if (!result.success) {
         return res.status(400).json({ errors: result.error.format() });
     }
-    const { newPin, newPinconfirm } = result.data;
+    const { newPin, oldPin } = result.data;
     try {
         const wallet = yield Models_1.Wallet.findOne({ where: { userId: id } });
         if (!wallet) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Wallet not found');
+        }
+        // Check if old pin matches
+        if (!wallet.pin) {
+            return (0, modules_1.handleResponse)(res, 400, false, 'Pin not set');
+        }
+        const isMatch = yield bcryptjs_1.default.compare(oldPin, wallet.pin);
+        if (!isMatch) {
+            return (0, modules_1.handleResponse)(res, 400, false, 'Old pin does not match');
         }
         // Hash pin
         const hashedPin = yield bcryptjs_1.default.hash(newPin, 10);
@@ -194,6 +202,32 @@ const resetPin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.resetPin = resetPin;
+const forgotPin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id, role } = req.user;
+    try {
+        const result = body_1.pinForgotSchema.safeParse(req.body);
+        if (!result.success) {
+            return res.status(400).json({ errors: result.error.format() });
+        }
+        const { newPin, newPinConfirm } = result.data;
+        const wallet = yield Models_1.Wallet.findOne({ where: { userId: id } });
+        if (!wallet) {
+            return (0, modules_1.handleResponse)(res, 404, false, 'Wallet not found');
+        }
+        // Check if old pin matches
+        if (!wallet.pin) {
+            return (0, modules_1.handleResponse)(res, 400, false, 'Pin not set');
+        }
+        const hashedPin = yield bcryptjs_1.default.hash(newPin, 10);
+        wallet.pin = hashedPin;
+        yield wallet.save();
+        return (0, modules_1.successResponse)(res, 'success', 'Pin reset successfully');
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error);
+    }
+});
+exports.forgotPin = forgotPin;
 const creditWallet = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.user;

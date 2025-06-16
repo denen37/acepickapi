@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.pinSchema = exports.paymentSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.pinForgotSchema = exports.pinResetSchema = exports.paymentSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum"); // adjust the path
 const enum_2 = require("../utils/enum");
@@ -194,12 +194,21 @@ exports.paymentSchema = zod_1.z.object({
     reason: zod_1.z.string().min(1, 'Reason is required'),
     jobId: zod_1.z.number().int().positive("Job ID must be a positive integer"),
 });
-exports.pinSchema = zod_1.z
+exports.pinResetSchema = zod_1.z
     .object({
     newPin: zod_1.z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
-    newPinconfirm: zod_1.z.string().regex(/^\d{4}$/, 'Confirm PIN must be exactly 4 digits'),
+    oldPin: zod_1.z.string().regex(/^\d{4}$/, 'Confirm PIN must be exactly 4 digits'),
+});
+// .refine((data) => data.newPin === data.newPinconfirm, {
+//     message: "PINs do not match",
+//     path: ['newPinconfirm'], // Error will show under `newPinconfirm`
+// });
+exports.pinForgotSchema = zod_1.z
+    .object({
+    newPin: zod_1.z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
+    newPinConfirm: zod_1.z.string().regex(/^\d{4}$/, 'Confirm PIN must be exactly 4 digits'),
 })
-    .refine((data) => data.newPin === data.newPinconfirm, {
+    .refine((data) => data.newPin === data.newPinConfirm, {
     message: "PINs do not match",
     path: ['newPinconfirm'], // Error will show under `newPinconfirm`
 });

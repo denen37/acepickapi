@@ -127,3 +127,9 @@ export const initiateTransfer = async (req: Request, res: Response) => {
 
     return successResponse(res, 'success', response.data.data);
 }
+
+export const verifyTransfer = async (req: Request, res: Response) => {
+    console.log(req.body);
+
+    return successResponse(res, 'success', req.body);
+}

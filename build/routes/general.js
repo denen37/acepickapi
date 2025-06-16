@@ -60,9 +60,11 @@ routes.post('/debit-wallet', /*allowRoles(UserRole.SEEKER),*/ wallet_1.debitWall
 routes.post('/credit-wallet', /*allowRoles(UserRole.SEEKER),*/ wallet_1.creditWallet);
 routes.post('/set-pin', /*allowRoles(UserRole.SEEKER),*/ wallet_1.setPin);
 routes.post('/reset-pin', wallet_1.resetPin);
+routes.post('/forgot-pin', wallet_1.forgotPin);
 routes.get('/transactions', /*allowRoles(UserRole.SEEKER, UserRole.PROVIDER),*/ transactions_1.getAllTransactions);
 routes.get('/transactions/:id', /*allowRoles(UserRole.SEEKER, UserRole.PROVIDER),*/ transactions_1.getTransactionById);
 routes.post('/payments/initiate', /*allowRoles(UserRole.SEEKER),*/ payment_1.initiatePayment);
 routes.post('/payments/verify/:ref', /*allowRoles(UserRole.SEEKER),*/ payment_1.verifyPayment);
 routes.post('/transfer/initiate', /*allowRoles(UserRole.PROVIDER),*/ payment_1.initiateTransfer);
+routes.post('/transfer/paystack/webhook', payment_1.verifyTransfer);
 exports.default = routes;

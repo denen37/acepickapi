@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs"
 import { errorResponse, handleResponse, successResponse } from "../utils/modules";
 import { JobStatus, PayStatus, TransactionType } from "../utils/enum";
 import { v4 as uuidv4 } from 'uuid';
-import { paymentSchema, pinSchema } from "../validation/body";
+import { paymentSchema, pinForgotSchema, pinResetSchema } from "../validation/body";
 import { Job, Wallet, Transaction, User, Profile } from "../models/Models";
 import { randomUUID } from "crypto";
 import { jobPaymentEmail } from "../utils/messages";
@@ -224,13 +224,13 @@ export const resetPin = async (req: Request, res: Response) => {
 
 
     // Usage example
-    const result = pinSchema.safeParse(req.body);
+    const result = pinResetSchema.safeParse(req.body);
 
     if (!result.success) {
         return res.status(400).json({ errors: result.error.format() });
     }
 
-    const { newPin, newPinconfirm } = result.data;
+    const { newPin, oldPin } = result.data;
 
     try {
         const wallet = await Wallet.findOne({ where: { userId: id } });
@@ -239,7 +239,53 @@ export const resetPin = async (req: Request, res: Response) => {
             return handleResponse(res, 404, false, 'Wallet not found')
         }
 
+        // Check if old pin matches
+        if (!wallet.pin) {
+            return handleResponse(res, 400, false, 'Pin not set')
+        }
+
+        const isMatch = await bcrypt.compare(oldPin, wallet.pin);
+
+        if (!isMatch) {
+            return handleResponse(res, 400, false, 'Old pin does not match')
+        }
+
         // Hash pin
+        const hashedPin = await bcrypt.hash(newPin, 10);
+
+        wallet.pin = hashedPin;
+
+        await wallet.save();
+
+        return successResponse(res, 'success', 'Pin reset successfully')
+    } catch (error) {
+        return errorResponse(res, 'error', error)
+    }
+}
+
+export const forgotPin = async (req: Request, res: Response) => {
+    const { id, role } = req.user;
+
+    try {
+        const result = pinForgotSchema.safeParse(req.body);
+
+        if (!result.success) {
+            return res.status(400).json({ errors: result.error.format() });
+        }
+
+        const { newPin, newPinConfirm } = result.data;
+
+        const wallet = await Wallet.findOne({ where: { userId: id } });
+
+        if (!wallet) {
+            return handleResponse(res, 404, false, 'Wallet not found')
+        }
+
+        // Check if old pin matches
+        if (!wallet.pin) {
+            return handleResponse(res, 400, false, 'Pin not set')
+        }
+
         const hashedPin = await bcrypt.hash(newPin, 10);
 
         wallet.pin = hashedPin;
