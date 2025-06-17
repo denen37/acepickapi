@@ -45,6 +45,12 @@ export class User extends Model {
     role!: UserRole;
 
 
+    @AllowNull(false)
+    @Default(false)
+    @Column(DataType.BOOLEAN)
+    agreed!: boolean;
+
+
 
     @HasOne(() => Wallet)
     wallet!: Wallet;

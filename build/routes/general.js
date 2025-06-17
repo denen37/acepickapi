@@ -66,5 +66,6 @@ routes.get('/transactions/:id', /*allowRoles(UserRole.SEEKER, UserRole.PROVIDER)
 routes.post('/payments/initiate', /*allowRoles(UserRole.SEEKER),*/ payment_1.initiatePayment);
 routes.post('/payments/verify/:ref', /*allowRoles(UserRole.SEEKER),*/ payment_1.verifyPayment);
 routes.post('/transfer/initiate', /*allowRoles(UserRole.PROVIDER),*/ payment_1.initiateTransfer);
-routes.post('/transfer/paystack/webhook', payment_1.verifyTransfer);
+routes.post('/transfer/verify/:ref', payment_1.verifyTransfer);
+routes.post('/transfer/paystack/webhook', payment_1.completeTransfer);
 exports.default = routes;

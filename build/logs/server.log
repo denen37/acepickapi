@@ -514,3 +514,4 @@
 2025-06-16 21:02:28	POST - /api/forgot-pin
 2025-06-16 21:03:49	POST - /api/forgot-pin
 2025-06-16 21:06:21	POST - /api/reset-pin
+2025-06-17 08:26:44	POST - /api/auth/login

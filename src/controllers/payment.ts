@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { Transfer, Transaction, Wallet } from "../models/Models";
-import { errorResponse, handleResponse, successResponse } from "../utils/modules";
+import { randomId, errorResponse, handleResponse, successResponse } from "../utils/modules";
 import config from "../config/configSetup"
 import axios from 'axios'
 import { TransactionStatus, TransactionType } from "../utils/enum";
@@ -97,7 +97,8 @@ export const verifyPayment = async (req: Request, res: Response) => {
 
 export const initiateTransfer = async (req: Request, res: Response) => {
     const { amount, recipientCode, reason = "Withdrawal" } = req.body;
-    const reference = uuidv4();
+    //const reference = uuidv4();
+    const reference = randomId(12);
 
     const transfer = await Transfer.create({
         userId: req.user.id,
@@ -128,8 +129,25 @@ export const initiateTransfer = async (req: Request, res: Response) => {
     return successResponse(res, 'success', response.data.data);
 }
 
-export const verifyTransfer = async (req: Request, res: Response) => {
+export const completeTransfer = async (req: Request, res: Response) => {
     console.log(req.body);
 
     return successResponse(res, 'success', req.body);
+}
+
+export const verifyTransfer = async (req: Request, res: Response) => {
+    const { ref } = req.params
+
+    try {
+        const response = await axios.get(`https://api.paystack.co/transfer/verify/${ref}`, {
+            headers: {
+                'Authorization': `Bearer ${config.PAYSTACK_SECRET_KEY}`
+            }
+        })
+
+        return successResponse(res, 'success', response.data.data);
+    } catch (error: any) {
+        console.log(error);
+        return errorResponse(res, 'error', error.response.data.message);
+    }
 }

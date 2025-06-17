@@ -20,6 +20,7 @@ const sequelize_1 = require("sequelize");
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const cryptography_1 = require("../../utils/cryptography");
+const enum_1 = require("../../utils/enum");
 const sendMessage = (io, socket, data) => __awaiter(void 0, void 0, void 0, function* () {
     let room = yield Models_1.ChatRoom.findOne({
         where: {
@@ -80,20 +81,40 @@ const onDisconnect = (socket) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.onDisconnect = onDisconnect;
 const getContacts = (io, socket) => __awaiter(void 0, void 0, void 0, function* () {
-    // let token = socket.handshake.auth.token;
-    // const user = socket.user;
-    // if (!user) {
-    //     return
-    // }
-    // if (user.role === 'client') {
-    //     const result = await axios.post(`${config.AUTH_BASE_URL}/api/profiles/get_professionals`, {}, {
-    //         headers: {
-    //             'Authorization': `Bearer ${token}`
-    //         }
-    //     })
-    //     const contacts = result.data.data;
-    //     socket.emit(Emit.ALL_CONTACTS, contacts);
-    // }
+    let token = socket.handshake.auth.token;
+    const user = socket.user;
+    if (!user) {
+        return;
+    }
+    let contacts;
+    if (user.role === enum_1.UserRole.CLIENT) {
+        contacts = yield Models_1.User.findAll({
+            attributes: { exclude: ['password'] },
+            where: {
+                role: enum_1.UserRole.PROFESSIONAL,
+            },
+            include: [{
+                    model: Models_1.Profile,
+                    include: [Models_1.Professional]
+                }, {
+                    model: Models_1.Location
+                }]
+        });
+    }
+    else if (user.role === enum_1.UserRole.PROFESSIONAL) {
+        contacts = yield Models_1.User.findAll({
+            attributes: { exclude: ['password'] },
+            where: {
+                role: enum_1.UserRole.CLIENT,
+            },
+            include: [{
+                    model: Models_1.Profile,
+                }, {
+                    model: Models_1.Location
+                }]
+        });
+    }
+    socket.emit(events_1.Emit.ALL_CONTACTS, contacts);
 });
 exports.getContacts = getContacts;
 const joinRoom = (io, socket, data) => __awaiter(void 0, void 0, void 0, function* () {

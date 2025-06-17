@@ -5,37 +5,37 @@ import * as Models from '../models/Models'
 
 const env = process.env.NODE_ENV || "development";
 
-// const sequelize = new Sequelize(
-//     config.DB_NAME || 'test',
-//     config.DB_USER || 'root',
-//     config.DB_PASSWORD,
-//     {
-//         host: config.DB_HOST,
-//         dialect: 'mysql',
-//         dialectOptions: {
-//             ssl: false,
-//         },
-//         logging: false,
-//         models: [...Object.values(Model)],
-//     }
-// );
-
-
-const sequelize = new Sequelize({
-    dialect: 'mssql',
-    host: config.DB_HOST,
-    port: config.DB_PORT,
-    username: config.DB_USER,
-    password: config.DB_PASSWORD,
-    database: config.DB_NAME,
-    models: Object.values(Models),
-    dialectOptions: {
-        options: {
-            encrypt: true,
-            trustServerCertificate: false,
+const sequelize = new Sequelize(
+    config.DB_NAME || 'test',
+    config.DB_USER || 'root',
+    config.DB_PASSWORD,
+    {
+        host: config.DB_HOST,
+        dialect: 'mysql',
+        dialectOptions: {
+            ssl: false,
         },
-    },
-});
+        logging: true,
+        models: Object.values(Models),
+    }
+);
+
+
+// const sequelize = new Sequelize({
+//     dialect: 'mssql',
+//     host: config.DB_HOST,
+//     port: config.DB_PORT,
+//     username: config.DB_USER,
+//     password: config.DB_PASSWORD,
+//     database: config.DB_NAME,
+//     models: Object.values(Models),
+//     dialectOptions: {
+//         options: {
+//             encrypt: true,
+//             trustServerCertificate: false,
+//         },
+//     },
+// });
 
 
 

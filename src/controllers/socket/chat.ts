@@ -2,13 +2,14 @@ import { Server, Socket } from "socket.io";
 import { Emit, Listen } from "../../utils/events";
 import axios from "axios";
 import config from "../../config/configSetup"
-import { Message, ChatRoom, OnlineUser } from "../../models/Models"
+import { Message, ChatRoom, OnlineUser, User, Professional, Profile, Location } from "../../models/Models"
 import { Op } from "sequelize";
 import { randomId } from "../../utils/modules";
 import http from "http";
 import path from "path";
 import fs from "fs";
 import { decryptMessage, encryptMessage } from "../../utils/cryptography";
+import { UserRole } from "../../utils/enum";
 
 export interface ChatMessage {
     to: string;
@@ -89,23 +90,42 @@ export const onDisconnect = async (socket: Socket) => {
 }
 
 export const getContacts = async (io: Server, socket: Socket) => {
-    // let token = socket.handshake.auth.token;
-    // const user = socket.user;
+    let token = socket.handshake.auth.token;
+    const user = socket.user;
 
-    // if (!user) {
-    //     return
-    // }
+    if (!user) {
+        return
+    }
 
-    // if (user.role === 'client') {
-    //     const result = await axios.post(`${config.AUTH_BASE_URL}/api/profiles/get_professionals`, {}, {
-    //         headers: {
-    //             'Authorization': `Bearer ${token}`
-    //         }
-    //     })
-    //     const contacts = result.data.data;
+    let contacts
+    if (user.role === UserRole.CLIENT) {
+        contacts = await User.findAll({
+            attributes: { exclude: ['password'] },
+            where: {
+                role: UserRole.PROFESSIONAL,
+            },
+            include: [{
+                model: Profile,
+                include: [Professional]
+            }, {
+                model: Location
+            }]
+        })
+    } else if (user.role === UserRole.PROFESSIONAL) {
+        contacts = await User.findAll({
+            attributes: { exclude: ['password'] },
+            where: {
+                role: UserRole.CLIENT,
+            },
+            include: [{
+                model: Profile,
+            }, {
+                model: Location
+            }]
+        })
+    }
 
-    //     socket.emit(Emit.ALL_CONTACTS, contacts);
-    // }
+    socket.emit(Emit.ALL_CONTACTS, contacts);
 }
 
 export const joinRoom = async (io: Server, socket: Socket, data: any) => {

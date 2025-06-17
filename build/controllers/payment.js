@@ -12,13 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyTransfer = exports.initiateTransfer = exports.verifyPayment = exports.initiatePayment = void 0;
+exports.verifyTransfer = exports.completeTransfer = exports.initiateTransfer = exports.verifyPayment = exports.initiatePayment = void 0;
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
 const axios_1 = __importDefault(require("axios"));
 const enum_1 = require("../utils/enum");
-const uuid_1 = require("uuid");
 const initiatePayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, email, role } = req.user;
     const { amount } = req.body;
@@ -88,7 +87,8 @@ const verifyPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.verifyPayment = verifyPayment;
 const initiateTransfer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { amount, recipientCode, reason = "Withdrawal" } = req.body;
-    const reference = (0, uuid_1.v4)();
+    //const reference = uuidv4();
+    const reference = (0, modules_1.randomId)(12);
     const transfer = yield Models_1.Transfer.create({
         userId: req.user.id,
         amount,
@@ -112,8 +112,24 @@ const initiateTransfer = (req, res) => __awaiter(void 0, void 0, void 0, functio
     return (0, modules_1.successResponse)(res, 'success', response.data.data);
 });
 exports.initiateTransfer = initiateTransfer;
-const verifyTransfer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const completeTransfer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(req.body);
     return (0, modules_1.successResponse)(res, 'success', req.body);
+});
+exports.completeTransfer = completeTransfer;
+const verifyTransfer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { ref } = req.params;
+    try {
+        const response = yield axios_1.default.get(`https://api.paystack.co/transfer/verify/${ref}`, {
+            headers: {
+                'Authorization': `Bearer ${configSetup_1.default.PAYSTACK_SECRET_KEY}`
+            }
+        });
+        return (0, modules_1.successResponse)(res, 'success', response.data.data);
+    }
+    catch (error) {
+        console.log(error);
+        return (0, modules_1.errorResponse)(res, 'error', error.response.data.message);
+    }
 });
 exports.verifyTransfer = verifyTransfer;
