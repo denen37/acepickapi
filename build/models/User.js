@@ -56,6 +56,12 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "role", void 0);
 __decorate([
+    (0, sequelize_typescript_1.AllowNull)(false),
+    (0, sequelize_typescript_1.Default)(false),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BOOLEAN),
+    __metadata("design:type", Boolean)
+], User.prototype, "agreed", void 0);
+__decorate([
     (0, sequelize_typescript_1.HasOne)(() => Models_1.Wallet),
     __metadata("design:type", Models_1.Wallet)
 ], User.prototype, "wallet", void 0);
@@ -75,6 +81,10 @@ __decorate([
     (0, sequelize_typescript_1.HasMany)(() => Models_1.Review, { foreignKey: 'clientUserId', as: 'clientReviews' }),
     __metadata("design:type", Array)
 ], User.prototype, "clientReviews", void 0);
+__decorate([
+    (0, sequelize_typescript_1.HasOne)(() => Models_1.OnlineUser),
+    __metadata("design:type", Models_1.OnlineUser)
+], User.prototype, "onlineUser", void 0);
 exports.User = User = __decorate([
     (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'users' })
 ], User);

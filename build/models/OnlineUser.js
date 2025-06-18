@@ -17,6 +17,7 @@ let OnlineUser = class OnlineUser extends sequelize_typescript_1.Model {
 exports.OnlineUser = OnlineUser;
 __decorate([
     sequelize_typescript_1.PrimaryKey,
+    (0, sequelize_typescript_1.ForeignKey)(() => Models_1.User),
     (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.UUID),
     __metadata("design:type", String)

@@ -67,16 +67,16 @@ export const uploadAvatar = async (req: Request, res: Response) => {
 
     const file = req.file as Express.Multer.File;
 
-    const fileModified = {
-        buffer: file.buffer,
-        name: Date.now().toString(),
-        mimetype: file.mimetype,
-    }
+    // const fileModified = {
+    //     buffer: file.buffer,
+    //     name: Date.now().toString(),
+    //     mimetype: file.mimetype,
+    // }
 
     try {
-        const path = await uploadFileToBlob(StorageContainer.PROFILE, fileModified)
+        // const path = await uploadFileToBlob(StorageContainer.PROFILE, fileModified)
 
-        return successResponse(res, 'success', { url: path })
+        return successResponse(res, 'success', { url: '/uploads/' + file.filename })
     } catch (error) {
         return handleResponse(res, 500, false, 'Error uploading file');
     }

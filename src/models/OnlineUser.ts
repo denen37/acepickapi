@@ -6,6 +6,7 @@ import { User } from './Models';
 @Table({ timestamps: true, tableName: 'online_users' })
 export class OnlineUser extends Model {
     @PrimaryKey
+    @ForeignKey(() => User)
     @AllowNull(false)
     @Column(DataType.UUID)
     userId!: string;

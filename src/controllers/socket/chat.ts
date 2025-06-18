@@ -2,7 +2,7 @@ import { Server, Socket } from "socket.io";
 import { Emit, Listen } from "../../utils/events";
 import axios from "axios";
 import config from "../../config/configSetup"
-import { Message, ChatRoom, OnlineUser, User, Professional, Profile, Location } from "../../models/Models"
+import { Message, ChatRoom, OnlineUser, User, Professional, Profile, Location, Profession } from "../../models/Models"
 import { Op } from "sequelize";
 import { randomId } from "../../utils/modules";
 import http from "http";
@@ -102,11 +102,17 @@ export const getContacts = async (io: Server, socket: Socket) => {
         contacts = await User.findAll({
             attributes: { exclude: ['password'] },
             where: {
-                role: UserRole.PROFESSIONAL,
+                [Op.and]: [
+                    { role: UserRole.PROFESSIONAL },
+                    { [Op.not]: [{ id: user.id }] }
+                ],
             },
             include: [{
                 model: Profile,
-                include: [Professional]
+                include: [{
+                    model: Professional,
+                    include: [Profession]
+                }]
             }, {
                 model: Location
             }]
@@ -115,7 +121,10 @@ export const getContacts = async (io: Server, socket: Socket) => {
         contacts = await User.findAll({
             attributes: { exclude: ['password'] },
             where: {
-                role: UserRole.CLIENT,
+                [Op.and]: [
+                    { role: UserRole.CLIENT },
+                    { [Op.not]: [{ id: user.id }] }
+                ],
             },
             include: [{
                 model: Profile,
@@ -130,46 +139,56 @@ export const getContacts = async (io: Server, socket: Socket) => {
 
 export const joinRoom = async (io: Server, socket: Socket, data: any) => {
 
-    // console.log("join room", data);
-    // //get the ids
-    // let room = await ChatRoom.findOne({
-    //     where: {
-    //         [Op.and]: [{
-    //             members: {
-    //                 [Op.like]: `%${socket.user.id}%`
-    //             }
-    //         }, {
-    //             members: {
-    //                 [Op.like]: `%${data.contactId}%`
-    //             }
-    //         }],
+    console.log("join room", data);
+    //get the ids
+    let room = await ChatRoom.findOne({
+        where: {
+            [Op.and]: [{
+                members: {
+                    [Op.like]: `%${socket.user.id}%`
+                }
+            }, {
+                members: {
+                    [Op.like]: `%${data.contactId}%`
+                }
+            }],
 
-    //     }
-    // })
+        }
+    })
 
 
-    // if (!room) {
-    //     room = await ChatRoom.create({
-    //         name: randomId(12),
-    //         members: `${socket.user.id},${data.contactId}`
-    //     })
-    // }
+    if (!room) {
+        room = await ChatRoom.create({
+            name: randomId(12),
+            members: `${socket.user.id},${data.contactId}`
+        })
+    }
 
-    // const existingRoom = io.of("/").adapter.rooms.get(room.name);
+    const existingRoom = io.of("/").adapter.rooms.get(room.name);
 
-    // if (!existingRoom?.has(socket.id))
-    //     socket.join(room.name);
+    if (!existingRoom?.has(socket.id))
+        socket.join(room.name);
 
-    // const sid = onlineUsers[data.contactId];
+    const onlineUser = await OnlineUser.findOne({
+        where: {
+            userId: data.contactId
+        }
+    })
 
-    // if (sid && !existingRoom?.has(sid)) {
-    //     const userSocket = io.sockets.sockets.get(sid);
+    if (onlineUser) {
+        const sid = onlineUser.socketId;
 
-    //     userSocket?.join(room.name);
-    // }
+        if (sid && !existingRoom?.has(sid)) {
+            const userSocket = io.sockets.sockets.get(sid);
 
-    // io.to(room.name).emit(Emit.JOINED_ROOM, room.name);
-    // console.log("joined room", room.name);
+            userSocket?.join(room.name);
+        }
+
+    }
+
+    io.to(room.name).emit(Emit.JOINED_ROOM, room.name);
+
+    console.log("joined room", room.name);
 }
 
 export const getMsgs = async (io: Server, socket: Socket, data: any) => {
@@ -200,43 +219,46 @@ export const getMsgs = async (io: Server, socket: Socket, data: any) => {
 
 export const getPrevChats = async (io: Server, socket: Socket, data: any) => {
 
-    // const chatrooms = await ChatRoom.findAll({
-    //     where: {
-    //         members: {
-    //             [Op.like]: `%${socket.user.id}%`
-    //         }
-    //     }
-    // });
+    const chatrooms = await ChatRoom.findAll({
+        where: {
+            members: {
+                [Op.like]: `%${socket.user.id}%`
+            }
+        }
+    });
 
-    // const partners = chatrooms.map((room) => {
-    //     const members = room.members.split(",");
-    //     return members.filter((member) => member !== socket.user.id)[0];
-    // })
+    const partners = chatrooms.map((room) => {
+        const members = room.members.split(",");
+        return members.filter((member) => member !== socket.user.id)[0];
+    })
 
 
 
-    // const result = await axios.post(`${config.AUTH_BASE_URL}/api/profiles/get_professionals`,
-    //     { userIds: partners },
-    //     {
-    //         headers: {
-    //             Authorization: `Bearer ${socket.handshake.auth.token}`
-    //         }
-    //     }
-    // )
+    const prevChats = await User.findAll({
+        attributes: { exclude: ['password'] },
+        where: {
+            id: partners
+        },
+        include: [{
+            model: Profile,
+            include: [{
+                model: Professional,
+                include: [Profession]
+            }]
+        }, {
+            model: Location
+        }, {
+            model: OnlineUser
+        }]
+    })
 
-    // const prevChats = result.data.data.map((member: any) => {
-    //     return {
-    //         ...member, online: Boolean(global.onlineUsers[member.user.id])
-    //     }
-    // })
-
-    // socket.emit(Emit.GOT_PREV_CHATS, prevChats);
+    socket.emit(Emit.GOT_PREV_CHATS, prevChats);
 }
 
 
 export const uploadFile = async (io: Server, socket: Socket, data: any) => {
     const { image, fileName } = data;
-    const uploadDir = path.join(__dirname, "../../public/uploads");
+    const uploadDir = path.join(__dirname, "../../../public/uploads");
 
     if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir);

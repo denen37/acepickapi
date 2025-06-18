@@ -64,14 +64,14 @@ const uploadAvatar = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         return (0, modules_1.handleResponse)(res, 404, false, 'No file uploaded');
     }
     const file = req.file;
-    const fileModified = {
-        buffer: file.buffer,
-        name: Date.now().toString(),
-        mimetype: file.mimetype,
-    };
+    // const fileModified = {
+    //     buffer: file.buffer,
+    //     name: Date.now().toString(),
+    //     mimetype: file.mimetype,
+    // }
     try {
-        const path = yield (0, uploadCloud_1.uploadFileToBlob)(StorageContainer.PROFILE, fileModified);
-        return (0, modules_1.successResponse)(res, 'success', { url: path });
+        // const path = await uploadFileToBlob(StorageContainer.PROFILE, fileModified)
+        return (0, modules_1.successResponse)(res, 'success', { url: '/uploads/' + file.filename });
     }
     catch (error) {
         return (0, modules_1.handleResponse)(res, 500, false, 'Error uploading file');

@@ -17,6 +17,7 @@ const events_1 = require("../../utils/events");
 const configSetup_1 = __importDefault(require("../../config/configSetup"));
 const Models_1 = require("../../models/Models");
 const sequelize_1 = require("sequelize");
+const modules_1 = require("../../utils/modules");
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const cryptography_1 = require("../../utils/cryptography");
@@ -91,11 +92,17 @@ const getContacts = (io, socket) => __awaiter(void 0, void 0, void 0, function* 
         contacts = yield Models_1.User.findAll({
             attributes: { exclude: ['password'] },
             where: {
-                role: enum_1.UserRole.PROFESSIONAL,
+                [sequelize_1.Op.and]: [
+                    { role: enum_1.UserRole.PROFESSIONAL },
+                    { [sequelize_1.Op.not]: [{ id: user.id }] }
+                ],
             },
             include: [{
                     model: Models_1.Profile,
-                    include: [Models_1.Professional]
+                    include: [{
+                            model: Models_1.Professional,
+                            include: [Models_1.Profession]
+                        }]
                 }, {
                     model: Models_1.Location
                 }]
@@ -105,7 +112,10 @@ const getContacts = (io, socket) => __awaiter(void 0, void 0, void 0, function* 
         contacts = yield Models_1.User.findAll({
             attributes: { exclude: ['password'] },
             where: {
-                role: enum_1.UserRole.CLIENT,
+                [sequelize_1.Op.and]: [
+                    { role: enum_1.UserRole.CLIENT },
+                    { [sequelize_1.Op.not]: [{ id: user.id }] }
+                ],
             },
             include: [{
                     model: Models_1.Profile,
@@ -118,37 +128,44 @@ const getContacts = (io, socket) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.getContacts = getContacts;
 const joinRoom = (io, socket, data) => __awaiter(void 0, void 0, void 0, function* () {
-    // console.log("join room", data);
-    // //get the ids
-    // let room = await ChatRoom.findOne({
-    //     where: {
-    //         [Op.and]: [{
-    //             members: {
-    //                 [Op.like]: `%${socket.user.id}%`
-    //             }
-    //         }, {
-    //             members: {
-    //                 [Op.like]: `%${data.contactId}%`
-    //             }
-    //         }],
-    //     }
-    // })
-    // if (!room) {
-    //     room = await ChatRoom.create({
-    //         name: randomId(12),
-    //         members: `${socket.user.id},${data.contactId}`
-    //     })
-    // }
-    // const existingRoom = io.of("/").adapter.rooms.get(room.name);
-    // if (!existingRoom?.has(socket.id))
-    //     socket.join(room.name);
-    // const sid = onlineUsers[data.contactId];
-    // if (sid && !existingRoom?.has(sid)) {
-    //     const userSocket = io.sockets.sockets.get(sid);
-    //     userSocket?.join(room.name);
-    // }
-    // io.to(room.name).emit(Emit.JOINED_ROOM, room.name);
-    // console.log("joined room", room.name);
+    console.log("join room", data);
+    //get the ids
+    let room = yield Models_1.ChatRoom.findOne({
+        where: {
+            [sequelize_1.Op.and]: [{
+                    members: {
+                        [sequelize_1.Op.like]: `%${socket.user.id}%`
+                    }
+                }, {
+                    members: {
+                        [sequelize_1.Op.like]: `%${data.contactId}%`
+                    }
+                }],
+        }
+    });
+    if (!room) {
+        room = yield Models_1.ChatRoom.create({
+            name: (0, modules_1.randomId)(12),
+            members: `${socket.user.id},${data.contactId}`
+        });
+    }
+    const existingRoom = io.of("/").adapter.rooms.get(room.name);
+    if (!(existingRoom === null || existingRoom === void 0 ? void 0 : existingRoom.has(socket.id)))
+        socket.join(room.name);
+    const onlineUser = yield Models_1.OnlineUser.findOne({
+        where: {
+            userId: data.contactId
+        }
+    });
+    if (onlineUser) {
+        const sid = onlineUser.socketId;
+        if (sid && !(existingRoom === null || existingRoom === void 0 ? void 0 : existingRoom.has(sid))) {
+            const userSocket = io.sockets.sockets.get(sid);
+            userSocket === null || userSocket === void 0 ? void 0 : userSocket.join(room.name);
+        }
+    }
+    io.to(room.name).emit(events_1.Emit.JOINED_ROOM, room.name);
+    console.log("joined room", room.name);
 });
 exports.joinRoom = joinRoom;
 const getMsgs = (io, socket, data) => __awaiter(void 0, void 0, void 0, function* () {
@@ -174,36 +191,40 @@ const getMsgs = (io, socket, data) => __awaiter(void 0, void 0, void 0, function
 });
 exports.getMsgs = getMsgs;
 const getPrevChats = (io, socket, data) => __awaiter(void 0, void 0, void 0, function* () {
-    // const chatrooms = await ChatRoom.findAll({
-    //     where: {
-    //         members: {
-    //             [Op.like]: `%${socket.user.id}%`
-    //         }
-    //     }
-    // });
-    // const partners = chatrooms.map((room) => {
-    //     const members = room.members.split(",");
-    //     return members.filter((member) => member !== socket.user.id)[0];
-    // })
-    // const result = await axios.post(`${config.AUTH_BASE_URL}/api/profiles/get_professionals`,
-    //     { userIds: partners },
-    //     {
-    //         headers: {
-    //             Authorization: `Bearer ${socket.handshake.auth.token}`
-    //         }
-    //     }
-    // )
-    // const prevChats = result.data.data.map((member: any) => {
-    //     return {
-    //         ...member, online: Boolean(global.onlineUsers[member.user.id])
-    //     }
-    // })
-    // socket.emit(Emit.GOT_PREV_CHATS, prevChats);
+    const chatrooms = yield Models_1.ChatRoom.findAll({
+        where: {
+            members: {
+                [sequelize_1.Op.like]: `%${socket.user.id}%`
+            }
+        }
+    });
+    const partners = chatrooms.map((room) => {
+        const members = room.members.split(",");
+        return members.filter((member) => member !== socket.user.id)[0];
+    });
+    const prevChats = yield Models_1.User.findAll({
+        attributes: { exclude: ['password'] },
+        where: {
+            id: partners
+        },
+        include: [{
+                model: Models_1.Profile,
+                include: [{
+                        model: Models_1.Professional,
+                        include: [Models_1.Profession]
+                    }]
+            }, {
+                model: Models_1.Location
+            }, {
+                model: Models_1.OnlineUser
+            }]
+    });
+    socket.emit(events_1.Emit.GOT_PREV_CHATS, prevChats);
 });
 exports.getPrevChats = getPrevChats;
 const uploadFile = (io, socket, data) => __awaiter(void 0, void 0, void 0, function* () {
     const { image, fileName } = data;
-    const uploadDir = path_1.default.join(__dirname, "../../public/uploads");
+    const uploadDir = path_1.default.join(__dirname, "../../../public/uploads");
     if (!fs_1.default.existsSync(uploadDir)) {
         fs_1.default.mkdirSync(uploadDir);
     }

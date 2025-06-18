@@ -1,6 +1,6 @@
 import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index, BelongsTo, ForeignKey, PrimaryKey } from 'sequelize-typescript';
 import { v4 as uuidv4 } from 'uuid';
-import { Profile, Wallet, Location, Review } from './Models';
+import { Profile, Wallet, Location, Review, OnlineUser } from './Models';
 import { UserRole, UserState, UserStatus } from '../utils/enum';
 
 
@@ -71,6 +71,9 @@ export class User extends Model {
 
     @HasMany(() => Review, { foreignKey: 'clientUserId', as: 'clientReviews' })
     clientReviews!: Review[]; // Reviews given as a client
+
+    @HasOne(() => OnlineUser)
+    onlineUser!: OnlineUser;
 
 
 
