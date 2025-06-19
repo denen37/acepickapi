@@ -1,5 +1,6 @@
 import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index, BelongsTo, ForeignKey, PrimaryKey, AutoIncrement } from 'sequelize-typescript';
 import { TransactionStatus, TransactionType } from '../utils/enum';
+import { User } from './User';
 // import { User } from './Models';
 
 
@@ -62,10 +63,10 @@ export class Transaction extends Model {
 
 
 
-    // @ForeignKey(() => User)
+    @ForeignKey(() => User)
     @AllowNull(false)
-    @Column(DataType.BIGINT)
-    userId!: number;
+    @Column(DataType.UUID)
+    userId!: string;
 
 
     // @BelongsTo(() => User, { onDelete: 'CASCADE' })

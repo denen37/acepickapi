@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Transaction = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
 const enum_1 = require("../utils/enum");
+const User_1 = require("./User");
 // import { User } from './Models';
 let Transaction = class Transaction extends sequelize_typescript_1.Model {
 };
@@ -66,9 +67,10 @@ __decorate([
     __metadata("design:type", String)
 ], Transaction.prototype, "reference", void 0);
 __decorate([
+    (0, sequelize_typescript_1.ForeignKey)(() => User_1.User),
     (0, sequelize_typescript_1.AllowNull)(false),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
-    __metadata("design:type", Number)
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.UUID),
+    __metadata("design:type", String)
 ], Transaction.prototype, "userId", void 0);
 exports.Transaction = Transaction = __decorate([
     (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'transactions' })
