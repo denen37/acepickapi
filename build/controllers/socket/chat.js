@@ -14,7 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadFile = exports.getPrevChats = exports.getMsgs = exports.joinRoom = exports.getContacts = exports.onDisconnect = exports.onConnect = exports.sendMessage = void 0;
 const events_1 = require("../../utils/events");
-const configSetup_1 = __importDefault(require("../../config/configSetup"));
 const Models_1 = require("../../models/Models");
 const sequelize_1 = require("sequelize");
 const modules_1 = require("../../utils/modules");
@@ -244,7 +243,7 @@ const uploadFile = (io, socket, data) => __awaiter(void 0, void 0, void 0, funct
             console.error("Error saving image:", err);
             return;
         }
-        const imageUrl = `http://${configSetup_1.default.HOST}:${configSetup_1.default.PORT}/uploads/${path_1.default.basename(filePath)}`;
+        const imageUrl = `/uploads/${path_1.default.basename(filePath)}`;
         console.log(`Image saved and broadcasted: ${imageUrl}`);
         let room = yield Models_1.ChatRoom.findOne({
             where: {

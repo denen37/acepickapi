@@ -28,6 +28,5 @@ export const getTransactionById = async (req: Request, res: Response) => {
     } catch (error) {
         return errorResponse(res, 'error', error)
     }
-
 }
 

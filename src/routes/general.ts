@@ -12,7 +12,7 @@ import { getClient } from "../controllers/client";
 import { addAccount, deleteAccount, getAccounts, getBanks, updateAccount } from "../controllers/account";
 import { createWallet, creditWallet, debitWallet, forgotPin, resetPin, setPin, viewWallet } from "../controllers/wallet";
 import { getAllTransactions, getTransactionById } from "../controllers/transactions";
-import { initiatePayment, initiateTransfer, verifyPayment, verifyTransfer, completeTransfer } from "../controllers/payment";
+import { initiatePayment, initiateTransfer, finalizeTransfer, verifyPayment, verifyTransfer, handlePaystackWebhook } from "../controllers/payment";
 
 const routes = Router();
 
@@ -76,12 +76,13 @@ routes.post('/forgot-pin', forgotPin);
 routes.get('/transactions', /*allowRoles(UserRole.SEEKER, UserRole.PROVIDER),*/ getAllTransactions);
 routes.get('/transactions/:id', /*allowRoles(UserRole.SEEKER, UserRole.PROVIDER),*/ getTransactionById);
 
-
+routes.post('/paystack/webhook', handlePaystackWebhook);
 routes.post('/payments/initiate', /*allowRoles(UserRole.SEEKER),*/ initiatePayment);
 routes.post('/payments/verify/:ref', /*allowRoles(UserRole.SEEKER),*/ verifyPayment);
 routes.post('/transfer/initiate', /*allowRoles(UserRole.PROVIDER),*/ initiateTransfer);
-routes.post('/transfer/verify/:ref', verifyTransfer)
-routes.post('/transfer/paystack/webhook', completeTransfer)
+routes.post('/transfer/finalize', finalizeTransfer);
+routes.post('/transfer/verify/:ref', verifyTransfer);
+
 
 
 export default routes;

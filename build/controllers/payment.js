@@ -12,12 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyTransfer = exports.completeTransfer = exports.initiateTransfer = exports.verifyPayment = exports.initiatePayment = void 0;
+exports.otpDisable = exports.verifyTransfer = exports.handlePaystackWebhook = exports.finalizeTransfer = exports.initiateTransfer = exports.verifyPayment = exports.initiatePayment = void 0;
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
 const axios_1 = __importDefault(require("axios"));
 const enum_1 = require("../utils/enum");
+const notification_1 = require("../services/notification");
 const initiatePayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, email, role } = req.user;
     const { amount } = req.body;
@@ -112,11 +113,70 @@ const initiateTransfer = (req, res) => __awaiter(void 0, void 0, void 0, functio
     return (0, modules_1.successResponse)(res, 'success', response.data.data);
 });
 exports.initiateTransfer = initiateTransfer;
-const completeTransfer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(req.body);
-    return (0, modules_1.successResponse)(res, 'success', req.body);
+const finalizeTransfer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { transferCode, otp } = req.body;
+    const response = yield axios_1.default.post('https://api.paystack.co/transfer/finalize_transfer', {
+        transfer_code: transferCode,
+        otp: otp
+    }, {
+        headers: {
+            Authorization: `Bearer ${configSetup_1.default.PAYSTACK_SECRET_KEY}`,
+            'Content-Type': 'application/json'
+        }
+    });
+    return (0, modules_1.successResponse)(res, 'success', response.data.data);
 });
-exports.completeTransfer = completeTransfer;
+exports.finalizeTransfer = finalizeTransfer;
+const handlePaystackWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const payload = req.body;
+    console.log("webhook called");
+    try {
+        if (payload.event.includes('transfer')) {
+            const transfer = yield Models_1.Transfer.findOne({
+                where: { reference: payload.data.reference }
+            });
+            if (!transfer) {
+                return res.status(200).send('Transfer not found');
+            }
+            const user = yield Models_1.User.findOne({
+                where: { id: transfer.userId },
+                include: [Models_1.OnlineUser, Models_1.Wallet]
+            });
+            if (!user) {
+                return res.status(200).send('User not found');
+            }
+            switch (payload.event) {
+                case 'transfer.success':
+                    transfer.status = enum_1.TransferStatus.SUCCESS;
+                    yield transfer.save();
+                    user.wallet.previousBalance = user.wallet.currentBalance;
+                    user.wallet.currentBalance -= transfer.amount;
+                    yield user.wallet.save();
+                    (0, notification_1.sendPushNotification)(user.fcmToken, `Transfer Success`, `Your transfer of ${transfer.amount} was successful`, {});
+                    break;
+                case 'transfer.failed':
+                    transfer.status = enum_1.TransferStatus.FAILED;
+                    yield transfer.save();
+                    (0, notification_1.sendPushNotification)(user.fcmToken, `Transfer Failed`, `Your transfer of ${transfer.amount} failed`, {});
+                    break;
+                case 'transfer.reversed':
+                    (0, notification_1.sendPushNotification)(user.fcmToken, `Transfer Reversed`, `Your transfer of ${transfer.amount} has been reversed`, {});
+                    break;
+                default:
+                    break;
+            }
+            return (0, modules_1.handleResponse)(res, 200, false, 'Handled');
+        }
+        else {
+            return (0, modules_1.handleResponse)(res, 400, false, 'Invalid event type');
+        }
+    }
+    catch (error) {
+        console.error('Webhook error:', error);
+        return res.status(500).send('Internal server error');
+    }
+});
+exports.handlePaystackWebhook = handlePaystackWebhook;
 const verifyTransfer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { ref } = req.params;
     try {
@@ -133,3 +193,6 @@ const verifyTransfer = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.verifyTransfer = verifyTransfer;
+const otpDisable = (req, res) => {
+};
+exports.otpDisable = otpDisable;

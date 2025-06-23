@@ -34,13 +34,13 @@ export const initSocket = (httpServer: any) => {
     io.on(Listen.CONNECTION, async (socket) => {
         await onConnect(socket)
 
+        socket.emit(Emit.CONNECTED, socket.id)
+
         socket.on("offer", (offer: any) => socket.broadcast.emit("offer", offer));
 
         socket.on("answer", (answer: any) => socket.broadcast.emit("answer", answer));
 
         socket.on("candidate", (candidate: any) => socket.broadcast.emit("candidate", candidate))
-
-        socket.emit(Emit.CONNECTED, socket.id)
 
         socket.on(Listen.UPLOAD_FILE, (data: any) => uploadFile(io, socket, data));
 
