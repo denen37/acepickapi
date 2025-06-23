@@ -39,10 +39,10 @@ const initSocket = (httpServer) => {
     }));
     io.on(events_1.Listen.CONNECTION, (socket) => __awaiter(void 0, void 0, void 0, function* () {
         yield (0, chat_1.onConnect)(socket);
+        socket.emit(events_1.Emit.CONNECTED, socket.id);
         socket.on("offer", (offer) => socket.broadcast.emit("offer", offer));
         socket.on("answer", (answer) => socket.broadcast.emit("answer", answer));
         socket.on("candidate", (candidate) => socket.broadcast.emit("candidate", candidate));
-        socket.emit(events_1.Emit.CONNECTED, socket.id);
         socket.on(events_1.Listen.UPLOAD_FILE, (data) => (0, chat_1.uploadFile)(io, socket, data));
         socket.on(events_1.Listen.SEND_MSG, (data) => __awaiter(void 0, void 0, void 0, function* () { return yield (0, chat_1.sendMessage)(io, socket, data); }));
         socket.on(events_1.Listen.DISCONNECT, () => (0, chat_1.onDisconnect)(socket));

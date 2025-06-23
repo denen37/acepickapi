@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
-import { Transfer, Transaction, Wallet } from "../models/Models";
+import { Transfer, Transaction, Wallet, User, OnlineUser } from "../models/Models";
 import { randomId, errorResponse, handleResponse, successResponse } from "../utils/modules";
 import config from "../config/configSetup"
 import axios from 'axios'
-import { TransactionStatus, TransactionType } from "../utils/enum";
+import { TransactionStatus, TransactionType, TransferStatus } from "../utils/enum";
 import { v4 as uuidv4 } from 'uuid';
+import { where } from "sequelize";
+import { sendPushNotification } from "../services/notification";
 
 
 
@@ -129,10 +131,97 @@ export const initiateTransfer = async (req: Request, res: Response) => {
     return successResponse(res, 'success', response.data.data);
 }
 
-export const completeTransfer = async (req: Request, res: Response) => {
-    console.log(req.body);
+export const finalizeTransfer = async (req: Request, res: Response) => {
 
-    return successResponse(res, 'success', req.body);
+
+    const { transferCode, otp } = req.body;
+
+    const response = await axios.post('https://api.paystack.co/transfer/finalize_transfer', {
+        transfer_code: transferCode,
+        otp: otp
+    }, {
+        headers: {
+            Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`,
+            'Content-Type': 'application/json'
+        }
+    })
+
+    return successResponse(res, 'success', response.data.data);
+}
+
+export const handlePaystackWebhook = async (req: Request, res: Response) => {
+    const payload = req.body;
+    console.log("webhook called");
+
+    try {
+        if (payload.event.includes('transfer')) {
+            const transfer = await Transfer.findOne({
+                where: { reference: payload.data.reference }
+            });
+
+            if (!transfer) {
+                return res.status(200).send('Transfer not found');
+            }
+
+            const user = await User.findOne({
+                where: { id: transfer.userId },
+                include: [OnlineUser, Wallet]
+            });
+
+            if (!user) {
+                return res.status(200).send('User not found');
+            }
+
+            switch (payload.event) {
+                case 'transfer.success':
+                    transfer.status = TransferStatus.SUCCESS;
+                    await transfer.save();
+
+                    user.wallet.previousBalance = user.wallet.currentBalance;
+                    user.wallet.currentBalance -= transfer.amount;
+                    await user.wallet.save();
+
+                    sendPushNotification(
+                        user.fcmToken,
+                        `Transfer Success`,
+                        `Your transfer of ${transfer.amount} was successful`,
+                        {}
+                    );
+                    break;
+
+                case 'transfer.failed':
+                    transfer.status = TransferStatus.FAILED;
+                    await transfer.save();
+
+                    sendPushNotification(
+                        user.fcmToken,
+                        `Transfer Failed`,
+                        `Your transfer of ${transfer.amount} failed`,
+                        {}
+                    );
+                    break;
+
+                case 'transfer.reversed':
+                    sendPushNotification(
+                        user.fcmToken,
+                        `Transfer Reversed`,
+                        `Your transfer of ${transfer.amount} has been reversed`,
+                        {}
+                    );
+                    break;
+
+                default:
+                    break;
+            }
+
+            return handleResponse(res, 200, false, 'Handled')
+        } else {
+            return handleResponse(res, 400, false, 'Invalid event type')
+        }
+    } catch (error) {
+        console.error('Webhook error:', error);
+        return res.status(500).send('Internal server error');
+    }
 }
 
 export const verifyTransfer = async (req: Request, res: Response) => {
@@ -150,4 +239,8 @@ export const verifyTransfer = async (req: Request, res: Response) => {
         console.log(error);
         return errorResponse(res, 'error', error.response.data.message);
     }
+}
+
+export const otpDisable = (req: Request, res: Response) => {
+
 }

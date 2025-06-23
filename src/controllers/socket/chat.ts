@@ -284,7 +284,7 @@ export const uploadFile = async (io: Server, socket: Socket, data: any) => {
             return;
         }
 
-        const imageUrl = `http://${config.HOST}:${config.PORT}/uploads/${path.basename(filePath)}`;
+        const imageUrl = `/uploads/${path.basename(filePath)}`;
         console.log(`Image saved and broadcasted: ${imageUrl}`);
 
         let room = await ChatRoom.findOne({

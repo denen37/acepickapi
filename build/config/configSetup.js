@@ -92,6 +92,7 @@ const getConfig = () => {
             '/api/admin/check-email',
             "/api/admin/register",
             "/api/admin/login",
+            "/api/paystack/webhook"
         ],
     };
 };
