@@ -21,7 +21,9 @@ const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const cryptography_1 = require("../../utils/cryptography");
 const enum_1 = require("../../utils/enum");
+const notification_1 = require("../../services/notification");
 const sendMessage = (io, socket, data) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     let room = yield Models_1.ChatRoom.findOne({
         where: {
             name: data.room
@@ -36,6 +38,23 @@ const sendMessage = (io, socket, data) => __awaiter(void 0, void 0, void 0, func
         timestamp: new Date(),
         chatroomId: room === null || room === void 0 ? void 0 : room.id
     });
+    let to = room.members.split(",").filter((member) => member !== data.from)[0];
+    let otherUser = yield Models_1.User.findOne({
+        where: {
+            userId: to
+        },
+        include: [Models_1.OnlineUser]
+    });
+    if (otherUser && !otherUser.onlineUser.isOnline) {
+        //send push notification
+        let user = yield Models_1.User.findOne({
+            where: {
+                userId: data.from
+            },
+            include: [Models_1.Profile]
+        });
+        yield (0, notification_1.sendPushNotification)(otherUser.fcmToken, `${(_a = user === null || user === void 0 ? void 0 : user.profile) === null || _a === void 0 ? void 0 : _a.firstName} ${(_b = user === null || user === void 0 ? void 0 : user.profile) === null || _b === void 0 ? void 0 : _b.lastName} sent you a message`, data.text, {});
+    }
     io.to(room.name).emit(events_1.Emit.RECV_MSG, Object.assign(Object.assign({}, data), { timestamp: message.timestamp }));
 });
 exports.sendMessage = sendMessage;
