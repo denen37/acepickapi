@@ -215,6 +215,13 @@ export const bankDetailsSchema = z.object({
         .regex(/^\d{10}$/, 'Account number must be exactly 10 digits'),
 });
 
+export const resolveBankSchema = z.object({
+    bankCode: z.string().min(1, 'Bank code is required'),
+    accountNumber: z
+        .string()
+        .regex(/^\d{10}$/, 'Account number must be exactly 10 digits'),
+})
+
 
 export const paymentSchema = z.object({
     amount: z.number().positive('Amount must be a positive number'),
@@ -245,7 +252,152 @@ export const pinForgotSchema = z
     });
 
 
+export const educationSchema = z.object({
+    school: z.string().min(1, 'School is required'),
+    degreeType: z.string().min(1, 'Degree type is required'),
+    course: z.string().min(1, 'Course is required'),
+    gradDate: z.string().refine(
+        (date) => !isNaN(Date.parse(date)),
+        'Graduation date must be a valid date'
+    ),
+});
 
+export const updateEducationSchema = z.object({
+    school: z
+        .string()
+        .min(1, 'School is required')
+        .optional()
+        .refine(val => val === undefined || val.trim().length > 0, {
+            message: 'School cannot be empty',
+        }),
+
+    degreeType: z
+        .string()
+        .min(1, 'Degree type is required')
+        .optional()
+        .refine(val => val === undefined || val.trim().length > 0, {
+            message: 'Degree type cannot be empty',
+        }),
+
+    course: z
+        .string()
+        .min(1, 'Course is required')
+        .optional()
+        .refine(val => val === undefined || val.trim().length > 0, {
+            message: 'Course cannot be empty',
+        }),
+
+    gradDate: z
+        .string()
+        .optional()
+        .refine(val => val === undefined || !isNaN(Date.parse(val)), {
+            message: 'Graduation date must be a valid date',
+        }),
+});
+
+
+export const certificationSchema = z.object({
+    title: z.string().min(1, 'Title is required'),
+
+    filePath: z.string(),
+
+    companyIssue: z.string().min(1, 'Issuing company is required'),
+
+    date: z.string().refine(
+        (val) => !isNaN(Date.parse(val)),
+        'Date must be a valid date'
+    ),
+
+    profileId: z
+        .number({
+            required_error: 'Profile ID is required',
+            invalid_type_error: 'Profile ID must be a number',
+        })
+        .int('Profile ID must be an integer'),
+});
+
+
+
+export const experienceSchema = z.object({
+    postHeld: z.string().min(1, 'Post held is required'),
+
+    workPlace: z.string().min(1, 'Workplace is required'),
+
+    startDate: z
+        .string()
+        .refine((val) => !isNaN(Date.parse(val)), {
+            message: 'Start date must be a valid date',
+        }),
+
+    endDate: z
+        .string()
+        .optional()
+        .refine((val) => val === undefined || !isNaN(Date.parse(val)), {
+            message: 'End date must be a valid date',
+        }),
+
+    isCurrent: z
+        .boolean()
+        .optional(),
+
+    description: z
+        .string()
+        .optional(),
+
+    profileId: z
+        .number({
+            required_error: 'Profile ID is required',
+            invalid_type_error: 'Profile ID must be a number',
+        })
+        .int('Profile ID must be an integer'),
+});
+
+
+export const updateExperienceSchema = z.object({
+    postHeld: z
+        .string()
+        .min(1, 'Post held cannot be empty')
+        .optional()
+        .describe('The job title or position held by the individual.'),
+
+    workPlace: z
+        .string()
+        .min(1, 'Workplace cannot be empty')
+        .optional()
+        .describe('The company or organization where the job was held.'),
+
+    startDate: z
+        .string()
+        .optional()
+        .refine((val) => val === undefined || !isNaN(Date.parse(val)), {
+            message: 'Start date must be a valid date',
+        })
+        .describe('The date when the job started (ISO string).'),
+
+    endDate: z
+        .string()
+        .optional()
+        .refine((val) => val === undefined || !isNaN(Date.parse(val)), {
+            message: 'End date must be a valid date',
+        })
+        .describe('The date when the job ended (optional if still current).'),
+
+    isCurrent: z
+        .boolean()
+        .optional()
+        .describe('Whether the job is currently held.'),
+
+    description: z
+        .string()
+        .optional()
+        .describe('A summary or description of the responsibilities and achievements.'),
+
+    profileId: z
+        .number()
+        .int('Profile ID must be an integer')
+        .optional()
+        .describe('ID of the profile this experience is associated with.'),
+});
 
 
 

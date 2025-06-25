@@ -3,11 +3,11 @@ import { Account } from "../models/Models";
 import config from "../config/configSetup";
 import axios from "axios";
 import { errorResponse, handleResponse, successResponse } from "../utils/modules";
-import { bankDetailsSchema } from "../validation/body";
+import { bankDetailsSchema, resolveBankSchema } from "../validation/body";
 
 export const getBanks = async (req: Request, res: Response) => {
     try {
-        const response = await axios.get("https://api.paystack.co/bank", {
+        const response = await axios.get("https://api.paystack.co/bank?currency=NGN", {
             headers: {
                 Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`
             }
@@ -75,6 +75,34 @@ export const getAccounts = async (req: Request, res: Response) => {
         return errorResponse(res, 'error', error.message);
     }
 }
+
+export const resolveAccount = async (req: Request, res: Response) => {
+    const result = resolveBankSchema.safeParse(req.body);
+
+    if (!result.success) {
+        return res.status(400).json({
+            status: false,
+            message: 'Validation error',
+            errors: result.error.flatten().fieldErrors,
+        });
+    }
+
+
+    const { accountNumber, bankCode } = result.data;
+
+    const response = await axios.get(
+        ` https://api.paystack.co/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`,
+        {
+            headers: {
+                Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`,
+                'Content-Type': 'application/json',
+            },
+        }
+    );
+
+    return successResponse(res, 'success', response.data);
+}
+
 
 export const updateAccount = async (req: Request, res: Response) => {
     const recipientCode = req.params.recipientCode;

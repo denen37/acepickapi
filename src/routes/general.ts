@@ -9,10 +9,13 @@ import { allowRoles } from "../middlewares/allowRoles";
 import { findPersonsNearby, sendEmailTest, sendSMSTest, testNotification } from "../controllers/test";
 import { updateLocation } from "../controllers/location";
 import { getClient } from "../controllers/client";
-import { addAccount, deleteAccount, getAccounts, getBanks, updateAccount } from "../controllers/account";
+import { addAccount, deleteAccount, getAccounts, getBanks, resolveAccount, updateAccount } from "../controllers/account";
 import { createWallet, creditWallet, debitWallet, forgotPin, resetPin, setPin, viewWallet } from "../controllers/wallet";
 import { getAllTransactions, getTransactionById } from "../controllers/transactions";
 import { initiatePayment, initiateTransfer, finalizeTransfer, verifyPayment, verifyTransfer, handlePaystackWebhook } from "../controllers/payment";
+import { addEducation, deleteEducation, getEducation, updateEducation } from "../controllers/education";
+import { addCertificate, deleteCertificate, getCertificates, updateCertificate } from "../controllers/certification";
+import { addExperience, deleteExperience, getExperiences, updateExperience } from "../controllers/experience";
 
 const routes = Router();
 
@@ -23,6 +26,21 @@ routes.put("/sectors/:id", updateSector);
 routes.delete("/sectors/:id", deleteSector);
 
 routes.get("/clients/:id", allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), getClient);
+
+routes.get("/education", getEducation);
+routes.post("/education", addEducation);
+routes.put("/education/:id", updateEducation);
+routes.delete("/education/:id", deleteEducation);
+
+routes.get("/certificates", getCertificates);
+routes.post("/certificates", addCertificate);
+routes.put("/certificates/:id", updateCertificate);
+routes.delete("/certificates/:id", deleteCertificate);
+
+routes.get("/experiences", getExperiences);
+routes.post("/experiences", addExperience);
+routes.put("/experiences/:id", updateExperience);
+routes.delete("/experiences/:id", deleteExperience);
 
 routes.get("/professions", getProfessions);
 routes.get("/professions/:id", getProfessionById);
@@ -59,11 +77,12 @@ routes.post('/nearest-person', findPersonsNearby);
 routes.put('/location', updateLocation);
 
 
-routes.get('/accounts/banks', allowRoles(UserRole.PROFESSIONAL), getBanks);
-routes.post('/accounts', allowRoles(UserRole.PROFESSIONAL), addAccount);
-routes.get('/accounts', allowRoles(UserRole.PROFESSIONAL), getAccounts);
-routes.put('/accounts/:recipientCode', allowRoles(UserRole.PROFESSIONAL), updateAccount);
-routes.delete('/accounts/:recipientCode', allowRoles(UserRole.PROFESSIONAL), deleteAccount);
+routes.get('/accounts/banks', allowRoles(UserRole.PROFESSIONAL, UserRole.CLIENT), getBanks);
+routes.post('/accounts', allowRoles(UserRole.PROFESSIONAL, UserRole.CLIENT), addAccount);
+routes.get('/accounts', allowRoles(UserRole.PROFESSIONAL, UserRole.CLIENT), getAccounts);
+routes.post('/accounts/resolve', allowRoles(UserRole.PROFESSIONAL, UserRole.CLIENT), resolveAccount)
+routes.put('/accounts/:recipientCode', allowRoles(UserRole.PROFESSIONAL, UserRole.CLIENT), updateAccount);
+routes.delete('/accounts/:recipientCode', allowRoles(UserRole.PROFESSIONAL, UserRole.CLIENT), deleteAccount);
 
 routes.post('/create-wallet', /*allowRoles(UserRole.SEEKER),*/ createWallet);
 routes.get('/view-wallet', /*allowRoles(UserRole.SEEKER),*/ viewWallet);
