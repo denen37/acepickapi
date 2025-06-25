@@ -10,6 +10,7 @@ import path from "path";
 import fs from "fs";
 import { decryptMessage, encryptMessage } from "../../utils/cryptography";
 import { UserRole } from "../../utils/enum";
+import { sendPushNotification } from "../../services/notification";
 
 export interface ChatMessage {
     to: string;
@@ -36,6 +37,32 @@ export const sendMessage = async (io: Server, socket: Socket, data: ChatMessage)
         timestamp: new Date(),
         chatroomId: room?.id
     })
+
+    let to = room.members.split(",").filter((member) => member !== data.from)[0];
+
+    let otherUser = await User.findOne({
+        where: {
+            userId: to
+        },
+        include: [OnlineUser]
+    })
+
+    if (otherUser && !otherUser.onlineUser.isOnline) {
+        //send push notification
+        let user = await User.findOne({
+            where: {
+                userId: data.from
+            },
+            include: [Profile]
+        })
+
+        await sendPushNotification(
+            otherUser.fcmToken,
+            `${user?.profile?.firstName} ${user?.profile?.lastName} sent you a message`,
+            data.text,
+            {}
+        )
+    }
 
     io.to(room.name).emit(Emit.RECV_MSG, { ...data, timestamp: message.timestamp });
 }
