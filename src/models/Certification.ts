@@ -13,6 +13,11 @@ export class Certification extends Model {
 
     @AllowNull(false)
     @Column(DataType.STRING)
+    filePath!: string;
+
+
+    @AllowNull(false)
+    @Column(DataType.STRING)
     companyIssue!: string;
 
 

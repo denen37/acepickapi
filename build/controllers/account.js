@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteAccount = exports.updateAccount = exports.getAccounts = exports.addAccount = exports.getBanks = void 0;
+exports.deleteAccount = exports.updateAccount = exports.resolveAccount = exports.getAccounts = exports.addAccount = exports.getBanks = void 0;
 const Models_1 = require("../models/Models");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
 const axios_1 = __importDefault(require("axios"));
@@ -20,7 +20,7 @@ const modules_1 = require("../utils/modules");
 const body_1 = require("../validation/body");
 const getBanks = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const response = yield axios_1.default.get("https://api.paystack.co/bank", {
+        const response = yield axios_1.default.get("https://api.paystack.co/bank?currency=NGN", {
             headers: {
                 Authorization: `Bearer ${configSetup_1.default.PAYSTACK_SECRET_KEY}`
             }
@@ -74,6 +74,25 @@ const getAccounts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getAccounts = getAccounts;
+const resolveAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = body_1.resolveBankSchema.safeParse(req.body);
+    if (!result.success) {
+        return res.status(400).json({
+            status: false,
+            message: 'Validation error',
+            errors: result.error.flatten().fieldErrors,
+        });
+    }
+    const { accountNumber, bankCode } = result.data;
+    const response = yield axios_1.default.get(` https://api.paystack.co/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`, {
+        headers: {
+            Authorization: `Bearer ${configSetup_1.default.PAYSTACK_SECRET_KEY}`,
+            'Content-Type': 'application/json',
+        },
+    });
+    return (0, modules_1.successResponse)(res, 'success', response.data);
+});
+exports.resolveAccount = resolveAccount;
 const updateAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const recipientCode = req.params.recipientCode;
     const { name } = req.body;

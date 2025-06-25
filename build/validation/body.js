@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.pinForgotSchema = exports.pinResetSchema = exports.paymentSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.updateExperienceSchema = exports.experienceSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum"); // adjust the path
 const enum_2 = require("../utils/enum");
@@ -188,6 +188,12 @@ exports.bankDetailsSchema = zod_1.z.object({
         .string()
         .regex(/^\d{10}$/, 'Account number must be exactly 10 digits'),
 });
+exports.resolveBankSchema = zod_1.z.object({
+    bankCode: zod_1.z.string().min(1, 'Bank code is required'),
+    accountNumber: zod_1.z
+        .string()
+        .regex(/^\d{10}$/, 'Account number must be exactly 10 digits'),
+});
 exports.paymentSchema = zod_1.z.object({
     amount: zod_1.z.number().positive('Amount must be a positive number'),
     pin: zod_1.z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
@@ -211,4 +217,117 @@ exports.pinForgotSchema = zod_1.z
     .refine((data) => data.newPin === data.newPinConfirm, {
     message: "PINs do not match",
     path: ['newPinconfirm'], // Error will show under `newPinconfirm`
+});
+exports.educationSchema = zod_1.z.object({
+    school: zod_1.z.string().min(1, 'School is required'),
+    degreeType: zod_1.z.string().min(1, 'Degree type is required'),
+    course: zod_1.z.string().min(1, 'Course is required'),
+    gradDate: zod_1.z.string().refine((date) => !isNaN(Date.parse(date)), 'Graduation date must be a valid date'),
+});
+exports.updateEducationSchema = zod_1.z.object({
+    school: zod_1.z
+        .string()
+        .min(1, 'School is required')
+        .optional()
+        .refine(val => val === undefined || val.trim().length > 0, {
+        message: 'School cannot be empty',
+    }),
+    degreeType: zod_1.z
+        .string()
+        .min(1, 'Degree type is required')
+        .optional()
+        .refine(val => val === undefined || val.trim().length > 0, {
+        message: 'Degree type cannot be empty',
+    }),
+    course: zod_1.z
+        .string()
+        .min(1, 'Course is required')
+        .optional()
+        .refine(val => val === undefined || val.trim().length > 0, {
+        message: 'Course cannot be empty',
+    }),
+    gradDate: zod_1.z
+        .string()
+        .optional()
+        .refine(val => val === undefined || !isNaN(Date.parse(val)), {
+        message: 'Graduation date must be a valid date',
+    }),
+});
+exports.certificationSchema = zod_1.z.object({
+    title: zod_1.z.string().min(1, 'Title is required'),
+    filePath: zod_1.z.string(),
+    companyIssue: zod_1.z.string().min(1, 'Issuing company is required'),
+    date: zod_1.z.string().refine((val) => !isNaN(Date.parse(val)), 'Date must be a valid date'),
+    profileId: zod_1.z
+        .number({
+        required_error: 'Profile ID is required',
+        invalid_type_error: 'Profile ID must be a number',
+    })
+        .int('Profile ID must be an integer'),
+});
+exports.experienceSchema = zod_1.z.object({
+    postHeld: zod_1.z.string().min(1, 'Post held is required'),
+    workPlace: zod_1.z.string().min(1, 'Workplace is required'),
+    startDate: zod_1.z
+        .string()
+        .refine((val) => !isNaN(Date.parse(val)), {
+        message: 'Start date must be a valid date',
+    }),
+    endDate: zod_1.z
+        .string()
+        .optional()
+        .refine((val) => val === undefined || !isNaN(Date.parse(val)), {
+        message: 'End date must be a valid date',
+    }),
+    isCurrent: zod_1.z
+        .boolean()
+        .optional(),
+    description: zod_1.z
+        .string()
+        .optional(),
+    profileId: zod_1.z
+        .number({
+        required_error: 'Profile ID is required',
+        invalid_type_error: 'Profile ID must be a number',
+    })
+        .int('Profile ID must be an integer'),
+});
+exports.updateExperienceSchema = zod_1.z.object({
+    postHeld: zod_1.z
+        .string()
+        .min(1, 'Post held cannot be empty')
+        .optional()
+        .describe('The job title or position held by the individual.'),
+    workPlace: zod_1.z
+        .string()
+        .min(1, 'Workplace cannot be empty')
+        .optional()
+        .describe('The company or organization where the job was held.'),
+    startDate: zod_1.z
+        .string()
+        .optional()
+        .refine((val) => val === undefined || !isNaN(Date.parse(val)), {
+        message: 'Start date must be a valid date',
+    })
+        .describe('The date when the job started (ISO string).'),
+    endDate: zod_1.z
+        .string()
+        .optional()
+        .refine((val) => val === undefined || !isNaN(Date.parse(val)), {
+        message: 'End date must be a valid date',
+    })
+        .describe('The date when the job ended (optional if still current).'),
+    isCurrent: zod_1.z
+        .boolean()
+        .optional()
+        .describe('Whether the job is currently held.'),
+    description: zod_1.z
+        .string()
+        .optional()
+        .describe('A summary or description of the responsibilities and achievements.'),
+    profileId: zod_1.z
+        .number()
+        .int('Profile ID must be an integer')
+        .optional()
+        .describe('ID of the profile this experience is associated with.'),
 });

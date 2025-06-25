@@ -24,13 +24,24 @@ export class Experience extends Model {
 
 
 
-    @AllowNull(false)
+    @AllowNull(true)
     @Column(DataType.STRING)
     endDate!: string;
+
+
+    @AllowNull(true)
+    @Default(false)
+    @Column(DataType.BOOLEAN)
+    isCurrent!: boolean;
+
+
+    @AllowNull(true)
+    @Column(DataType.TEXT)
+    description!: string;
+
 
     @AllowNull(false)
     @ForeignKey(() => Profile)
     @Column(DataType.INTEGER)
     profileId!: number;
-
 }
