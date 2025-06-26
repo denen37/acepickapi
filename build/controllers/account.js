@@ -39,6 +39,10 @@ const addAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         return res.status(400).json({ errors: result.error.format() });
     }
     const { accountName, bank, bankCode, accountNumber } = result.data;
+    const existingAccount = yield Models_1.Account.findOne({ where: { number: accountNumber } });
+    if (existingAccount) {
+        return (0, modules_1.handleResponse)(res, 400, false, 'Account already exists');
+    }
     const response = yield axios_1.default.post('https://api.paystack.co/transferrecipient', {
         type: 'nuban',
         name: accountName,

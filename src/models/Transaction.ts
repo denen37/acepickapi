@@ -1,6 +1,7 @@
 import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index, BelongsTo, ForeignKey, PrimaryKey, AutoIncrement } from 'sequelize-typescript';
 import { TransactionStatus, TransactionType } from '../utils/enum';
 import { User } from './User';
+import { Job } from './Job';
 // import { User } from './Models';
 
 
@@ -62,6 +63,11 @@ export class Transaction extends Model {
     reference!: string
 
 
+    @ForeignKey(() => Job)
+    @AllowNull(true)
+    @Column(DataType.INTEGER)
+    jobId!: number;
+
 
     @ForeignKey(() => User)
     @AllowNull(false)
@@ -69,6 +75,11 @@ export class Transaction extends Model {
     userId!: string;
 
 
-    // @BelongsTo(() => User, { onDelete: 'CASCADE' })
-    // user!: User
+
+    @BelongsTo(() => User, { onDelete: 'CASCADE' })
+    user!: User
+
+
+    @BelongsTo(() => Job, { onDelete: 'CASCADE' })
+    job!: Job
 }

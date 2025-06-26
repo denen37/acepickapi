@@ -32,6 +32,12 @@ export const addAccount = async (req: Request, res: Response) => {
 
     const { accountName, bank, bankCode, accountNumber } = result.data;
 
+    const existingAccount = await Account.findOne({ where: { number: accountNumber } });
+
+    if (existingAccount) {
+        return handleResponse(res, 400, false, 'Account already exists');
+    }
+
     const response = await axios.post(
         'https://api.paystack.co/transferrecipient',
         {

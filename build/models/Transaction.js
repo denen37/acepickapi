@@ -13,6 +13,7 @@ exports.Transaction = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
 const enum_1 = require("../utils/enum");
 const User_1 = require("./User");
+const Job_1 = require("./Job");
 // import { User } from './Models';
 let Transaction = class Transaction extends sequelize_typescript_1.Model {
 };
@@ -67,11 +68,25 @@ __decorate([
     __metadata("design:type", String)
 ], Transaction.prototype, "reference", void 0);
 __decorate([
+    (0, sequelize_typescript_1.ForeignKey)(() => Job_1.Job),
+    (0, sequelize_typescript_1.AllowNull)(true),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.INTEGER),
+    __metadata("design:type", Number)
+], Transaction.prototype, "jobId", void 0);
+__decorate([
     (0, sequelize_typescript_1.ForeignKey)(() => User_1.User),
     (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.UUID),
     __metadata("design:type", String)
 ], Transaction.prototype, "userId", void 0);
+__decorate([
+    (0, sequelize_typescript_1.BelongsTo)(() => User_1.User, { onDelete: 'CASCADE' }),
+    __metadata("design:type", User_1.User)
+], Transaction.prototype, "user", void 0);
+__decorate([
+    (0, sequelize_typescript_1.BelongsTo)(() => Job_1.Job, { onDelete: 'CASCADE' }),
+    __metadata("design:type", Job_1.Job)
+], Transaction.prototype, "job", void 0);
 exports.Transaction = Transaction = __decorate([
     (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'transactions' })
 ], Transaction);

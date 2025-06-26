@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateExperienceSchema = exports.experienceSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum"); // adjust the path
 const enum_2 = require("../utils/enum");
@@ -222,7 +222,9 @@ exports.educationSchema = zod_1.z.object({
     school: zod_1.z.string().min(1, 'School is required'),
     degreeType: zod_1.z.string().min(1, 'Degree type is required'),
     course: zod_1.z.string().min(1, 'Course is required'),
-    gradDate: zod_1.z.string().refine((date) => !isNaN(Date.parse(date)), 'Graduation date must be a valid date'),
+    startDate: zod_1.z.string().refine((date) => !isNaN(Date.parse(date)), 'Start date must be a valid date'),
+    gradDate: zod_1.z.string().refine((date) => !isNaN(Date.parse(date)), 'Graduation date must be a valid date').optional(),
+    isCurrent: zod_1.z.boolean().optional(),
 });
 exports.updateEducationSchema = zod_1.z.object({
     school: zod_1.z
@@ -246,12 +248,21 @@ exports.updateEducationSchema = zod_1.z.object({
         .refine(val => val === undefined || val.trim().length > 0, {
         message: 'Course cannot be empty',
     }),
+    startDate: zod_1.z
+        .string()
+        .optional()
+        .refine(val => val === undefined || !isNaN(Date.parse(val)), {
+        message: 'Start date must be a valid date',
+    }),
     gradDate: zod_1.z
         .string()
         .optional()
         .refine(val => val === undefined || !isNaN(Date.parse(val)), {
         message: 'Graduation date must be a valid date',
     }),
+    isCurrent: zod_1.z
+        .boolean()
+        .optional()
 });
 exports.certificationSchema = zod_1.z.object({
     title: zod_1.z.string().min(1, 'Title is required'),
@@ -330,4 +341,72 @@ exports.updateExperienceSchema = zod_1.z.object({
         .int('Profile ID must be an integer')
         .optional()
         .describe('ID of the profile this experience is associated with.'),
+});
+exports.portfolioSchema = zod_1.z.object({
+    title: zod_1.z
+        .string()
+        .min(1, 'Title is required')
+        .describe('The title of the portfolio project.'),
+    description: zod_1.z
+        .string()
+        .min(1, 'Description is required')
+        .describe('A detailed description of the project.'),
+    duration: zod_1.z
+        .string()
+        .min(1, 'Duration is required')
+        .max(50, 'Duration must not exceed 50 characters')
+        .describe('The duration of the project (e.g. "3 months").'),
+    date: zod_1.z
+        .string()
+        .refine((val) => !isNaN(Date.parse(val)), {
+        message: 'Date must be a valid date',
+    })
+        .describe('The date the project was completed.'),
+    file: zod_1.z
+        .string()
+        .max(500, 'File path must not exceed 500 characters')
+        .optional()
+        .describe('An optional file path or URL for the project.'),
+    // profileId: z
+    //     .number({
+    //         required_error: 'Profile ID is required',
+    //         invalid_type_error: 'Profile ID must be a number',
+    //     })
+    //     .int('Profile ID must be an integer')
+    //     .describe('ID of the profile this portfolio item is associated with.'),
+});
+exports.updatePortfolioSchema = zod_1.z.object({
+    title: zod_1.z
+        .string()
+        .min(1, 'Title cannot be empty')
+        .optional()
+        .describe('The title of the portfolio project.'),
+    description: zod_1.z
+        .string()
+        .min(1, 'Description cannot be empty')
+        .optional()
+        .describe('A detailed description of the project.'),
+    duration: zod_1.z
+        .string()
+        .min(1, 'Duration cannot be empty')
+        .max(50, 'Duration must not exceed 50 characters')
+        .optional()
+        .describe('The duration of the project (e.g. "3 months").'),
+    date: zod_1.z
+        .string()
+        .optional()
+        .refine((val) => val === undefined || !isNaN(Date.parse(val)), {
+        message: 'Date must be a valid date',
+    })
+        .describe('The date the project was completed.'),
+    file: zod_1.z
+        .string()
+        .max(500, 'File path must not exceed 500 characters')
+        .optional()
+        .describe('An optional file path or URL for the project.'),
+    // profileId: z
+    //     .number()
+    //     .int('Profile ID must be an integer')
+    //     .optional()
+    //     .describe('ID of the profile this portfolio item is associated with.'),
 });

@@ -34,7 +34,18 @@ __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
+], Education.prototype, "startDate", void 0);
+__decorate([
+    (0, sequelize_typescript_1.AllowNull)(true),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
+    __metadata("design:type", String)
 ], Education.prototype, "gradDate", void 0);
+__decorate([
+    (0, sequelize_typescript_1.AllowNull)(true),
+    (0, sequelize_typescript_1.Default)(false),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BOOLEAN),
+    __metadata("design:type", Boolean)
+], Education.prototype, "isCurrent", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.ForeignKey)(() => Profile_1.Profile),

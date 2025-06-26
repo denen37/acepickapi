@@ -241,6 +241,3 @@ export const verifyTransfer = async (req: Request, res: Response) => {
     }
 }
 
-export const otpDisable = (req: Request, res: Response) => {
-
-}

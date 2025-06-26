@@ -12,10 +12,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getTransactionById = exports.getAllTransactions = void 0;
 const Transaction_1 = require("../models/Transaction");
 const modules_1 = require("../utils/modules");
+const Job_1 = require("../models/Job");
 const getAllTransactions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, role } = req.user;
     try {
-        const transactions = yield Transaction_1.Transaction.findAll({ where: { userId: id } });
+        const transactions = yield Transaction_1.Transaction.findAll({
+            where: { userId: id },
+            include: [Job_1.Job],
+            order: [['createdAt', 'DESC']]
+        });
         return (0, modules_1.successResponse)(res, 'success', transactions);
     }
     catch (error) {

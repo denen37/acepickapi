@@ -2,6 +2,7 @@ import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNu
 
 import { User } from './User';
 import { Profile } from './Profile';
+import { DenyAll } from 'stream-chat';
 
 
 
@@ -24,7 +25,18 @@ export class Education extends Model {
 
     @AllowNull(false)
     @Column(DataType.STRING)
+    startDate!: string;
+
+
+    @AllowNull(true)
+    @Column(DataType.STRING)
     gradDate!: string;
+
+
+    @AllowNull(true)
+    @Default(false)
+    @Column(DataType.BOOLEAN)
+    isCurrent!: boolean;
 
 
     // @AllowNull(false)

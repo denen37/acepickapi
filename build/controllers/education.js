@@ -14,13 +14,20 @@ const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const body_1 = require("../validation/body");
 const getEducation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.user;
+    const { id } = req.user;
+    console.log(req.user);
     try {
-        const profile = yield Models_1.Profile.findOne({ where: userId });
+        const profile = yield Models_1.Profile.findOne({
+            where: { userId: id }
+        });
         if (!profile) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Profile not found');
         }
-        const education = yield Models_1.Education.findAll({ where: profile.id });
+        const education = yield Models_1.Education.findAll({
+            where: {
+                profileId: profile.id
+            }
+        });
         if (!education) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Education not found');
         }
@@ -32,7 +39,7 @@ const getEducation = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.getEducation = getEducation;
 const addEducation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.user;
+    const { id } = req.user;
     const result = body_1.educationSchema.safeParse(req.body);
     if (!result.success) {
         return res.status(400).json({
@@ -41,17 +48,21 @@ const addEducation = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             errors: result.error.flatten().fieldErrors,
         });
     }
-    const { school, degreeType, course, gradDate } = req.body;
+    const { school, degreeType, course, startDate, gradDate, isCurrent } = req.body;
     try {
-        const profile = yield Models_1.Profile.findOne({ where: userId });
+        const profile = yield Models_1.Profile.findOne({
+            where: { userId: id }
+        });
         if (!profile) {
-            return (0, modules_1.handleResponse)(res, 404, false, 'Prrofile not found');
+            return (0, modules_1.handleResponse)(res, 404, false, 'Profile not found');
         }
         const education = yield Models_1.Education.create({
             school,
             degreeType,
             course,
+            startDate,
             gradDate,
+            isCurrent,
             profileId: profile.id
         });
         return (0, modules_1.successResponse)(res, 'success', education);
@@ -63,7 +74,7 @@ const addEducation = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.addEducation = addEducation;
 const updateEducation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    const { userId } = req.user;
+    //const { userId } = req.user;
     try {
         const result = body_1.updateEducationSchema.safeParse(req.body);
         if (!result.success) {
@@ -86,7 +97,7 @@ const updateEducation = (req, res) => __awaiter(void 0, void 0, void 0, function
 });
 exports.updateEducation = updateEducation;
 const deleteEducation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.user;
+    //const { userId } = req.user;
     const { id } = req.params;
     try {
         const deleted = yield Models_1.Education.destroy({

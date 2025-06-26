@@ -3,7 +3,7 @@ import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNu
 // import { Wallet } from './Wallet';
 // import { LanLog } from './LanLog';
 // import { User } from './User';
-import { User, Material, Dispute } from './Models'
+import { User, Material, Dispute, Transaction } from './Models'
 import { JobMode, JobStatus, PaidFor, PayStatus } from '../utils/enum';
 // import { VoiceRecording } from './VoiceRecording';
 
@@ -211,7 +211,7 @@ export class Job extends Model {
 
 
     @AllowNull(true)
-    @Column(DataType.UUID)
+    @Column(DataType.STRING(200))
     paymentRef!: string
 
 
@@ -294,11 +294,18 @@ export class Job extends Model {
     @BelongsTo(() => User, { foreignKey: 'clientId' })
     client!: User;
 
+
     @BelongsTo(() => User, { foreignKey: 'professionalId' })
     professional!: User;
 
+
     @HasMany(() => Dispute, { onDelete: 'CASCADE' })
     dispute!: Dispute[];
+
+
+
+    @HasOne(() => Transaction)
+    transaction!: Transaction;
 
 
     // @HasMany(() => VoiceRecording, { onDelete: 'CASCADE' })

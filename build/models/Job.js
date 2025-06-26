@@ -123,7 +123,7 @@ __decorate([
 ], Job.prototype, "payStatus", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(true),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.UUID),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING(200)),
     __metadata("design:type", String)
 ], Job.prototype, "paymentRef", void 0);
 __decorate([
@@ -202,6 +202,10 @@ __decorate([
     (0, sequelize_typescript_1.HasMany)(() => Models_1.Dispute, { onDelete: 'CASCADE' }),
     __metadata("design:type", Array)
 ], Job.prototype, "dispute", void 0);
+__decorate([
+    (0, sequelize_typescript_1.HasOne)(() => Models_1.Transaction),
+    __metadata("design:type", Models_1.Transaction)
+], Job.prototype, "transaction", void 0);
 __decorate([
     (0, sequelize_typescript_1.HasMany)(() => Models_1.Material, { onDelete: 'CASCADE' }),
     __metadata("design:type", Array)
