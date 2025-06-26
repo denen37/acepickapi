@@ -78,6 +78,10 @@ export const updateEducation = async (req: Request, res: Response) => {
     const { id } = req.params;
     //const { userId } = req.user;
 
+    if (!id) {
+        return handleResponse(res, 400, false, 'Provide an id')
+    }
+
     try {
         const result = updateEducationSchema.safeParse(req.body);
 
@@ -105,6 +109,10 @@ export const updateEducation = async (req: Request, res: Response) => {
 export const deleteEducation = async (req: Request, res: Response) => {
     //const { userId } = req.user;
     const { id } = req.params;
+
+    if (!id) {
+        return handleResponse(res, 400, false, 'Provide an id')
+    }
 
     try {
 

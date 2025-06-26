@@ -256,14 +256,13 @@ export const educationSchema = z.object({
     school: z.string().min(1, 'School is required'),
     degreeType: z.string().min(1, 'Degree type is required'),
     course: z.string().min(1, 'Course is required'),
-    startDate: z.string().refine(
-        (date) => !isNaN(Date.parse(date)),
-        'Start date must be a valid date'
-    ),
-    gradDate: z.string()
-        .refine((date) => !isNaN(Date.parse(date)), {
-            message: 'Graduation date must be a valid date',
-        })
+    startDate: z
+        .coerce
+        .date({ required_error: 'Start date is required', invalid_type_error: 'Start date must be a valid date' }),
+
+    gradDate: z
+        .coerce
+        .date({ invalid_type_error: 'Graduation date must be a valid date' })
         .optional(),
     isCurrent: z.boolean().optional(),
 }).refine(
@@ -308,18 +307,16 @@ export const updateEducationSchema = z.object({
         }),
 
     startDate: z
-        .string()
-        .optional()
-        .refine(val => val === undefined || !isNaN(Date.parse(val)), {
-            message: 'Start date must be a valid date',
-        }),
+        .coerce
+        .date({
+            required_error: 'Start date is required',
+
+            invalid_type_error: 'Start date must be a valid date'
+        }).optional(),
 
     gradDate: z
-        .string()
-        .optional()
-        .refine(val => val === undefined || !isNaN(Date.parse(val)), {
-            message: 'Graduation date must be a valid date',
-        }),
+        .date({ invalid_type_error: 'Graduation date must be a valid date' })
+        .optional(),
 
     isCurrent: z.boolean().optional(),
 }).refine(
@@ -344,18 +341,28 @@ export const certificationSchema = z.object({
 
     companyIssue: z.string().min(1, 'Issuing company is required'),
 
-    date: z.string().refine(
-        (val) => !isNaN(Date.parse(val)),
-        'Date must be a valid date'
-    ),
+    date: z.coerce.date({ invalid_type_error: 'Date must be a valid date' }),
 
-    profileId: z
-        .number({
-            required_error: 'Profile ID is required',
-            invalid_type_error: 'Profile ID must be a number',
-        })
-        .int('Profile ID must be an integer'),
+    // profileId: z
+    //     .number({
+    //         required_error: 'Profile ID is required',
+    //         invalid_type_error: 'Profile ID must be a number',
+    //     })
+    //     .int('Profile ID must be an integer'),
 });
+
+
+
+export const updateCertificationSchema = z.object({
+    title: z.string().min(1, 'Title is required').optional(),
+
+    filePath: z.string().optional(),
+
+    companyIssue: z.string().min(1, 'Issuing company is required').optional(),
+
+    date: z.coerce.date({ invalid_type_error: 'Date must be a valid date' }).optional(),
+});
+
 
 
 
@@ -365,17 +372,13 @@ export const experienceSchema = z.object({
     workPlace: z.string().min(1, 'Workplace is required'),
 
     startDate: z
-        .string()
-        .refine((val) => !isNaN(Date.parse(val)), {
-            message: 'Start date must be a valid date',
-        }),
+        .coerce
+        .date({ required_error: 'Start date is required', invalid_type_error: 'Start date must be a valid date' }),
 
     endDate: z
-        .string()
-        .optional()
-        .refine((val) => val === undefined || !isNaN(Date.parse(val)), {
-            message: 'End date must be a valid date',
-        }),
+        .coerce
+        .date({ invalid_type_error: 'End date must be a valid date' })
+        .optional(),
 
     isCurrent: z
         .boolean()
@@ -385,12 +388,12 @@ export const experienceSchema = z.object({
         .string()
         .optional(),
 
-    profileId: z
-        .number({
-            required_error: 'Profile ID is required',
-            invalid_type_error: 'Profile ID must be a number',
-        })
-        .int('Profile ID must be an integer'),
+    // profileId: z
+    //     .number({
+    //         required_error: 'Profile ID is required',
+    //         invalid_type_error: 'Profile ID must be a number',
+    //     })
+    //     .int('Profile ID must be an integer'),
 });
 
 
@@ -408,19 +411,15 @@ export const updateExperienceSchema = z.object({
         .describe('The company or organization where the job was held.'),
 
     startDate: z
-        .string()
+        .coerce
+        .date({ required_error: 'Start date is required', invalid_type_error: 'Start date must be a valid date' })
         .optional()
-        .refine((val) => val === undefined || !isNaN(Date.parse(val)), {
-            message: 'Start date must be a valid date',
-        })
         .describe('The date when the job started (ISO string).'),
 
     endDate: z
-        .string()
+        .coerce
+        .date({ invalid_type_error: 'End date must be a valid date' })
         .optional()
-        .refine((val) => val === undefined || !isNaN(Date.parse(val)), {
-            message: 'End date must be a valid date',
-        })
         .describe('The date when the job ended (optional if still current).'),
 
     isCurrent: z
@@ -433,11 +432,11 @@ export const updateExperienceSchema = z.object({
         .optional()
         .describe('A summary or description of the responsibilities and achievements.'),
 
-    profileId: z
-        .number()
-        .int('Profile ID must be an integer')
-        .optional()
-        .describe('ID of the profile this experience is associated with.'),
+    // profileId: z
+    //     .number()
+    //     .int('Profile ID must be an integer')
+    //     .optional()
+    //     .describe('ID of the profile this experience is associated with.'),
 });
 
 
@@ -459,10 +458,8 @@ export const portfolioSchema = z.object({
         .describe('The duration of the project (e.g. "3 months").'),
 
     date: z
-        .string()
-        .refine((val) => !isNaN(Date.parse(val)), {
-            message: 'Date must be a valid date',
-        })
+        .coerce
+        .date()
         .describe('The date the project was completed.'),
 
     file: z
@@ -502,11 +499,9 @@ export const updatePortfolioSchema = z.object({
         .describe('The duration of the project (e.g. "3 months").'),
 
     date: z
-        .string()
+        .coerce
+        .date()
         .optional()
-        .refine((val) => val === undefined || !isNaN(Date.parse(val)), {
-            message: 'Date must be a valid date',
-        })
         .describe('The date the project was completed.'),
 
     file: z

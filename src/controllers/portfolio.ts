@@ -5,10 +5,10 @@ import { portfolioSchema, updatePortfolioSchema } from "../validation/body";
 
 
 export const getPortfolios = async (req: Request, res: Response) => {
-    const { userId } = req.user;
+    const { id } = req.user;
 
     try {
-        const profile = await Profile.findOne({ where: { userId } });
+        const profile = await Profile.findOne({ where: { userId: id } });
 
         if (!profile) {
             return handleResponse(res, 404, false, 'Profile not found');
@@ -27,7 +27,7 @@ export const getPortfolios = async (req: Request, res: Response) => {
 
 
 export const addPortfolio = async (req: Request, res: Response) => {
-    const { userId } = req.user;
+    const { id } = req.user;
 
     const result = portfolioSchema.safeParse(req.body);
 
@@ -42,7 +42,7 @@ export const addPortfolio = async (req: Request, res: Response) => {
     const { title, description, duration, date, file } = result.data;
 
     try {
-        const profile = await Profile.findOne({ where: { userId } });
+        const profile = await Profile.findOne({ where: { userId: id } });
 
         if (!profile) {
             return handleResponse(res, 404, false, 'Profile not found');
@@ -68,7 +68,11 @@ export const addPortfolio = async (req: Request, res: Response) => {
 export const updatePortfolio = async (req: Request, res: Response) => {
     const { id } = req.params;
 
-    const { userId } = req.user;
+    if (!id) {
+        return handleResponse(res, 400, false, 'Provide an id')
+    }
+
+    //const { userId } = req.user;
 
     const result = updatePortfolioSchema.safeParse(req.body);
 
@@ -95,6 +99,10 @@ export const updatePortfolio = async (req: Request, res: Response) => {
 
 export const deletePortfolio = async (req: Request, res: Response) => {
     const { id } = req.params;
+
+    if (!id) {
+        return handleResponse(res, 400, false, 'Provide an id')
+    }
 
     try {
         await Portfolio.destroy({

@@ -22,8 +22,8 @@ export class Certification extends Model {
 
 
     @AllowNull(false)
-    @Column(DataType.STRING)
-    date!: string;
+    @Column(DataType.DATE)
+    date!: Date;
 
 
     @AllowNull(false)

@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
 import { Certification, Profile } from "../models/Models";
 import { errorResponse, handleResponse, successResponse } from "../utils/modules";
-import { certificationSchema } from "../validation/body";
+import { certificationSchema, updateCertificationSchema } from "../validation/body";
 
 
 export const getCertificates = async (req: Request, res: Response) => {
-    const { userId } = req.user;
+    const { id } = req.user;
 
     try {
-        const profile = await Profile.findOne({ where: { userId } });
+        const profile = await Profile.findOne({ where: { userId: id } });
 
         if (!profile) {
             return handleResponse(res, 404, false, 'Profile not found');
@@ -27,7 +27,7 @@ export const getCertificates = async (req: Request, res: Response) => {
 
 
 export const addCertificate = async (req: Request, res: Response) => {
-    const { userId } = req.user;
+    const { id } = req.user;
 
     const result = certificationSchema.safeParse(req.body);
 
@@ -42,7 +42,7 @@ export const addCertificate = async (req: Request, res: Response) => {
     const { title, filePath, companyIssue, date } = result.data;
 
     try {
-        const profile = await Profile.findOne({ where: { userId } });
+        const profile = await Profile.findOne({ where: { userId: id } });
 
         if (!profile) {
             return handleResponse(res, 404, false, 'Profile not found');
@@ -64,9 +64,13 @@ export const addCertificate = async (req: Request, res: Response) => {
 
 export const updateCertificate = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { userId } = req.user;
+    //const { userId } = req.user;
 
-    const result = certificationSchema.safeParse(req.body);
+    if (!id) {
+        return handleResponse(res, 400, false, 'Provide an id')
+    }
+
+    const result = updateCertificationSchema.safeParse(req.body);
 
     if (!result.success) {
         return res.status(400).json({
@@ -76,23 +80,15 @@ export const updateCertificate = async (req: Request, res: Response) => {
         });
     }
 
-    const { title, filePath, companyIssue, date } = result.data;
 
     try {
-        const certificate = await Certification.findByPk(id);
+        const updated = await Certification.update(result.data, {
+            where: {
+                id: id
+            }
+        })
 
-        if (!certificate) {
-            return handleResponse(res, 404, false, 'Certificate not found');
-        }
-
-        certificate.title = title;
-        certificate.filePath = filePath;
-        certificate.companyIssue = companyIssue;
-        certificate.date = date;
-
-        await certificate.save();
-
-        return successResponse(res, 'success', certificate);
+        return successResponse(res, 'success', updated);
     } catch (error) {
         return errorResponse(res, 'error', error);
     }
@@ -101,6 +97,10 @@ export const updateCertificate = async (req: Request, res: Response) => {
 
 export const deleteCertificate = async (req: Request, res: Response) => {
     const { id } = req.params;
+
+    if (!id) {
+        return handleResponse(res, 400, false, 'Provide an id')
+    }
 
     try {
         await Certification.destroy({

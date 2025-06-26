@@ -32,8 +32,8 @@ __decorate([
 ], Portfolio.prototype, "duration", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
-    __metadata("design:type", String)
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DATE),
+    __metadata("design:type", Date)
 ], Portfolio.prototype, "date", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(true),

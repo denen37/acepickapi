@@ -27,13 +27,13 @@ __decorate([
 ], Experience.prototype, "workPlace", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
-    __metadata("design:type", String)
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DATE),
+    __metadata("design:type", Date)
 ], Experience.prototype, "startDate", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(true),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
-    __metadata("design:type", String)
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DATE),
+    __metadata("design:type", Object)
 ], Experience.prototype, "endDate", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(true),

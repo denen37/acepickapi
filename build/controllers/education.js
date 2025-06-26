@@ -75,6 +75,9 @@ exports.addEducation = addEducation;
 const updateEducation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     //const { userId } = req.user;
+    if (!id) {
+        return (0, modules_1.handleResponse)(res, 400, false, 'Provide an id');
+    }
     try {
         const result = body_1.updateEducationSchema.safeParse(req.body);
         if (!result.success) {
@@ -99,6 +102,9 @@ exports.updateEducation = updateEducation;
 const deleteEducation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     //const { userId } = req.user;
     const { id } = req.params;
+    if (!id) {
+        return (0, modules_1.handleResponse)(res, 400, false, 'Provide an id');
+    }
     try {
         const deleted = yield Models_1.Education.destroy({
             where: {

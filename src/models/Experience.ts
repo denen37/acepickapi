@@ -19,14 +19,13 @@ export class Experience extends Model {
 
 
     @AllowNull(false)
-    @Column(DataType.STRING)
-    startDate!: string;
-
+    @Column(DataType.DATE)
+    startDate!: Date;
 
 
     @AllowNull(true)
-    @Column(DataType.STRING)
-    endDate!: string;
+    @Column(DataType.DATE)
+    endDate!: Date | null;
 
 
     @AllowNull(true)
