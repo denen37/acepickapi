@@ -14,9 +14,9 @@ const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const body_1 = require("../validation/body");
 const getExperiences = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.user;
+    const { id } = req.user;
     try {
-        const profile = yield Models_1.Profile.findOne({ where: { userId } });
+        const profile = yield Models_1.Profile.findOne({ where: { userId: id } });
         if (!profile) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Profile not found');
         }
@@ -32,7 +32,7 @@ const getExperiences = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.getExperiences = getExperiences;
 const addExperience = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.user;
+    const { id } = req.user;
     const result = body_1.experienceSchema.safeParse(req.body);
     if (!result.success) {
         return res.status(400).json({
@@ -43,7 +43,7 @@ const addExperience = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     const { postHeld, workPlace, startDate, endDate, isCurrent, description } = result.data;
     try {
-        const profile = yield Models_1.Profile.findOne({ where: { userId } });
+        const profile = yield Models_1.Profile.findOne({ where: { userId: id } });
         if (!profile) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Profile not found');
         }
@@ -65,8 +65,11 @@ const addExperience = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.addExperience = addExperience;
 const updateExperience = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    const { userId } = req.user;
-    const result = body_1.certificationSchema.safeParse(req.body);
+    //const { userId } = req.user;
+    if (!id) {
+        return (0, modules_1.handleResponse)(res, 400, false, 'Provide an id');
+    }
+    const result = body_1.updateExperienceSchema.safeParse(req.body);
     if (!result.success) {
         return res.status(400).json({
             status: false,
@@ -87,6 +90,9 @@ const updateExperience = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.updateExperience = updateExperience;
 const deleteExperience = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
+    if (!id) {
+        return (0, modules_1.handleResponse)(res, 400, false, 'Provide an id');
+    }
     try {
         yield Models_1.Experience.destroy({
             where: { id }

@@ -14,9 +14,9 @@ const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const body_1 = require("../validation/body");
 const getCertificates = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.user;
+    const { id } = req.user;
     try {
-        const profile = yield Models_1.Profile.findOne({ where: { userId } });
+        const profile = yield Models_1.Profile.findOne({ where: { userId: id } });
         if (!profile) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Profile not found');
         }
@@ -32,7 +32,7 @@ const getCertificates = (req, res) => __awaiter(void 0, void 0, void 0, function
 });
 exports.getCertificates = getCertificates;
 const addCertificate = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.user;
+    const { id } = req.user;
     const result = body_1.certificationSchema.safeParse(req.body);
     if (!result.success) {
         return res.status(400).json({
@@ -43,7 +43,7 @@ const addCertificate = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
     const { title, filePath, companyIssue, date } = result.data;
     try {
-        const profile = yield Models_1.Profile.findOne({ where: { userId } });
+        const profile = yield Models_1.Profile.findOne({ where: { userId: id } });
         if (!profile) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Profile not found');
         }
@@ -63,8 +63,11 @@ const addCertificate = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.addCertificate = addCertificate;
 const updateCertificate = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    const { userId } = req.user;
-    const result = body_1.certificationSchema.safeParse(req.body);
+    //const { userId } = req.user;
+    if (!id) {
+        return (0, modules_1.handleResponse)(res, 400, false, 'Provide an id');
+    }
+    const result = body_1.updateCertificationSchema.safeParse(req.body);
     if (!result.success) {
         return res.status(400).json({
             status: false,
@@ -72,18 +75,13 @@ const updateCertificate = (req, res) => __awaiter(void 0, void 0, void 0, functi
             errors: result.error.flatten().fieldErrors,
         });
     }
-    const { title, filePath, companyIssue, date } = result.data;
     try {
-        const certificate = yield Models_1.Certification.findByPk(id);
-        if (!certificate) {
-            return (0, modules_1.handleResponse)(res, 404, false, 'Certificate not found');
-        }
-        certificate.title = title;
-        certificate.filePath = filePath;
-        certificate.companyIssue = companyIssue;
-        certificate.date = date;
-        yield certificate.save();
-        return (0, modules_1.successResponse)(res, 'success', certificate);
+        const updated = yield Models_1.Certification.update(result.data, {
+            where: {
+                id: id
+            }
+        });
+        return (0, modules_1.successResponse)(res, 'success', updated);
     }
     catch (error) {
         return (0, modules_1.errorResponse)(res, 'error', error);
@@ -92,6 +90,9 @@ const updateCertificate = (req, res) => __awaiter(void 0, void 0, void 0, functi
 exports.updateCertificate = updateCertificate;
 const deleteCertificate = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
+    if (!id) {
+        return (0, modules_1.handleResponse)(res, 400, false, 'Provide an id');
+    }
     try {
         yield Models_1.Certification.destroy({
             where: { id }

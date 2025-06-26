@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
 import { Experience, Profile } from "../models/Models";
 import { errorResponse, handleResponse, successResponse } from "../utils/modules";
-import { certificationSchema, experienceSchema } from "../validation/body";
+import { certificationSchema, experienceSchema, updateExperienceSchema } from "../validation/body";
 
 
 export const getExperiences = async (req: Request, res: Response) => {
-    const { userId } = req.user;
+    const { id } = req.user;
 
     try {
-        const profile = await Profile.findOne({ where: { userId } });
+        const profile = await Profile.findOne({ where: { userId: id } });
 
         if (!profile) {
             return handleResponse(res, 404, false, 'Profile not found');
@@ -27,7 +27,7 @@ export const getExperiences = async (req: Request, res: Response) => {
 
 
 export const addExperience = async (req: Request, res: Response) => {
-    const { userId } = req.user;
+    const { id } = req.user;
 
     const result = experienceSchema.safeParse(req.body);
 
@@ -42,7 +42,7 @@ export const addExperience = async (req: Request, res: Response) => {
     const { postHeld, workPlace, startDate, endDate, isCurrent, description } = result.data;
 
     try {
-        const profile = await Profile.findOne({ where: { userId } });
+        const profile = await Profile.findOne({ where: { userId: id } });
 
         if (!profile) {
             return handleResponse(res, 404, false, 'Profile not found');
@@ -68,9 +68,13 @@ export const addExperience = async (req: Request, res: Response) => {
 
 export const updateExperience = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { userId } = req.user;
+    //const { userId } = req.user;
 
-    const result = certificationSchema.safeParse(req.body);
+    if (!id) {
+        return handleResponse(res, 400, false, 'Provide an id')
+    }
+
+    const result = updateExperienceSchema.safeParse(req.body);
 
     if (!result.success) {
         return res.status(400).json({
@@ -95,6 +99,10 @@ export const updateExperience = async (req: Request, res: Response) => {
 
 export const deleteExperience = async (req: Request, res: Response) => {
     const { id } = req.params;
+
+    if (!id) {
+        return handleResponse(res, 400, false, 'Provide an id')
+    }
 
     try {
         await Experience.destroy({

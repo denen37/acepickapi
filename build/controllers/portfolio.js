@@ -14,9 +14,9 @@ const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const body_1 = require("../validation/body");
 const getPortfolios = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.user;
+    const { id } = req.user;
     try {
-        const profile = yield Models_1.Profile.findOne({ where: { userId } });
+        const profile = yield Models_1.Profile.findOne({ where: { userId: id } });
         if (!profile) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Profile not found');
         }
@@ -32,7 +32,7 @@ const getPortfolios = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.getPortfolios = getPortfolios;
 const addPortfolio = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.user;
+    const { id } = req.user;
     const result = body_1.portfolioSchema.safeParse(req.body);
     if (!result.success) {
         return res.status(400).json({
@@ -43,7 +43,7 @@ const addPortfolio = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
     const { title, description, duration, date, file } = result.data;
     try {
-        const profile = yield Models_1.Profile.findOne({ where: { userId } });
+        const profile = yield Models_1.Profile.findOne({ where: { userId: id } });
         if (!profile) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Profile not found');
         }
@@ -64,7 +64,10 @@ const addPortfolio = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.addPortfolio = addPortfolio;
 const updatePortfolio = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    const { userId } = req.user;
+    if (!id) {
+        return (0, modules_1.handleResponse)(res, 400, false, 'Provide an id');
+    }
+    //const { userId } = req.user;
     const result = body_1.updatePortfolioSchema.safeParse(req.body);
     if (!result.success) {
         return res.status(400).json({
@@ -86,6 +89,9 @@ const updatePortfolio = (req, res) => __awaiter(void 0, void 0, void 0, function
 exports.updatePortfolio = updatePortfolio;
 const deletePortfolio = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
+    if (!id) {
+        return (0, modules_1.handleResponse)(res, 400, false, 'Provide an id');
+    }
     try {
         yield Models_1.Portfolio.destroy({
             where: { id }

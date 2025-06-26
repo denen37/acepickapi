@@ -5,6 +5,7 @@ import { successResponse, errorResponse, nestFlatKeys, handleResponse } from '..
 import sequelize, { QueryTypes } from 'sequelize';
 import dbSequelize from '../config/db';
 import { professionalSearchQuerySchema } from '../validation/query';
+import { profile } from 'console';
 
 
 
@@ -348,7 +349,9 @@ export const getProfessionalById = async (req: Request, res: Response) => {
                 'profile.education.school',
                 'profile.education.degreeType',
                 'profile.education.course',
+                'profile.education.startDate',
                 'profile.education.gradDate',
+                'profile.education.isCurrent',
                 'profile.education.profileId',
                 'profile.education.createdAt',
                 'profile.education.updatedAt',
@@ -376,6 +379,8 @@ export const getProfessionalById = async (req: Request, res: Response) => {
                 'profile.experience.workPlace',
                 'profile.experience.startDate',
                 'profile.experience.endDate',
+                'profile.experience.isCurrent',
+                'profile.experience.description',
                 'profile.experience.profileId',
                 'profile.experience.createdAt',
                 'profile.experience.updatedAt',
