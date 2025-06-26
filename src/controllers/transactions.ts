@@ -1,12 +1,17 @@
 import { Request, Response } from "express";
 import { Transaction } from "../models/Transaction";
 import { successResponse, errorResponse } from '../utils/modules'
+import { Job } from "../models/Job";
 
 export const getAllTransactions = async (req: Request, res: Response) => {
     const { id, role } = req.user;
 
     try {
-        const transactions = await Transaction.findAll({ where: { userId: id } })
+        const transactions = await Transaction.findAll({
+            where: { userId: id },
+            include: [Job],
+            order: [['createdAt', 'DESC']]
+        })
 
         return successResponse(res, 'success', transactions)
     } catch (error) {

@@ -16,6 +16,7 @@ import { initiatePayment, initiateTransfer, finalizeTransfer, verifyPayment, ver
 import { addEducation, deleteEducation, getEducation, updateEducation } from "../controllers/education";
 import { addCertificate, deleteCertificate, getCertificates, updateCertificate } from "../controllers/certification";
 import { addExperience, deleteExperience, getExperiences, updateExperience } from "../controllers/experience";
+import { addPortfolio, deletePortfolio, getPortfolios, updatePortfolio } from "../controllers/portfolio";
 
 const routes = Router();
 
@@ -41,6 +42,11 @@ routes.get("/experiences", getExperiences);
 routes.post("/experiences", addExperience);
 routes.put("/experiences/:id", updateExperience);
 routes.delete("/experiences/:id", deleteExperience);
+
+routes.get("/portfolios", getPortfolios);
+routes.post("/portfolios", addPortfolio);
+routes.put("/portfolios/:id", updatePortfolio);
+routes.delete("/portfolios/:id", deletePortfolio);
 
 routes.get("/professions", getProfessions);
 routes.get("/professions/:id", getProfessionById);

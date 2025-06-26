@@ -4,16 +4,24 @@ import { errorResponse, handleResponse, successResponse } from "../utils/modules
 import { educationSchema, updateEducationSchema } from "../validation/body";
 
 export const getEducation = async (req: Request, res: Response) => {
-    const { userId } = req.user;
+    const { id } = req.user;
+
+    console.log(req.user);
 
     try {
-        const profile = await Profile.findOne({ where: userId })
+        const profile = await Profile.findOne({
+            where: { userId: id }
+        })
 
         if (!profile) {
             return handleResponse(res, 404, false, 'Profile not found')
         }
 
-        const education = await Education.findAll({ where: profile.id });
+        const education = await Education.findAll({
+            where: {
+                profileId: profile.id
+            }
+        });
 
         if (!education) {
             return handleResponse(res, 404, false, 'Education not found')
@@ -26,7 +34,7 @@ export const getEducation = async (req: Request, res: Response) => {
 }
 
 export const addEducation = async (req: Request, res: Response) => {
-    const { userId } = req.user;
+    const { id } = req.user;
 
     const result = educationSchema.safeParse(req.body);
 
@@ -39,20 +47,24 @@ export const addEducation = async (req: Request, res: Response) => {
     }
 
 
-    const { school, degreeType, course, gradDate } = req.body;
+    const { school, degreeType, course, startDate, gradDate, isCurrent } = req.body;
 
     try {
-        const profile = await Profile.findOne({ where: userId })
+        const profile = await Profile.findOne({
+            where: { userId: id }
+        })
 
         if (!profile) {
-            return handleResponse(res, 404, false, 'Prrofile not found')
+            return handleResponse(res, 404, false, 'Profile not found')
         }
 
         const education = await Education.create({
             school,
             degreeType,
             course,
+            startDate,
             gradDate,
+            isCurrent,
             profileId: profile.id
         });
 
@@ -64,7 +76,7 @@ export const addEducation = async (req: Request, res: Response) => {
 
 export const updateEducation = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { userId } = req.user;
+    //const { userId } = req.user;
 
     try {
         const result = updateEducationSchema.safeParse(req.body);
@@ -91,7 +103,7 @@ export const updateEducation = async (req: Request, res: Response) => {
 }
 
 export const deleteEducation = async (req: Request, res: Response) => {
-    const { userId } = req.user;
+    //const { userId } = req.user;
     const { id } = req.params;
 
     try {

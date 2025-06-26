@@ -256,11 +256,31 @@ export const educationSchema = z.object({
     school: z.string().min(1, 'School is required'),
     degreeType: z.string().min(1, 'Degree type is required'),
     course: z.string().min(1, 'Course is required'),
-    gradDate: z.string().refine(
+    startDate: z.string().refine(
         (date) => !isNaN(Date.parse(date)),
-        'Graduation date must be a valid date'
+        'Start date must be a valid date'
     ),
-});
+    gradDate: z.string()
+        .refine((date) => !isNaN(Date.parse(date)), {
+            message: 'Graduation date must be a valid date',
+        })
+        .optional(),
+    isCurrent: z.boolean().optional(),
+}).refine(
+    (data) => {
+        // If gradDate is provided, isCurrent must be undefined or false
+        if (data.gradDate) {
+            return data.isCurrent !== true; // Must be false or undefined
+        }
+        return true;
+    },
+    {
+        message: 'isCurrent must be false or not set if gradDate is provided',
+        path: ['isCurrent'], // Attach error to the isCurrent field
+    }
+);
+
+
 
 export const updateEducationSchema = z.object({
     school: z
@@ -287,13 +307,34 @@ export const updateEducationSchema = z.object({
             message: 'Course cannot be empty',
         }),
 
+    startDate: z
+        .string()
+        .optional()
+        .refine(val => val === undefined || !isNaN(Date.parse(val)), {
+            message: 'Start date must be a valid date',
+        }),
+
     gradDate: z
         .string()
         .optional()
         .refine(val => val === undefined || !isNaN(Date.parse(val)), {
             message: 'Graduation date must be a valid date',
         }),
-});
+
+    isCurrent: z.boolean().optional(),
+}).refine(
+    (data) => {
+        // If gradDate is provided, isCurrent must not be true
+        if (data.gradDate !== undefined) {
+            return data.isCurrent !== true;
+        }
+        return true;
+    },
+    {
+        message: 'isCurrent must be false or not set if gradDate is provided',
+        path: ['isCurrent'],
+    }
+);
 
 
 export const certificationSchema = z.object({
@@ -397,6 +438,88 @@ export const updateExperienceSchema = z.object({
         .int('Profile ID must be an integer')
         .optional()
         .describe('ID of the profile this experience is associated with.'),
+});
+
+
+export const portfolioSchema = z.object({
+    title: z
+        .string()
+        .min(1, 'Title is required')
+        .describe('The title of the portfolio project.'),
+
+    description: z
+        .string()
+        .min(1, 'Description is required')
+        .describe('A detailed description of the project.'),
+
+    duration: z
+        .string()
+        .min(1, 'Duration is required')
+        .max(50, 'Duration must not exceed 50 characters')
+        .describe('The duration of the project (e.g. "3 months").'),
+
+    date: z
+        .string()
+        .refine((val) => !isNaN(Date.parse(val)), {
+            message: 'Date must be a valid date',
+        })
+        .describe('The date the project was completed.'),
+
+    file: z
+        .string()
+        .max(500, 'File path must not exceed 500 characters')
+        .optional()
+        .describe('An optional file path or URL for the project.'),
+
+    // profileId: z
+    //     .number({
+    //         required_error: 'Profile ID is required',
+    //         invalid_type_error: 'Profile ID must be a number',
+    //     })
+    //     .int('Profile ID must be an integer')
+    //     .describe('ID of the profile this portfolio item is associated with.'),
+});
+
+
+export const updatePortfolioSchema = z.object({
+    title: z
+        .string()
+        .min(1, 'Title cannot be empty')
+        .optional()
+        .describe('The title of the portfolio project.'),
+
+    description: z
+        .string()
+        .min(1, 'Description cannot be empty')
+        .optional()
+        .describe('A detailed description of the project.'),
+
+    duration: z
+        .string()
+        .min(1, 'Duration cannot be empty')
+        .max(50, 'Duration must not exceed 50 characters')
+        .optional()
+        .describe('The duration of the project (e.g. "3 months").'),
+
+    date: z
+        .string()
+        .optional()
+        .refine((val) => val === undefined || !isNaN(Date.parse(val)), {
+            message: 'Date must be a valid date',
+        })
+        .describe('The date the project was completed.'),
+
+    file: z
+        .string()
+        .max(500, 'File path must not exceed 500 characters')
+        .optional()
+        .describe('An optional file path or URL for the project.'),
+
+    // profileId: z
+    //     .number()
+    //     .int('Profile ID must be an integer')
+    //     .optional()
+    //     .describe('ID of the profile this portfolio item is associated with.'),
 });
 
 

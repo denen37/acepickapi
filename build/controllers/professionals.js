@@ -74,118 +74,116 @@ const getProfessionals = (req, res) => __awaiter(void 0, void 0, void 0, functio
                     userId: id
                 }
             });
-            distanceQuery = `
+        }
+        distanceQuery = `
   6371 * acos(
-    cos(radians(${userLocation === null || userLocation === void 0 ? void 0 : userLocation.latitude})) * cos(radians([profile->user->location].[latitude])) *
-    cos(radians([profile->user->location].[longitude]) - radians(${userLocation === null || userLocation === void 0 ? void 0 : userLocation.longitude})) +
-    sin(radians(${userLocation === null || userLocation === void 0 ? void 0 : userLocation.latitude})) * sin(radians([profile->user->location].[latitude]))
+    cos(radians(${userLocation === null || userLocation === void 0 ? void 0 : userLocation.latitude})) * cos(radians(location.latitude)) *
+    cos(radians(location.longitude) - radians(${userLocation === null || userLocation === void 0 ? void 0 : userLocation.longitude})) +
+    sin(radians(${userLocation === null || userLocation === void 0 ? void 0 : userLocation.latitude})) * sin(radians(location.latitude))
   )
 `;
-        }
         const professionals = yield db_1.default.query(`
-          SELECT [Professional].[id], 
-                 [Professional].[chargeFrom], 
-                 [Professional].[available], 
-                 AVG([profile->user->professionalReviews].[rating]) AS [avgRating], 
-                 [profile].[id] AS [profile.id], 
-                 [profile].[firstName] AS [profile.firstName], 
-                 [profile].[lastName] AS [profile.lastName], 
-                 [profile].[avatar] AS [profile.avatar], 
-                 [profile].[verified] AS [profile.verified], 
-                 [profile].[userId] AS [profile.userId], 
-                 [profile->user].[id] AS [profile.user.id], 
-                 [profile->user].[email] AS [profile.user.email], 
-                 [profile->user].[phone] AS [profile.user.phone], 
-                 [profile->user].[status] AS [profile.user.status], 
-                 [profile->user].[role] AS [profile.user.role], 
-                 [profile->user].[createdAt] AS [profile.user.createdAt], 
-                 [profile->user].[updatedAt] AS [profile.user.updatedAt], 
-                 [profile->user->location].[id] AS [profile.user.location.id], 
-                 [profile->user->location].[address] AS [profile.user.location.address], 
-                 [profile->user->location].[lga] AS [profile.user.location.lga], 
-                 [profile->user->location].[state] AS [profile.user.location.state], 
-                 [profile->user->location].[latitude] AS [profile.user.location.latitude], 
-                 [profile->user->location].[longitude] AS [profile.user.location.longitude], 
-                 [profile->user->location].[zipcode] AS [profile.user.location.zipcode], 
-                 [profile->user->location].[userId] AS [profile.user.location.userId], 
-                 [profile->user->location].[createdAt] AS [profile.user.location.createdAt],
-                 [profile->user->location].[updatedAt] AS [profile.user.location.updatedAt],
-                 ${span ? `(${distanceQuery}) AS [profile.user.location.distance],` : ''} 
-                 [profession].[id] AS [profession.id], 
-                 [profession].[title] AS [profession.title], 
-                 [profession].[image] AS [profession.image], 
-                 [profession].[sectorId] AS [profession.sectorId], 
-                 [profession->sector].[id] AS [profession.sector.id],
-                 [profession->sector].[title] AS [profession.sector.title],
-                 [profession->sector].[image] AS [profession.sector.image] 
-          FROM [professionals] AS [Professional] 
-          LEFT OUTER JOIN [profiles] AS [profile] 
-              ON [Professional].[profileId] = [profile].[id] 
-          LEFT OUTER JOIN (
-              [users] AS [profile->user] 
-              LEFT OUTER JOIN [review] AS [profile->user->professionalReviews] 
-                  ON [profile->user].[id] = [profile->user->professionalReviews].[professionalUserId] 
-              INNER JOIN [location] AS [profile->user->location] 
-                  ON [profile->user].[id] = [profile->user->location].[userId] 
-                  ${span || state || lga ? `
-                  AND (
-                      ${span ? `(${distanceQuery} <= ${span})` : '1=1'}
-                      ${state ? ` AND [profile->user->location].[state] LIKE N'%${state}%'` : ''}
-                      ${lga ? ` AND [profile->user->location].[lga] LIKE N'%${lga}%'` : ''}
-                  )` : ''}
-          ) ON [profile].[userId] = [profile->user].[id] 
-          INNER JOIN [professions] AS [profession] 
-              ON [Professional].[professionId] = [profession].[id] 
-              ${profession ? `AND [profession].[title] LIKE N'%${profession}%'` : ''} 
-          INNER JOIN [sectors] AS [profession->sector] 
-              ON [profession].[sectorId] = [profession->sector].[id] 
-              ${sector ? `AND [profession->sector].[title] LIKE N'%${sector}%'` : ''}
-      
-              ${chargeFrom || professionId ? `WHERE ` : ''}
-          ${chargeFrom ? `[Professional].[chargeFrom] >= ${chargeFrom}` : ''}
-          ${professionId ? `[Professional].[professionId] = ${professionId}` : ''}
+    SELECT 
+      Professional.id,
+      Professional.chargeFrom,
+      Professional.available,
+      AVG(professionalReviews.rating) AS avgRating,
 
-          GROUP BY 
-              [Professional].[id], 
-              [Professional].[chargeFrom], 
-              [Professional].[available], 
-              [profile].[id], 
-              [profile].[firstName], 
-              [profile].[lastName], 
-              [profile].[avatar], 
-              [profile].[verified], 
-              [profile].[userId], 
-              [profile->user].[id], 
-              [profile->user].[email], 
-              [profile->user].[phone], 
-              [profile->user].[status], 
-              [profile->user].[role], 
-              [profile->user].[createdAt], 
-              [profile->user].[updatedAt], 
-              [profile->user->location].[id], 
-              [profile->user->location].[address], 
-              [profile->user->location].[lga],
-               [profile->user->location].[state], 
-              [profile->user->location].[latitude],
-               [profile->user->location].[longitude], 
-              [profile->user->location].[zipcode], 
-              [profile->user->location].[userId], 
-              [profile->user->location].[createdAt],
-               [profile->user->location].[updatedAt], 
-              [profession].[id], [profession].[title],
-               [profession].[image], 
-              [profession].[sectorId], 
-              [profession->sector].[id], 
-              [profession->sector].[title], 
-              [profession->sector].[image] 
-      
-          ${minRating ? `HAVING AVG([profile->user->professionalReviews].[rating]) >= ${minRating}` : ''}
-          
-          ORDER BY [Professional].[id] ASC
-          OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY;
-        `, {
-            type: sequelize_1.QueryTypes.SELECT
-        });
+      profile.id AS 'profile.id',
+      profile.firstName AS 'profile.firstName',
+      profile.lastName AS 'profile.lastName',
+      profile.avatar AS 'profile.avatar',
+      profile.verified AS 'profile.verified',
+      profile.userId AS 'profile.userId',
+
+      user.id AS 'profile.user.id',
+      user.email AS 'profile.user.email',
+      user.phone AS 'profile.user.phone',
+      user.status AS 'profile.user.status',
+      user.role AS 'profile.user.role',
+      user.createdAt AS 'profile.user.createdAt',
+      user.updatedAt AS 'profile.user.updatedAt',
+
+      location.id AS 'profile.user.location.id',
+      location.address AS 'profile.user.location.address',
+      location.lga AS 'profile.user.location.lga',
+      location.state AS 'profile.user.location.state',
+      location.latitude AS 'profile.user.location.latitude',
+      location.longitude AS 'profile.user.location.longitude',
+      location.zipcode AS 'profile.user.location.zipcode',
+      location.userId AS 'profile.user.location.userId',
+      location.createdAt AS 'profile.user.location.createdAt',
+      location.updatedAt AS 'profile.user.location.updatedAt',
+      ${span ? `(${distanceQuery}) AS 'profile.user.location.distance',` : ''}
+
+      profession.id AS 'profession.id',
+      profession.title AS 'profession.title',
+      profession.image AS 'profession.image',
+      profession.sectorId AS 'profession.sectorId',
+
+      sector.id AS 'profession.sector.id',
+      sector.title AS 'profession.sector.title',
+      sector.image AS 'profession.sector.image'
+
+    FROM professionals AS Professional
+    LEFT JOIN profiles AS profile ON Professional.profileId = profile.id
+    LEFT JOIN users AS user ON profile.userId = user.id
+    LEFT JOIN review AS professionalReviews ON user.id = professionalReviews.professionalUserId
+    INNER JOIN location AS location ON user.id = location.userId
+      ${span || state || lga ? `
+        AND (
+          ${span ? `(${distanceQuery} <= ${span})` : '1=1'}
+          ${state ? `AND location.state LIKE '%${state}%'` : ''}
+          ${lga ? `AND location.lga LIKE '%${lga}%'` : ''}
+        )
+      ` : ''}
+    INNER JOIN professions AS profession ON Professional.professionId = profession.id
+      ${profession ? `AND profession.title LIKE '%${profession}%'` : ''}
+    INNER JOIN sectors AS sector ON profession.sectorId = sector.id
+      ${sector ? `AND sector.title LIKE '%${sector}%'` : ''}
+
+    ${chargeFrom || professionId ? `WHERE ` : ''}
+    ${chargeFrom ? `Professional.chargeFrom >= ${chargeFrom}` : ''}
+    ${chargeFrom && professionId ? ' AND ' : ''}
+    ${professionId ? `Professional.professionId = ${professionId}` : ''}
+
+    GROUP BY 
+      Professional.id,
+      profile.id,
+      profile.firstName,
+      profile.lastName,
+      profile.avatar,
+      profile.verified,
+      profile.userId,
+      user.id,
+      user.email,
+      user.phone,
+      user.status,
+      user.role,
+      user.createdAt,
+      user.updatedAt,
+      location.id,
+      location.address,
+      location.lga,
+      location.state,
+      location.latitude,
+      location.longitude,
+      location.zipcode,
+      location.userId,
+      location.createdAt,
+      location.updatedAt,
+      profession.id,
+      profession.title,
+      profession.image,
+      profession.sectorId,
+      sector.id,
+      sector.title,
+      sector.image
+
+    ${minRating ? `HAVING avgRating >= ${minRating}` : ''}
+    ORDER BY Professional.id ASC
+    LIMIT ${limit} OFFSET ${offset};
+  `, { type: sequelize_1.QueryTypes.SELECT });
         const nestedProfessionals = professionals.map(modules_1.nestFlatKeys);
         return (0, modules_1.successResponse)(res, 'success', nestedProfessionals);
     }

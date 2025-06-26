@@ -36,5 +36,4 @@ export class Portfolio extends Model {
     @ForeignKey(() => Profile)
     @Column(DataType.INTEGER)
     profileId!: number;
-
 }
