@@ -41,7 +41,7 @@ const sendMessage = (io, socket, data) => __awaiter(void 0, void 0, void 0, func
     let to = room.members.split(",").filter((member) => member !== data.from)[0];
     let otherUser = yield Models_1.User.findOne({
         where: {
-            userId: to
+            id: to
         },
         include: [Models_1.OnlineUser]
     });
