@@ -42,7 +42,7 @@ export const sendMessage = async (io: Server, socket: Socket, data: ChatMessage)
 
     let otherUser = await User.findOne({
         where: {
-            userId: to
+            id: to
         },
         include: [OnlineUser]
     })
