@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum"); // adjust the path
 const enum_2 = require("../utils/enum");
@@ -120,6 +120,40 @@ exports.registerCoporateSchema = zod_1.z.object({
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
+});
+exports.updateUserProfileSchema = zod_1.z.object({
+    contact: zod_1.z
+        .object({
+        email: zod_1.z
+            .string()
+            .email('Invalid email address')
+            .optional(),
+        phone: zod_1.z
+            .string()
+            .min(7, 'Phone number is too short')
+            .optional(),
+    })
+        .optional(),
+    bio: zod_1.z
+        .object({
+        firstName: zod_1.z.string().optional(),
+        lastName: zod_1.z.string().optional(),
+        gender: zod_1.z.enum(['male', 'female', 'other']).optional(),
+        birthDate: zod_1.z
+            .coerce
+            .date()
+            .optional(),
+        avatar: zod_1.z.string().optional(),
+    })
+        .optional(),
+    location: zod_1.z
+        .object({
+        address: zod_1.z.string().optional(),
+        city: zod_1.z.string().optional(),
+        state: zod_1.z.string().optional(),
+        country: zod_1.z.string().optional(),
+    })
+        .optional(),
 });
 exports.jobPostSchema = zod_1.z.object({
     title: zod_1.z.string().min(1, "Title is required"),

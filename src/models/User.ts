@@ -1,8 +1,7 @@
 import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index, BelongsTo, ForeignKey, PrimaryKey } from 'sequelize-typescript';
 import { v4 as uuidv4 } from 'uuid';
-import { Profile, Wallet, Location, Review, OnlineUser } from './Models';
+import { Profile, Wallet, Location, Review, OnlineUser, Transaction } from './Models';
 import { UserRole, UserState, UserStatus } from '../utils/enum';
-
 
 
 @Table({ timestamps: true, tableName: 'users' })
@@ -75,32 +74,9 @@ export class User extends Model {
     @HasOne(() => OnlineUser)
     onlineUser!: OnlineUser;
 
-
-
-    // @HasOne(() => Profile)
-    // profile!: Profile;
-
-
-    // @HasOne(() => Professional)
-    // professional!: Professional;
-
-
-    // @HasOne(() => MarketPlace)
-    // marketPlace!: MarketPlace;
+    @HasMany(() => Transaction, { foreignKey: 'userId', as: 'transactions' })
+    transactions!: Transaction[];
 
 
 
-    // // relationships
-    // @HasMany(() => Jobs, { onDelete: 'CASCADE' })
-    // job!: Jobs[];
-
-
-
-
-    // @HasMany(() => Dispute, { onDelete: 'CASCADE' })
-    // dispute!: Dispute[];
-
-
-    // @HasMany(() => ProfessionalSector, { onDelete: 'CASCADE' })
-    // professionalSector!: ProfessionalSector[];
 }

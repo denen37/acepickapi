@@ -85,6 +85,10 @@ __decorate([
     (0, sequelize_typescript_1.HasOne)(() => Models_1.OnlineUser),
     __metadata("design:type", Models_1.OnlineUser)
 ], User.prototype, "onlineUser", void 0);
+__decorate([
+    (0, sequelize_typescript_1.HasMany)(() => Models_1.Transaction, { foreignKey: 'userId', as: 'transactions' }),
+    __metadata("design:type", Array)
+], User.prototype, "transactions", void 0);
 exports.User = User = __decorate([
     (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'users' })
 ], User);

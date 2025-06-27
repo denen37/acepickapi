@@ -136,6 +136,47 @@ export const registerCoporateSchema = z.object({
 });
 
 
+export const updateUserProfileSchema = z.object({
+    contact: z
+        .object({
+            email: z
+                .string()
+                .email('Invalid email address')
+                .optional(),
+
+            phone: z
+                .string()
+                .min(7, 'Phone number is too short')
+                .optional(),
+        })
+        .optional(),
+
+    bio: z
+        .object({
+            firstName: z.string().optional(),
+            lastName: z.string().optional(),
+            gender: z.enum(['male', 'female', 'other']).optional(),
+            birthDate: z
+                .coerce
+                .date()
+                .optional(),
+
+            avatar: z.string().optional(),
+        })
+        .optional(),
+
+    location: z
+        .object({
+            address: z.string().optional(),
+            city: z.string().optional(),
+            state: z.string().optional(),
+            country: z.string().optional(),
+        })
+        .optional(),
+});
+
+
+
 
 export const jobPostSchema = z.object({
     title: z.string().min(1, "Title is required"),

@@ -8,183 +8,92 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateProfile = exports.ProfAccountInfo = exports.getProfessionalById = exports.getProfessionals = exports.getCooperates = void 0;
-const Cooperation_1 = require("../models/Cooperation");
-const Profile_1 = require("../models/Profile");
-const User_1 = require("../models/User");
+exports.updateProfile = exports.AccountInfo = void 0;
+const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
-const Professional_1 = require("../models/Professional");
-const axios_1 = __importDefault(require("axios"));
-const configSetup_1 = __importDefault(require("../config/configSetup"));
-var MetricOperation;
-(function (MetricOperation) {
-    MetricOperation["INCREMENT"] = "increment";
-    MetricOperation["DECREMENT"] = "decrement";
-})(MetricOperation || (MetricOperation = {}));
-const getCooperates = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    let { metadata, search } = req.query;
-    let hasmetadata = metadata === 'true' ? true : false;
-    let assoc = hasmetadata ? [
-        {
-            model: Profile_1.Profile,
-            attributes: ['id', 'fullName', 'avatar', 'verified', 'notified', 'lga', 'state', 'address']
-        },
-        {
-            model: User_1.User,
-            attributes: ['id', 'email', 'phone'],
-        }
-    ] : [];
-    let searchids = [];
+const body_1 = require("../validation/body");
+const AccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.user;
     try {
-        if (search) {
-            let result = yield axios_1.default.get(`${configSetup_1.default.JOBS_BASE_URL}/jobs-api/search_profs?search=${search}`);
-            searchids = result.data.data.map((item) => item.id);
-        }
-        const whereCondition = searchids.length > 0 ? { professionId: searchids } : {};
-        const cooperates = yield Cooperation_1.Cooperation.findAll({
-            where: whereCondition,
-            include: assoc
-        });
-        return (0, modules_1.successResponse)(res, 'sucess', cooperates);
-    }
-    catch (error) {
-        return (0, modules_1.errorResponse)(res, 'error', error);
-    }
-});
-exports.getCooperates = getCooperates;
-const getProfessionals = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    let { search } = req.query;
-    let { userIds } = req.body;
-    //Send a message to jobs to return professionals
-    try {
-        let searchids = [];
-        if (search) {
-            let result = yield axios_1.default.get(`${configSetup_1.default.JOBS_BASE_URL}/jobs-api/search_profs?search=${search}`, {
-                headers: {
-                    Authorization: req.headers.authorization
-                }
-            });
-            searchids = result.data.data.map((item) => item.id);
-        }
-        let whereCondition = searchids.length > 0 ? { professionId: searchids } : {};
-        if (userIds && userIds.length > 0) {
-            whereCondition.userId = userIds;
-        }
-        // console.log(whereCondition)
-        let professionals = yield Professional_1.Professional.findAll({
-            where: whereCondition,
-            attributes: ['id', 'chargeFrom', 'avaialable', 'professionId'],
-            include: [
-                {
-                    model: User_1.User,
-                    attributes: ['id', 'email', 'phone'],
-                    include: [{
-                            model: Profile_1.Profile,
-                            attributes: ['id', 'fullName', 'avatar', 'verified', 'notified', 'lga', 'state', 'address']
-                        }]
-                }
-            ]
-        });
-        let result = yield axios_1.default.post(`${configSetup_1.default.JOBS_BASE_URL}/jobs-api/get_profs`, { profIds: professionals.map(prof => prof.professionId), }, {
-            headers: {
-                Authorization: req.headers.authorization
-            }
-        });
-        const profList = result.data.data;
-        professionals.forEach((prof) => {
-            const profession = profList.find((p) => p.id === prof.professionId);
-            prof.setDataValue('profession', profession || null);
-        });
-        return (0, modules_1.successResponse)(res, 'success', professionals);
-    }
-    catch (error) {
-        return (0, modules_1.errorResponse)(res, 'error', error);
-    }
-});
-exports.getProfessionals = getProfessionals;
-const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    let { userId } = req.params;
-    try {
-        const profile = yield Profile_1.Profile.findOne({
-            where: { userId: userId },
+        const profile = yield Models_1.Profile.findOne({
+            where: { userId: id },
             attributes: {
                 exclude: []
             },
             include: [
                 {
-                    model: User_1.User,
-                    attributes: ["email", "phone"],
+                    model: Models_1.User,
+                    attributes: { exclude: ['password', 'fcmToken'] },
+                    include: [
+                        {
+                            model: Models_1.Location,
+                            //attributes: ['country', 'state', 'city', 'address']
+                        },
+                        {
+                            model: Models_1.Wallet,
+                            attributes: { exclude: ['pin'] }
+                        }
+                    ]
                 },
                 {
-                    model: Professional_1.Professional,
+                    model: Models_1.Professional,
                 },
                 {
-                    model: Cooperation_1.Cooperation,
+                    model: Models_1.Cooperation,
                 },
+                {
+                    model: Models_1.Education
+                },
+                {
+                    model: Models_1.Certification
+                },
+                {
+                    model: Models_1.Experience
+                },
+                {
+                    model: Models_1.Portfolio,
+                }
             ],
         });
-        //we need to get the profession of the user
-        const profResponse = yield axios_1.default.get(`${configSetup_1.default.JOBS_BASE_URL}/jobs-api/profs/${profile === null || profile === void 0 ? void 0 : profile.professional.professionId}`, {
-            headers: {
-                Authorization: req.headers.authorization
-            }
-        });
-        const profession = profResponse.data.data;
-        profile === null || profile === void 0 ? void 0 : profile.professional.setDataValue('profession', profession || null);
-        //TODO - we need to get the reviews of the user
-        return (0, modules_1.successResponse)(res, 'success', profile);
+        if (!profile)
+            return (0, modules_1.errorResponse)(res, "Failed", { status: false, message: "Profile Does'nt exist" });
+        return (0, modules_1.successResponse)(res, "Successful", profile);
     }
     catch (error) {
-        return (0, modules_1.errorResponse)(res, 'error', error);
+        return (0, modules_1.errorResponse)(res, "Failed", error);
     }
 });
-exports.getProfessionalById = getProfessionalById;
-const ProfAccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { id } = req.user;
-    const profile = yield Profile_1.Profile.findOne({
-        where: { userId: id },
-        attributes: {
-            exclude: []
-        },
-        include: [
-            {
-                model: User_1.User,
-                attributes: ["email", "phone"],
-            },
-            {
-                model: Professional_1.Professional,
-            },
-            {
-                model: Cooperation_1.Cooperation,
-            },
-        ],
-    });
-    const walletResponse = yield axios_1.default.get(`${configSetup_1.default.PAYMENT_BASE_URL}/pay-api/view-wallet`, {
-        headers: {
-            Authorization: req.headers.authorization
-        }
-    });
-    const wallet = walletResponse.data.data;
-    profile === null || profile === void 0 ? void 0 : profile.setDataValue('wallet', wallet);
-    if (!profile)
-        return (0, modules_1.errorResponse)(res, "Failed", { status: false, message: "Profile Does'nt exist" });
-    return (0, modules_1.successResponse)(res, "Successful", profile);
-});
-exports.ProfAccountInfo = ProfAccountInfo;
+exports.AccountInfo = AccountInfo;
 const updateProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { id, role } = req.user;
-    try {
-        console.log(req.user);
-        const profile = yield Profile_1.Profile.findOne({
-            where: { userId: id }
+    const result = body_1.updateUserProfileSchema.safeParse(req.body);
+    if (!result.success) {
+        return res.status(400).json({
+            status: false,
+            message: 'Validation error',
+            errors: result.error.flatten().fieldErrors,
         });
-        const updatedProfile = yield (profile === null || profile === void 0 ? void 0 : profile.update(req.body));
-        yield (profile === null || profile === void 0 ? void 0 : profile.save());
-        return (0, modules_1.successResponse)(res, "Successful", updatedProfile);
+    }
+    const { contact, bio, location } = result.data;
+    try {
+        // console.log(req.user);
+        if (bio) {
+            const updated = yield Models_1.Profile.update(bio, {
+                where: { userId: id }
+            });
+        }
+        if (contact) {
+            const updated = yield Models_1.User.update(contact, {
+                where: { id }
+            });
+        }
+        if (location) {
+            const updated = yield Models_1.Location.update(location, {
+                where: { userId: id }
+            });
+        }
+        return (0, modules_1.successResponse)(res, "success", "Profile updated successfully");
     }
     catch (error) {
         return (0, modules_1.errorResponse)(res, "Failed", error);

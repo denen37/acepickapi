@@ -17,6 +17,7 @@ import { addEducation, deleteEducation, getEducation, updateEducation } from "..
 import { addCertificate, deleteCertificate, getCertificates, updateCertificate } from "../controllers/certification";
 import { addExperience, deleteExperience, getExperiences, updateExperience } from "../controllers/experience";
 import { addPortfolio, deletePortfolio, getPortfolios, updatePortfolio } from "../controllers/portfolio";
+import { AccountInfo, updateProfile } from "../controllers/profiles";
 
 const routes = Router();
 
@@ -27,6 +28,9 @@ routes.put("/sectors/:id", updateSector);
 routes.delete("/sectors/:id", deleteSector);
 
 routes.get("/clients/:id", allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), getClient);
+
+routes.get('/profile', AccountInfo);
+routes.post('/profile', updateProfile);
 
 routes.get("/education", getEducation);
 routes.post("/education", addEducation);
