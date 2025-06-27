@@ -272,6 +272,30 @@ export const paymentSchema = z.object({
 });
 
 
+export const withdrawSchema = z.object({
+    amount: z
+        .number({
+            required_error: 'Amount is required',
+            invalid_type_error: 'Amount must be a number',
+        })
+        .positive('Amount must be greater than zero'),
+
+    recipientCode: z
+        .string()
+        .min(1, 'Recipient code is required'),
+
+    pin: z
+        .string()
+        .min(4, 'PIN must be at least 4 digits'),
+
+    reason: z
+        .string()
+        .optional()
+        .default('Withdrawal'),
+});
+
+
+
 export const pinResetSchema = z
     .object({
         newPin: z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
