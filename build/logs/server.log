@@ -649,3 +649,10 @@
 2025-06-26 19:41:37	GET - /api/portfolios
 2025-06-26 19:43:21	DELETE - /api/experience/8
 2025-06-26 19:43:44	DELETE - /api/experiences/8
+2025-06-27 13:06:36	PUT - /api/profile
+2025-06-27 13:07:36	PUT - /api/profile
+2025-06-27 13:08:05	POST - /api/profile
+2025-06-27 13:10:57	POST - /api/profile
+2025-06-27 13:11:27	POST - /api/profile
+2025-06-27 13:12:14	GET - /api/profile
+2025-06-27 13:58:39	GET - /api/profile

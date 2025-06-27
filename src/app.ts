@@ -9,7 +9,6 @@ import { logRoutes } from './middlewares/logRoutes';
 import { isAuthorized } from './middlewares/authorize';
 import index from './routes/index';
 import auth from './routes/auth';
-import profiles from './routes/profiles';
 import general from './routes/general';
 import "reflect-metadata";
 import { initSocket } from './chat';
