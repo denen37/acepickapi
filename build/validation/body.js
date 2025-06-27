@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum"); // adjust the path
 const enum_2 = require("../utils/enum");
@@ -233,6 +233,24 @@ exports.paymentSchema = zod_1.z.object({
     pin: zod_1.z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
     reason: zod_1.z.string().min(1, 'Reason is required'),
     jobId: zod_1.z.number().int().positive("Job ID must be a positive integer"),
+});
+exports.withdrawSchema = zod_1.z.object({
+    amount: zod_1.z
+        .number({
+        required_error: 'Amount is required',
+        invalid_type_error: 'Amount must be a number',
+    })
+        .positive('Amount must be greater than zero'),
+    recipientCode: zod_1.z
+        .string()
+        .min(1, 'Recipient code is required'),
+    pin: zod_1.z
+        .string()
+        .min(4, 'PIN must be at least 4 digits'),
+    reason: zod_1.z
+        .string()
+        .optional()
+        .default('Withdrawal'),
 });
 exports.pinResetSchema = zod_1.z
     .object({

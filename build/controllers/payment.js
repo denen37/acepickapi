@@ -19,6 +19,8 @@ const configSetup_1 = __importDefault(require("../config/configSetup"));
 const axios_1 = __importDefault(require("axios"));
 const enum_1 = require("../utils/enum");
 const notification_1 = require("../services/notification");
+const body_1 = require("../validation/body");
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const initiatePayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, email, role } = req.user;
     const { amount } = req.body;
@@ -87,11 +89,32 @@ const verifyPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.verifyPayment = verifyPayment;
 const initiateTransfer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { amount, recipientCode, reason = "Withdrawal" } = req.body;
-    //const reference = uuidv4();
+    const { id } = req.user;
+    const result = body_1.withdrawSchema.safeParse(req.body);
+    if (!result.success) {
+        return res.status(400).json({
+            status: false,
+            message: 'Validation error',
+            errors: result.error.flatten().fieldErrors,
+        });
+    }
+    const { amount, recipientCode, pin, reason } = result.data;
+    const wallet = yield Models_1.Wallet.findOne({ where: { userId: id } });
+    if (!wallet) {
+        return (0, modules_1.errorResponse)(res, 'error', 'Wallet not found');
+    }
+    if (!wallet.pin) {
+        return (0, modules_1.handleResponse)(res, 403, false, 'Pin not set. Please set your pin to continue');
+    }
+    if (!bcryptjs_1.default.compareSync(pin, wallet.pin)) {
+        return (0, modules_1.handleResponse)(res, 403, false, 'Invalid PIN');
+    }
+    if (amount > wallet.currentBalance) {
+        return (0, modules_1.handleResponse)(res, 403, false, 'Insufficient balance');
+    }
     const reference = (0, modules_1.randomId)(12);
     const transfer = yield Models_1.Transfer.create({
-        userId: req.user.id,
+        userId: id,
         amount,
         recipientCode,
         reference,

@@ -7,6 +7,8 @@ import { TransactionStatus, TransactionType, TransferStatus } from "../utils/enu
 import { v4 as uuidv4 } from 'uuid';
 import { where } from "sequelize";
 import { sendPushNotification } from "../services/notification";
+import { withdrawSchema } from "../validation/body";
+import bcrypt from 'bcryptjs';
 
 
 
@@ -98,12 +100,42 @@ export const verifyPayment = async (req: Request, res: Response) => {
 
 
 export const initiateTransfer = async (req: Request, res: Response) => {
-    const { amount, recipientCode, reason = "Withdrawal" } = req.body;
-    //const reference = uuidv4();
+    const { id } = req.user;
+
+    const result = withdrawSchema.safeParse(req.body);
+
+    if (!result.success) {
+        return res.status(400).json({
+            status: false,
+            message: 'Validation error',
+            errors: result.error.flatten().fieldErrors,
+        });
+    }
+
+    const { amount, recipientCode, pin, reason } = result.data;
+
+    const wallet = await Wallet.findOne({ where: { userId: id } });
+
+    if (!wallet) {
+        return errorResponse(res, 'error', 'Wallet not found');
+    }
+
+    if (!wallet.pin) {
+        return handleResponse(res, 403, false, 'Pin not set. Please set your pin to continue');
+    }
+
+    if (!bcrypt.compareSync(pin, wallet.pin)) {
+        return handleResponse(res, 403, false, 'Invalid PIN');
+    }
+
+    if (amount > wallet.currentBalance) {
+        return handleResponse(res, 403, false, 'Insufficient balance');
+    }
+
     const reference = randomId(12);
 
     const transfer = await Transfer.create({
-        userId: req.user.id,
+        userId: id,
         amount,
         recipientCode,
         reference,
