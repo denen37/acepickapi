@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyTransaction = exports.verifyBvn = void 0;
+exports.verifyTransaction = exports.verifyBvnWithPaystack = exports.verifyBvn = void 0;
 const axios = require("axios");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
 const verifyBvn = (bvn) => __awaiter(void 0, void 0, void 0, function* () {
@@ -48,6 +48,34 @@ const verifyBvn = (bvn) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.verifyBvn = verifyBvn;
+const verifyBvnWithPaystack = (bvn) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const response = yield axios.get(`https://api.paystack.co/bank/resolve_bvn/${bvn}`, {
+            headers: {
+                "Authorization": `Bearer ${configSetup_1.default.PAYSTACK_SECRET_KEY}`
+            }
+        });
+        if (response.status <= 300) {
+            return {
+                status: true,
+                message: response.data,
+            };
+        }
+        else {
+            return {
+                status: false,
+                message: response.data,
+            };
+        }
+    }
+    catch (error) {
+        return {
+            status: false,
+            message: { verificationStatus: "NOT VERIFIED", description: "Error processing bvn" },
+        };
+    }
+});
+exports.verifyBvnWithPaystack = verifyBvnWithPaystack;
 const verifyTransaction = (reference) => __awaiter(void 0, void 0, void 0, function* () {
     const response = yield axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
         headers: {

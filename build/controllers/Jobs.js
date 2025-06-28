@@ -73,7 +73,8 @@ const getJobs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 {
                     model: Models_1.Material
                 }
-            ]
+            ],
+            order: [['createdAt', 'DESC']]
         });
         return (0, modules_1.successResponse)(res, "success", jobs);
     }

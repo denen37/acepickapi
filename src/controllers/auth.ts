@@ -14,7 +14,7 @@ import { sign } from "jsonwebtoken";
 import { sendSMS } from "../services/sms";
 import { sendEmail } from "../services/gmail";
 import { } from "../models/Location";
-import { verifyBvn } from "../services/bvn";
+import { verifyBvn, verifyBvnWithPaystack } from "../services/bvn";
 import { compareTwoStrings } from 'string-similarity';
 
 // yarn add stream-chat
@@ -1616,15 +1616,20 @@ export const postlocationData = async (req: Request, res: Response) => {
 
 export const verifyMyBvn = async (req: Request, res: Response) => {
     let { bvn } = req.body;
-    try {
-        let result = await verifyBvn(bvn);
 
-        let verifyStatus = result
+    // try {
+    const response = await axios.get(`https://api.paystack.co/bank/resolve_bvn/${bvn}`, {
+        headers: {
+            "Authorization": `Bearer ${config.PAYSTACK_SECRET_KEY}`
+        }
+    });
 
-        return successResponse(res, "BVN verified successfully", verifyStatus);
-    } catch (error) {
-        return errorResponse(res, "BVN verification failed", error);
-    }
+    let verifyStatus = response.data
+
+    return successResponse(res, "BVN verified successfully", verifyStatus);
+    // } catch (error) {
+    //     return errorResponse(res, "BVN verification failed", error);
+    // }
 }
 
 

@@ -71,7 +71,9 @@ export const getJobs = async (req: Request, res: Response) => {
                 {
                     model: Material
                 }
-            ]
+            ],
+
+            order: [['createdAt', 'DESC']]
         })
 
         return successResponse(res, "success", jobs)

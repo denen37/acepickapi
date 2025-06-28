@@ -44,6 +44,34 @@ export const verifyBvn = async (bvn: string) => {
 }
 
 
+export const verifyBvnWithPaystack = async (bvn: string) => {
+    try {
+        const response = await axios.get(`https://api.paystack.co/bank/resolve_bvn/${bvn}`, {
+            headers: {
+                "Authorization": `Bearer ${config.PAYSTACK_SECRET_KEY}`
+            }
+        });
+
+        if (response.status <= 300) {
+            return {
+                status: true,
+                message: response.data,
+            }
+        } else {
+            return {
+                status: false,
+                message: response.data,
+            };
+        }
+    } catch (error: any) {
+        return {
+            status: false,
+            message: { verificationStatus: "NOT VERIFIED", description: "Error processing bvn" },
+        };
+    }
+}
+
+
 
 
 
