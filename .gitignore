@@ -4,3 +4,4 @@ node_modules
 build\logs\
 build\logs\server.log
 public
+build/logs/server.log
