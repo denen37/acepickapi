@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.corperateReg = exports.deleteUsers = exports.updatePushToken = exports.login = exports.passwordChange = exports.registerCorperate = exports.registerProfessional = exports.register = exports.verifyOtp = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
 const modules_1 = require("../utils/modules");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
+const axios_1 = __importDefault(require("axios"));
 const enum_1 = require("../utils/enum");
 const Models_1 = require("../models/Models");
 const messages_1 = require("../utils/messages");
@@ -25,7 +26,6 @@ const bcryptjs_2 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_2 = require("jsonwebtoken");
 const sms_1 = require("../services/sms");
 const gmail_1 = require("../services/gmail");
-const bvn_1 = require("../services/bvn");
 // yarn add stream-chat
 const stream_chat_1 = require("stream-chat");
 // instantiate your stream client using the API key and secret
@@ -1248,14 +1248,17 @@ const postlocationData = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.postlocationData = postlocationData;
 const verifyMyBvn = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { bvn } = req.body;
-    try {
-        let result = yield (0, bvn_1.verifyBvn)(bvn);
-        let verifyStatus = result;
-        return (0, modules_1.successResponse)(res, "BVN verified successfully", verifyStatus);
-    }
-    catch (error) {
-        return (0, modules_1.errorResponse)(res, "BVN verification failed", error);
-    }
+    // try {
+    const response = yield axios_1.default.get(`https://api.paystack.co/bank/resolve_bvn/${bvn}`, {
+        headers: {
+            "Authorization": `Bearer ${configSetup_1.default.PAYSTACK_SECRET_KEY}`
+        }
+    });
+    let verifyStatus = response.data;
+    return (0, modules_1.successResponse)(res, "BVN verified successfully", verifyStatus);
+    // } catch (error) {
+    //     return errorResponse(res, "BVN verification failed", error);
+    // }
 });
 exports.verifyMyBvn = verifyMyBvn;
 // export const verifyBvnDetail = async (req: Request, res: Response) => {
