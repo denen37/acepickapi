@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.disputeJob = exports.approveJob = exports.completeJob = exports.viewInvoice = exports.updateInvoice = exports.generateInvoice = exports.respondToJob = exports.cancelJob = exports.updateJob = exports.createJobOrder = exports.getJobById = exports.getLatestJob = exports.getJobs = exports.testApi = void 0;
+exports.disputeJob = exports.approveJob = exports.completeJob = exports.viewInvoice = exports.updateInvoice = exports.generateInvoice = exports.respondToJob = exports.cancelJob = exports.updateJob = exports.createJobOrder = exports.getJobById = exports.getLatestJob = exports.getJobStat = exports.getJobs = exports.testApi = void 0;
 const modules_1 = require("../utils/modules");
 const Models_1 = require("../models/Models");
 const enum_1 = require("../utils/enum");
@@ -83,6 +83,40 @@ const getJobs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getJobs = getJobs;
+const getJobStat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    let { id, role } = req.user;
+    try {
+        // const jobStats = await Job.findAll({
+        //     where: { [role === UserRole.CLIENT ? 'clientId' : 'professionalId']: id },
+        //     attributes: [
+        //         [sequelize.fn('COUNT', sequelize.col('id')), 'totalJobs'],
+        //         [sequelize.fn('SUM', sequelize.col('price')), 'totalEarnings'],
+        //         [sequelize.fn('AVG', sequelize.col('price')), 'averageEarnings'],
+        //     ],
+        //     raw: true
+        // });
+        //totalJobs
+        //totalExpense
+        //totalJobsDeclined
+        //totalJobsOngoing
+        //totalJobsPending
+        //totalJobsCompleted
+        //totalJobsApproved
+        //totalJobsCanceled
+        //totalDisputes
+        //totalEarning!: number;
+        //completedAmount
+        //pendingAmount
+        //pendingAmount
+        //rejectedAmount
+        //availableWithdrawalAmount
+        // return successResponse(res, "success", jobStats);
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, "error", error);
+    }
+});
+exports.getJobStat = getJobStat;
 const getLatestJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { id, role } = req.user;
     let whereCondition;

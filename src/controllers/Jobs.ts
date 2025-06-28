@@ -82,6 +82,43 @@ export const getJobs = async (req: Request, res: Response) => {
     }
 }
 
+export const getJobStat = async (req: Request, res: Response) => {
+    let { id, role } = req.user;
+
+    try {
+        // const jobStats = await Job.findAll({
+        //     where: { [role === UserRole.CLIENT ? 'clientId' : 'professionalId']: id },
+        //     attributes: [
+        //         [sequelize.fn('COUNT', sequelize.col('id')), 'totalJobs'],
+        //         [sequelize.fn('SUM', sequelize.col('price')), 'totalEarnings'],
+        //         [sequelize.fn('AVG', sequelize.col('price')), 'averageEarnings'],
+        //     ],
+        //     raw: true
+        // });
+        //totalJobs
+        //totalExpense
+        //totalJobsDeclined
+        //totalJobsOngoing
+        //totalJobsPending
+        //totalJobsCompleted
+        //totalJobsApproved
+        //totalJobsCanceled
+        //totalDisputes
+
+        //totalEarning!: number;
+        //completedAmount
+        //pendingAmount
+        //pendingAmount
+        //rejectedAmount
+        //availableWithdrawalAmount
+
+
+        // return successResponse(res, "success", jobStats);
+    } catch (error) {
+        return errorResponse(res, "error", error);
+    }
+}
+
 
 export const getLatestJob = async (req: Request, res: Response) => {
     let { id, role } = req.user;

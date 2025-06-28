@@ -12,6 +12,7 @@ import auth from './routes/auth';
 import general from './routes/general';
 import "reflect-metadata";
 import { initSocket } from './chat';
+import { registerJobHook } from './hooks/jobHook';
 
 const app = express();
 const server = createServer(app);
@@ -38,12 +39,13 @@ initSocket(server);
 
 
 db.sync().then(() => {
+
+    registerJobHook();
     server.listen(
         config.PORT || 5000,
         config.HOST || '0.0.0.0',
         () => console.log(`Server is running on http://${config.HOST}:${config.PORT}`));
 })
     .catch(err => console.error('Error connecting to the database', err));
-
 
 export default app;

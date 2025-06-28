@@ -11,18 +11,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Job = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
-// import { Profile } from './Profile';
-// import { Wallet } from './Wallet';
-// import { LanLog } from './LanLog';
-// import { User } from './User';
 const Models_1 = require("./Models");
 const enum_1 = require("../utils/enum");
-// import { VoiceRecording } from './VoiceRecording';
-// export enum UserGender {
-// 	MALE = 'MALE',
-// 	FEMALE = 'FEMALE',
-// 	OTHER = 'OTHER',
-// }
 let Job = class Job extends sequelize_typescript_1.Model {
 };
 exports.Job = Job;

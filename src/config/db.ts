@@ -21,6 +21,7 @@ const sequelize = new Sequelize(
 );
 
 
+
 // const sequelize = new Sequelize({
 //     dialect: 'mssql',
 //     host: config.DB_HOST,

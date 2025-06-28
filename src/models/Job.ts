@@ -1,21 +1,6 @@
 import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index, BelongsTo, ForeignKey } from 'sequelize-typescript';
-// import { Profile } from './Profile';
-// import { Wallet } from './Wallet';
-// import { LanLog } from './LanLog';
-// import { User } from './User';
 import { User, Material, Dispute, Transaction } from './Models'
 import { JobMode, JobStatus, PaidFor, PayStatus } from '../utils/enum';
-// import { VoiceRecording } from './VoiceRecording';
-
-
-// export enum UserGender {
-// 	MALE = 'MALE',
-// 	FEMALE = 'FEMALE',
-// 	OTHER = 'OTHER',
-// }
-
-
-
 
 
 @Table({ timestamps: true, tableName: 'jobs' })
@@ -91,48 +76,6 @@ export class Job extends Model {
     arrivalDaysCount!: number
 
 
-
-    // @Default(null)
-    // @AllowNull(true)
-    // @Column(DataType.JSON)
-    // ownerLocationDeparture!: any;
-
-
-    // @Default(null)
-    // @AllowNull(true)
-    // @Column(DataType.JSON)
-    // currentOwnerLocationDeparture!: any;
-
-
-
-    // @Default(null)
-    // @AllowNull(true)
-    // @Column(DataType.JSON)
-    // currentOwnerLocationArrival!: any;
-
-
-
-
-    // @Default(null)
-    // @AllowNull(true)
-    // @Column(DataType.JSON)
-    // currentClientLocationArrival!: any;
-
-
-
-    // @Default(null)
-    // @AllowNull(true)
-    // @Column(DataType.JSON)
-    // currentClientLocationDeparture!: any;
-
-
-
-    // @Default(null)
-    // @AllowNull(true)
-    // @Column(DataType.JSON)
-    // ownerLocationArrival!: any;
-
-
     @Default(null)
     @AllowNull(true)
     @Column(DataType.JSON)
@@ -160,54 +103,12 @@ export class Job extends Model {
     isLocationMatch!: string
 
 
-    // @Default(false)
-    // @AllowNull(true)
-    // @Column(DataType.BOOLEAN)
-    // ownerMatchArrival!: string
-
-
-
-    // @Default(false)
-    // @AllowNull(true)
-    // @Column(DataType.BOOLEAN)
-    // clientMatchArrival!: string
-
-
-
-    // @Default(false)
-    // @AllowNull(true)
-    // @Column(DataType.BOOLEAN)
-    // clientMatchDeparture!: string
-
-
-
-    // @Default(false)
-    // @AllowNull(true)
-    // @Column(DataType.BOOLEAN)
-    // ownerMatchDeparture!: string
-
-
-
-    // @Default(false)
-    // @AllowNull(true)
-    // @Column(DataType.BOOLEAN)
-    // processed!: string
-
-
-
-
 
     @Default(PayStatus.UNPAID)
     @AllowNull(true)
     @Column(DataType.ENUM(...Object.values(PayStatus)))
     payStatus!: string
 
-
-
-    // @Default(PaidFor.WORKMANSHIP)
-    // @AllowNull(false)
-    // @Column(DataType.ENUM(PaidFor.WORKMANSHIP, PaidFor.MATERIAL, PaidFor.BOTH))
-    // paidFor!: string
 
 
     @AllowNull(true)
@@ -281,15 +182,6 @@ export class Job extends Model {
 
 
 
-
-
-    // @ForeignKey(() => Dispute)
-    // @AllowNull(true)
-    // @Column(DataType.INTEGER)
-    // disputeId!: number;
-
-
-
     // relationships
     @BelongsTo(() => User, { foreignKey: 'clientId' })
     client!: User;
@@ -307,9 +199,6 @@ export class Job extends Model {
     @HasOne(() => Transaction)
     transaction!: Transaction;
 
-
-    // @HasMany(() => VoiceRecording, { onDelete: 'CASCADE' })
-    // record!: VoiceRecording[];
 
 
     @HasMany(() => Material, { onDelete: 'CASCADE' })

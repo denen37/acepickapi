@@ -16,6 +16,7 @@ const auth_1 = __importDefault(require("./routes/auth"));
 const general_1 = __importDefault(require("./routes/general"));
 require("reflect-metadata");
 const chat_1 = require("./chat");
+const jobHook_1 = require("./hooks/jobHook");
 const app = (0, express_1.default)();
 const server = createServer(app);
 app.use(express_1.default.json());
@@ -32,6 +33,7 @@ app.use('/api/', general_1.default);
 // consumeJobEvents();
 (0, chat_1.initSocket)(server);
 db_1.default.sync().then(() => {
+    (0, jobHook_1.registerJobHook)();
     server.listen(configSetup_1.default.PORT || 5000, configSetup_1.default.HOST || '0.0.0.0', () => console.log(`Server is running on http://${configSetup_1.default.HOST}:${configSetup_1.default.PORT}`));
 })
     .catch(err => console.error('Error connecting to the database', err));
