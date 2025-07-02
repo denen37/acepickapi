@@ -23,6 +23,8 @@ import { Account } from './Account'
 import { Transfer } from './Transfer'
 import { ChatRoom } from './ChatRoom'
 import { Message } from './Message'
+import { Category } from './Category'
+import { Product } from './Product'
 
 export {
     User,
@@ -49,5 +51,7 @@ export {
     Account,
     Transfer,
     ChatRoom,
-    Message
+    Message,
+    Category,
+    Product,
 }

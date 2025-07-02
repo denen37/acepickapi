@@ -17,8 +17,8 @@ const path = require('path')
 // });
 
 
-const pathExistsOrCreate = (dirPath: string): string => {
-  let filepath: string = path.resolve(__dirname, dirPath)
+const pathExistsOrCreate = (folder: string): string => {
+  let filepath: string = path.resolve(__dirname, '../../public/', folder)
   if (!fs.existsSync(filepath)) {
     fs.mkdirSync(filepath, { recursive: true });
     console.log(`Directory created: ${filepath}`);
@@ -29,10 +29,24 @@ const pathExistsOrCreate = (dirPath: string): string => {
 
 
 
-const storeImage = (folder: string) => {
+const storeImage = () => {
   return multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, pathExistsOrCreate('../../public/' + folder))
+      switch (file.fieldname) {
+        case 'avatar':
+          cb(null, pathExistsOrCreate('uploads/avatars'));
+          break;
+        case 'product':
+          cb(null, pathExistsOrCreate('uploads/products'));
+          break;
+        // case 'category':
+        //   cb(null, pathExistsOrCreate('uploads/categories'));
+        //   break;
+        default:
+          cb(new Error('Invalid field name'), '');
+      }
+
+      //cb(null, pathExistsOrCreate( + folder))
     },
     filename: (req, file, cb) => {
       let filename = Date.now() + '.' + file.mimetype.split('/')[1];
@@ -45,7 +59,7 @@ const storeImage = (folder: string) => {
 
 
 export const uploads = multer({
-  storage: storeImage('uploads'),
+  storage: storeImage(),
 })
 
 

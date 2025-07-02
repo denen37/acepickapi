@@ -11,9 +11,11 @@ export class Job extends Model {
     @Column(DataType.STRING)
     description!: string
 
+
     @AllowNull(true)
     @Column(DataType.STRING)
     title!: string
+
 
     @Default(false)
     @AllowNull(false)

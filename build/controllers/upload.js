@@ -23,15 +23,15 @@ const uploadFiles = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         return (0, modules_1.handleResponse)(res, 404, false, 'No files uploaded');
     }
     const files = req.files;
-    const filesModified = files.map((file) => {
-        return {
-            buffer: file.buffer,
-            name: Date.now().toString(),
-            mimetype: file.mimetype,
-        };
-    });
+    // const filesModified = files.map((file) => {
+    //     return {
+    //         buffer: file.buffer,
+    //         name: Date.now().toString(),
+    //         mimetype: file.mimetype,
+    //     }
+    // })
     try {
-        const paths = yield (0, uploadCloud_1.uploadFilesToBlob)(StorageContainer.GENERAL, filesModified);
+        const paths = files.map((file) => `/${file.path.slice(file.path.indexOf('uploads')).split('\\').join('/')}`);
         return (0, modules_1.successResponse)(res, 'success', { urls: paths });
     }
     catch (error) {
@@ -64,14 +64,11 @@ const uploadAvatar = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         return (0, modules_1.handleResponse)(res, 404, false, 'No file uploaded');
     }
     const file = req.file;
-    // const fileModified = {
-    //     buffer: file.buffer,
-    //     name: Date.now().toString(),
-    //     mimetype: file.mimetype,
-    // }
     try {
         // const path = await uploadFileToBlob(StorageContainer.PROFILE, fileModified)
-        return (0, modules_1.successResponse)(res, 'success', { url: '/uploads/' + file.filename });
+        return (0, modules_1.successResponse)(res, 'success', {
+            url: `/${file.path.slice(file.path.indexOf('uploads')).split('\\').join('/')}`
+        });
     }
     catch (error) {
         return (0, modules_1.handleResponse)(res, 500, false, 'Error uploading file');

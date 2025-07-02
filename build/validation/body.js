@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum"); // adjust the path
 const enum_2 = require("../utils/enum");
@@ -473,4 +473,89 @@ exports.updatePortfolioSchema = zod_1.z.object({
     //     .int('Profile ID must be an integer')
     //     .optional()
     //     .describe('ID of the profile this portfolio item is associated with.'),
+});
+exports.createProductSchema = zod_1.z.object({
+    name: zod_1.z
+        .string()
+        .min(1, 'Product name is required'),
+    description: zod_1.z
+        .string()
+        .min(1, 'Product description is required')
+        .optional(),
+    images: zod_1.z
+        .array(zod_1.z.string().min(1, 'Image path cannot be empty'))
+        .min(1, 'At least one image is required'),
+    categoryId: zod_1.z
+        .number({
+        required_error: 'Category ID is required',
+        invalid_type_error: 'Category ID must be a number',
+    }),
+    quantity: zod_1.z
+        .number({
+        required_error: 'Quantity is required',
+        invalid_type_error: 'Quantity must be a number',
+    })
+        .int('Quantity must be an integer')
+        .nonnegative('Quantity cannot be negative'),
+    price: zod_1.z
+        .number({
+        required_error: 'Price is required',
+        invalid_type_error: 'Price must be a number',
+    })
+        .positive('Price must be greater than zero'),
+    discount: zod_1.z
+        .number()
+        .min(0, 'Discount cannot be negative')
+        .max(100, 'Discount cannot be more than 100%')
+        .optional(),
+    userId: zod_1.z
+        .string()
+        .uuid('User ID must be a valid UUID'),
+    locationId: zod_1.z
+        .number({
+        required_error: 'Location ID is required',
+        invalid_type_error: 'Location ID must be a number',
+    }),
+});
+exports.updateProductSchema = zod_1.z.object({
+    name: zod_1.z.
+        string()
+        .min(1, 'Product name is required')
+        .optional(),
+    description: zod_1.z.
+        string()
+        .min(1, 'Product description is required')
+        .optional(),
+    categoryId: zod_1.z.
+        number({
+        required_error: 'Category ID is required',
+        invalid_type_error: 'Category ID must be a number',
+    })
+        .optional(),
+    quantity: zod_1.z
+        .number({
+        required_error: 'Quantity is required',
+        invalid_type_error: 'Quantity must be a number',
+    })
+        .int('Quantity must be an integer')
+        .nonnegative('Quantity cannot be negative')
+        .optional(),
+    price: zod_1.z
+        .number({
+        required_error: 'Price is required',
+        invalid_type_error: 'Price must be a number',
+    })
+        .positive('Price must be greater than zero')
+        .optional(),
+    discount: zod_1.z
+        .number()
+        .min(0, 'Discount cannot be negative')
+        .max(100, 'Discount cannot be more than 100%')
+        .optional(),
+    locationId: zod_1.z
+        .number({
+        required_error: 'Location ID is required',
+        invalid_type_error: 'Location ID must be a number',
+    })
+        .optional(),
 });

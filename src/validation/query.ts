@@ -20,3 +20,14 @@ export const professionalSearchQuerySchema = z.object({
     // sortBy: z.enum(['rating', 'chargeFrom', 'available']).optional(),
     // sortOrder: z.enum(['asc', 'desc']).optional(),
 });
+
+
+export const getProductSchema = z.object({
+    categoryId: z.coerce.number().optional(),
+    locationId: z.coerce.number().optional(),
+    category: z.string().optional(),
+    search: z.string().optional(),
+    page: z.coerce.number().min(1).default(1),
+    limit: z.coerce.number().min(1).default(10),
+});
+

@@ -582,6 +582,116 @@ export const updatePortfolioSchema = z.object({
     //     .describe('ID of the profile this portfolio item is associated with.'),
 });
 
+export const createProductSchema = z.object({
+    name: z
+        .string()
+        .min(1, 'Product name is required'),
+
+    description: z
+        .string()
+        .min(1, 'Product description is required')
+        .optional(),
+
+    images: z
+        .array(
+            z.string().min(1, 'Image path cannot be empty')
+        )
+        .min(1, 'At least one image is required'),
+
+    categoryId: z
+        .number({
+            required_error: 'Category ID is required',
+            invalid_type_error: 'Category ID must be a number',
+        }),
+
+    quantity: z
+        .number({
+            required_error: 'Quantity is required',
+            invalid_type_error: 'Quantity must be a number',
+        })
+        .int('Quantity must be an integer')
+        .nonnegative('Quantity cannot be negative'),
+
+    price: z
+        .number({
+            required_error: 'Price is required',
+            invalid_type_error: 'Price must be a number',
+        })
+        .positive('Price must be greater than zero'),
+
+    discount: z
+        .number()
+        .min(0, 'Discount cannot be negative')
+        .max(100, 'Discount cannot be more than 100%')
+        .optional(),
+
+    userId: z
+        .string()
+        .uuid('User ID must be a valid UUID'),
+
+    locationId: z
+        .number({
+            required_error: 'Location ID is required',
+            invalid_type_error: 'Location ID must be a number',
+        }),
+});
+
+export const updateProductSchema = z.object({
+    name: z.
+        string()
+        .min(1, 'Product name is required')
+        .optional(),
+
+
+    description: z.
+        string()
+        .min(1, 'Product description is required')
+        .optional(),
+
+
+    categoryId: z.
+        number({
+            required_error: 'Category ID is required',
+            invalid_type_error: 'Category ID must be a number',
+        })
+        .optional(),
+
+
+    quantity: z
+        .number({
+            required_error: 'Quantity is required',
+            invalid_type_error: 'Quantity must be a number',
+        })
+        .int('Quantity must be an integer')
+        .nonnegative('Quantity cannot be negative')
+        .optional(),
+
+
+    price: z
+        .number({
+            required_error: 'Price is required',
+            invalid_type_error: 'Price must be a number',
+        })
+        .positive('Price must be greater than zero')
+        .optional(),
+
+
+    discount: z
+        .number()
+        .min(0, 'Discount cannot be negative')
+        .max(100, 'Discount cannot be more than 100%')
+        .optional(),
+
+
+    locationId: z
+        .number({
+            required_error: 'Location ID is required',
+            invalid_type_error: 'Location ID must be a number',
+        })
+        .optional(),
+})
+
+
 
 
 

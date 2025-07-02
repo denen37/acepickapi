@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Message = exports.ChatRoom = exports.Transfer = exports.Account = exports.OnlineUser = exports.Transaction = exports.Material = exports.Dispute = exports.Review = exports.Job = exports.Director = exports.Sector = exports.Profession = exports.Wallet = exports.VoiceRecording = exports.Cooperation = exports.Verify = exports.Professional = exports.Portfolio = exports.Location = exports.Experience = exports.Education = exports.Certification = exports.Profile = exports.User = void 0;
+exports.Product = exports.Category = exports.Message = exports.ChatRoom = exports.Transfer = exports.Account = exports.OnlineUser = exports.Transaction = exports.Material = exports.Dispute = exports.Review = exports.Job = exports.Director = exports.Sector = exports.Profession = exports.Wallet = exports.VoiceRecording = exports.Cooperation = exports.Verify = exports.Professional = exports.Portfolio = exports.Location = exports.Experience = exports.Education = exports.Certification = exports.Profile = exports.User = void 0;
 const User_1 = require("./User");
 Object.defineProperty(exports, "User", { enumerable: true, get: function () { return User_1.User; } });
 const Certification_1 = require("./Certification");
@@ -51,3 +51,7 @@ const ChatRoom_1 = require("./ChatRoom");
 Object.defineProperty(exports, "ChatRoom", { enumerable: true, get: function () { return ChatRoom_1.ChatRoom; } });
 const Message_1 = require("./Message");
 Object.defineProperty(exports, "Message", { enumerable: true, get: function () { return Message_1.Message; } });
+const Category_1 = require("./Category");
+Object.defineProperty(exports, "Category", { enumerable: true, get: function () { return Category_1.Category; } });
+const Product_1 = require("./Product");
+Object.defineProperty(exports, "Product", { enumerable: true, get: function () { return Product_1.Product; } });

@@ -13,18 +13,31 @@ const path = require('path');
 //   api_key: config.CLOUDINARY_API_KEY,
 //   api_secret: config.CLOUDINARY_API_SECRET
 // });
-const pathExistsOrCreate = (dirPath) => {
-    let filepath = path.resolve(__dirname, dirPath);
+const pathExistsOrCreate = (folder) => {
+    let filepath = path.resolve(__dirname, '../../public/', folder);
     if (!fs.existsSync(filepath)) {
         fs.mkdirSync(filepath, { recursive: true });
         console.log(`Directory created: ${filepath}`);
     }
     return filepath;
 };
-const storeImage = (folder) => {
+const storeImage = () => {
     return multer_1.default.diskStorage({
         destination: (req, file, cb) => {
-            cb(null, pathExistsOrCreate('../../public/' + folder));
+            switch (file.fieldname) {
+                case 'avatar':
+                    cb(null, pathExistsOrCreate('uploads/avatars'));
+                    break;
+                case 'product':
+                    cb(null, pathExistsOrCreate('uploads/products'));
+                    break;
+                // case 'category':
+                //   cb(null, pathExistsOrCreate('uploads/categories'));
+                //   break;
+                default:
+                    cb(new Error('Invalid field name'), '');
+            }
+            //cb(null, pathExistsOrCreate( + folder))
         },
         filename: (req, file, cb) => {
             let filename = Date.now() + '.' + file.mimetype.split('/')[1];
@@ -33,7 +46,7 @@ const storeImage = (folder) => {
     });
 };
 exports.uploads = (0, multer_1.default)({
-    storage: storeImage('uploads'),
+    storage: storeImage(),
 });
 // const storage = multer.memoryStorage();
 // export const uploads = multer({
