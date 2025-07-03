@@ -27,12 +27,12 @@ export class Transaction extends Model {
 
 
     @AllowNull(false)
-    @Column(DataType.ENUM(TransactionStatus.SUCCESS, TransactionStatus.FAILED))
+    @Column(DataType.ENUM(...Object.values(TransactionStatus)))
     status!: string
 
 
 
-    @AllowNull(false)
+    @AllowNull(true)
     @Column(DataType.STRING)
     channel!: string
 

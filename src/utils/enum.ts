@@ -68,6 +68,7 @@ export enum PaidFor {
 export enum TransactionStatus {
     SUCCESS = 'success',
     FAILED = 'failed',
+    PENDING = 'pending',
 }
 
 export enum TransactionType {

@@ -97,6 +97,19 @@ const jobResponseEmail = (job) => {
     };
 };
 exports.jobResponseEmail = jobResponseEmail;
+// export const jobPayment = (job: Job): Message => {
+//     return {
+//         title: `Job Payment`,
+//         body: `Your has been paid by ${job.client.profile.firstName} ${job.client.profile.lastName}
+//         <p><b>Job title: </b>${job.title}</p>
+//         <p><b>Job description: </b>${job.description}</p>
+//         <p><b>Job location: </b>${job.fullAddress}</p>
+//         <br>
+//         <br>
+//         <p>Kindly proceed with the job</p>
+//         `
+//     }
+// }
 const jobDisputeEmail = (job, dispute) => {
     return {
         title: `Job dispute: ${job.title}`,

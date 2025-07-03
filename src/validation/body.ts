@@ -692,6 +692,42 @@ export const updateProductSchema = z.object({
 })
 
 
+export const initPaymentSchema = z
+    .object({
+        amount: z
+            .number({
+                required_error: 'Amount is required',
+                invalid_type_error: 'Amount must be a number',
+            })
+            .positive('Amount must be greater than zero'),
+
+        // Coerce and lowercase the description to allow case-insensitive matching
+        description: z
+            .preprocess(
+                (val) => (typeof val === 'string' ? val.toLowerCase() : val),
+                z.enum(['job payment', 'wallet topup'], {
+                    errorMap: () => ({ message: 'Description must be "Job Payment" or "Wallet Topup"' }),
+                })
+            ),
+
+        jobId: z
+            .number()
+            .int('jobId must be an integer')
+            .positive('jobId must be a positive number')
+            .optional(),
+    })
+    .refine(
+        (data) => {
+            if (data.description === 'job payment') {
+                return typeof data.jobId === 'number';
+            }
+            return true;
+        },
+        {
+            message: 'jobId is required when description is "Job Payment"',
+            path: ['jobId'],
+        }
+    );
 
 
 

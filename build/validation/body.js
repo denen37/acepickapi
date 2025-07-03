@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.initPaymentSchema = exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum"); // adjust the path
 const enum_2 = require("../utils/enum");
@@ -558,4 +558,32 @@ exports.updateProductSchema = zod_1.z.object({
         invalid_type_error: 'Location ID must be a number',
     })
         .optional(),
+});
+exports.initPaymentSchema = zod_1.z
+    .object({
+    amount: zod_1.z
+        .number({
+        required_error: 'Amount is required',
+        invalid_type_error: 'Amount must be a number',
+    })
+        .positive('Amount must be greater than zero'),
+    // Coerce and lowercase the description to allow case-insensitive matching
+    description: zod_1.z
+        .preprocess((val) => (typeof val === 'string' ? val.toLowerCase() : val), zod_1.z.enum(['job payment', 'wallet topup'], {
+        errorMap: () => ({ message: 'Description must be "Job Payment" or "Wallet Topup"' }),
+    })),
+    jobId: zod_1.z
+        .number()
+        .int('jobId must be an integer')
+        .positive('jobId must be a positive number')
+        .optional(),
+})
+    .refine((data) => {
+    if (data.description === 'job payment') {
+        return typeof data.jobId === 'number';
+    }
+    return true;
+}, {
+    message: 'jobId is required when description is "Job Payment"',
+    path: ['jobId'],
 });

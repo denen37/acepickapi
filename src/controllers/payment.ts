@@ -1,45 +1,71 @@
 import { Request, Response } from "express";
-import { Transfer, Transaction, Wallet, User, OnlineUser } from "../models/Models";
+import { Transfer, Transaction, Wallet, User, OnlineUser, Job, Profile } from "../models/Models";
 import { randomId, errorResponse, handleResponse, successResponse } from "../utils/modules";
 import config from "../config/configSetup"
 import axios from 'axios'
-import { TransactionStatus, TransactionType, TransferStatus } from "../utils/enum";
+import { JobStatus, PayStatus, TransactionStatus, TransactionType, TransferStatus } from "../utils/enum";
 import { v4 as uuidv4 } from 'uuid';
 import { where } from "sequelize";
 import { sendPushNotification } from "../services/notification";
-import { withdrawSchema } from "../validation/body";
+import { initPaymentSchema, withdrawSchema } from "../validation/body";
 import bcrypt from 'bcryptjs';
+import { getIO } from "../chat";
+import { Emit } from "../utils/events";
+import { jobPaymentEmail } from "../utils/messages";
+import { sendEmail } from "../services/gmail";
 
 
 
 export const initiatePayment = async (req: Request, res: Response) => {
     const { id, email, role } = req.user
-    const { amount } = req.body
 
-    try {
-        if (!id || !email || !role) {
-            return handleResponse(res, 403, false, "Unauthorized user")
-        }
+    // try {
+    const result = initPaymentSchema.safeParse(req.body);
 
-
-        // Initiate payment with Paystack API
-        const paystackResponseInit = await axios.post(
-            "https://api.paystack.co/transaction/initialize",
-            {
-                email: email,
-                amount: amount * 100,
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`,
-                },
-            }
-        );
-
-        return successResponse(res, 'success', paystackResponseInit.data.data)
-    } catch (error) {
-        return handleResponse(res, 500, false, 'An error occurred while initiating payment')
+    if (!result.success) {
+        return res.status(400).json({
+            status: false,
+            message: 'Validation error',
+            errors: result.error.flatten().fieldErrors,
+        });
     }
+
+    const { amount, description, jobId } = result.data;
+
+    // Initiate payment with Paystack API
+    const paystackResponseInit = await axios.post(
+        "https://api.paystack.co/transaction/initialize",
+        {
+            email: email,
+            amount: amount * 100,
+        },
+        {
+            headers: {
+                Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`,
+            },
+        }
+    );
+
+    const data = paystackResponseInit.data.data;
+
+
+    const transaction = await Transaction.create({
+        userId: id,
+        amount: amount,
+        reference: data.reference,
+        status: TransactionStatus.PENDING,
+        //channel: data.channel,
+        currency: data.currency,
+        timestamp: new Date(),
+        description: description,
+        jobId: description.toString().includes('job') ? jobId : null,
+        type: TransactionType.CREDIT,
+    })
+
+    return successResponse(res, 'success', data)
+    // } catch (error) {
+    //     return handleResponse(res, 500, false, 'An error occurred while initiating payment')
+    // }
 }
 
 export const verifyPayment = async (req: Request, res: Response) => {
@@ -60,36 +86,23 @@ export const verifyPayment = async (req: Request, res: Response) => {
         const { data } = paystackResponse.data;
 
         if (data.status === TransactionStatus.SUCCESS) {
-            const [transaction, created] = await Transaction.findOrCreate({
-                where: { reference: ref },
-                defaults: {
-                    userId: id,
-                    amount: data.amount / 100,
-                    reference: data.reference,
-                    status: data.status,
-                    channel: data.channel,
-                    currency: data.currency,
-                    timestamp: new Date(),
-                    description: 'Wallet topup',
-                    type: TransactionType.CREDIT,
-                }
-            })
 
-            if (created) {
-                const wallet = await Wallet.findOne({ where: { userId: id } })
 
-                if (wallet) {
-                    let prevAmount = Number(wallet.currentBalance);
-                    let newAmount = Number(transaction.amount);
+            // if (created) {
+            //     const wallet = await Wallet.findOne({ where: { userId: id } })
 
-                    wallet.previousBalance = prevAmount;
-                    wallet.currentBalance = prevAmount + newAmount;
+            //     if (wallet) {
+            //         let prevAmount = Number(wallet.currentBalance);
+            //         let newAmount = Number(transaction.amount);
 
-                    await wallet.save()
-                }
-            }
+            //         wallet.previousBalance = prevAmount;
+            //         wallet.currentBalance = prevAmount + newAmount;
 
-            return handleResponse(res, 200, true, "Payment sucessfully verified", { result: paystackResponse.data })
+            //         await wallet.save()
+            //     }
+            // }
+
+            // return handleResponse(res, 200, true, "Payment sucessfully verified", { result: paystackResponse.data })
         }
 
         return handleResponse(res, 200, true, "Payment sucessfully verified", { result: paystackResponse.data })
@@ -184,6 +197,7 @@ export const finalizeTransfer = async (req: Request, res: Response) => {
 export const handlePaystackWebhook = async (req: Request, res: Response) => {
     const payload = req.body;
     console.log("webhook called");
+    console.log(payload.event);
 
     try {
         if (payload.event.includes('transfer')) {
@@ -246,7 +260,112 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
                     break;
             }
 
-            return handleResponse(res, 200, false, 'Handled')
+            return handleResponse(res, 200, true, 'Handled')
+        } else if (payload.event.includes('charge.success')) {
+            const { reference, status, channel, paid_at } = payload.data;
+
+            const transaction = await Transaction.findOne({
+                where: { reference: reference },
+                include: [
+                    {
+                        model: User,
+                        as: 'user',
+                        include: [OnlineUser, Wallet]
+                    }
+                ]
+            })
+
+            if (!transaction) {
+                return res.status(200).send('Transaction not found');
+            }
+
+            if (transaction.status === TransactionStatus.SUCCESS) {
+                return res.status(200).send('Transaction already processed');
+            }
+
+            transaction.status = status;
+            transaction.channel = channel;
+            transaction.timestamp = new Date(paid_at);
+
+            await transaction.save();
+
+            if (transaction.jobId && transaction.description.includes('job')) {
+                const job = await Job.findByPk(transaction.jobId, {
+                    include: [
+                        {
+                            model: User,
+                            as: 'professional',
+                            include: [Profile]
+                        },
+                        {
+                            model: User,
+                            as: 'client',
+                            include: [Profile]
+                        }
+                    ]
+                });
+
+                if (job) {
+                    job.status = JobStatus.ONGOING;
+                    job.payStatus = PayStatus.PAID;
+                    job.paymentRef = reference;
+
+                    await job.save();
+
+                    sendPushNotification(
+                        transaction.user.fcmToken,
+                        `Job Payment`,
+                        `Job titled: ${job?.title} has been paid by ${job?.client?.profile?.firstName} ${job?.client?.profile?.lastName}}`,
+                        {}
+                    );
+
+                    const email = jobPaymentEmail(job?.toJSON())
+
+                    const msgStat = await sendEmail(
+                        job.dataValues.professional.email,
+                        email.title,
+                        email.body,
+                        job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName
+                    )
+                }
+            } else {
+                if (transaction.user.wallet) {
+                    let prevAmount = Number(transaction.user.wallet.currentBalance);
+                    let newAmount = Number(transaction.amount);
+
+                    transaction.user.wallet.previousBalance = prevAmount;
+                    transaction.user.wallet.currentBalance = prevAmount + newAmount;
+
+                    await transaction.user.wallet.save()
+                }
+            }
+
+            sendPushNotification(
+                transaction.user.fcmToken,
+                `Payment Success`,
+                `Your Payment of ${transaction.amount} was successful`,
+                {}
+            );
+
+            const io = getIO();
+
+            if (transaction.user.onlineUser?.isOnline) {
+                io.to(transaction.user.onlineUser?.socketId).emit(Emit.PAYMENT_SUCCESS, {
+                    text: 'Payment Success', data: {
+                        id: transaction.id,
+                        status: transaction.status,
+                        channel: transaction.channel,
+                        amount: transaction.amount,
+                        reference: transaction.reference,
+                        timeStamp: transaction.timestamp,
+                        type: transaction.type,
+                        createdAt: transaction.createdAt,
+                        updatedAt: transaction.updatedAt,
+                    }
+                });
+            }
+
+            return handleResponse(res, 200, true, 'Handled');
         } else {
             return handleResponse(res, 400, false, 'Invalid event type')
         }
@@ -272,4 +391,5 @@ export const verifyTransfer = async (req: Request, res: Response) => {
         return errorResponse(res, 'error', error.response.data.message);
     }
 }
+
 

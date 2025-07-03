@@ -21,27 +21,48 @@ const enum_1 = require("../utils/enum");
 const notification_1 = require("../services/notification");
 const body_1 = require("../validation/body");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const chat_1 = require("../chat");
+const events_1 = require("../utils/events");
+const messages_1 = require("../utils/messages");
+const gmail_1 = require("../services/gmail");
 const initiatePayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, email, role } = req.user;
-    const { amount } = req.body;
-    try {
-        if (!id || !email || !role) {
-            return (0, modules_1.handleResponse)(res, 403, false, "Unauthorized user");
-        }
-        // Initiate payment with Paystack API
-        const paystackResponseInit = yield axios_1.default.post("https://api.paystack.co/transaction/initialize", {
-            email: email,
-            amount: amount * 100,
-        }, {
-            headers: {
-                Authorization: `Bearer ${configSetup_1.default.PAYSTACK_SECRET_KEY}`,
-            },
+    // try {
+    const result = body_1.initPaymentSchema.safeParse(req.body);
+    if (!result.success) {
+        return res.status(400).json({
+            status: false,
+            message: 'Validation error',
+            errors: result.error.flatten().fieldErrors,
         });
-        return (0, modules_1.successResponse)(res, 'success', paystackResponseInit.data.data);
     }
-    catch (error) {
-        return (0, modules_1.handleResponse)(res, 500, false, 'An error occurred while initiating payment');
-    }
+    const { amount, description, jobId } = result.data;
+    // Initiate payment with Paystack API
+    const paystackResponseInit = yield axios_1.default.post("https://api.paystack.co/transaction/initialize", {
+        email: email,
+        amount: amount * 100,
+    }, {
+        headers: {
+            Authorization: `Bearer ${configSetup_1.default.PAYSTACK_SECRET_KEY}`,
+        },
+    });
+    const data = paystackResponseInit.data.data;
+    const transaction = yield Models_1.Transaction.create({
+        userId: id,
+        amount: amount,
+        reference: data.reference,
+        status: enum_1.TransactionStatus.PENDING,
+        //channel: data.channel,
+        currency: data.currency,
+        timestamp: new Date(),
+        description: description,
+        jobId: description.toString().includes('job') ? jobId : null,
+        type: enum_1.TransactionType.CREDIT,
+    });
+    return (0, modules_1.successResponse)(res, 'success', data);
+    // } catch (error) {
+    //     return handleResponse(res, 500, false, 'An error occurred while initiating payment')
+    // }
 });
 exports.initiatePayment = initiatePayment;
 const verifyPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -55,31 +76,17 @@ const verifyPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
         const { data } = paystackResponse.data;
         if (data.status === enum_1.TransactionStatus.SUCCESS) {
-            const [transaction, created] = yield Models_1.Transaction.findOrCreate({
-                where: { reference: ref },
-                defaults: {
-                    userId: id,
-                    amount: data.amount / 100,
-                    reference: data.reference,
-                    status: data.status,
-                    channel: data.channel,
-                    currency: data.currency,
-                    timestamp: new Date(),
-                    description: 'Wallet topup',
-                    type: enum_1.TransactionType.CREDIT,
-                }
-            });
-            if (created) {
-                const wallet = yield Models_1.Wallet.findOne({ where: { userId: id } });
-                if (wallet) {
-                    let prevAmount = Number(wallet.currentBalance);
-                    let newAmount = Number(transaction.amount);
-                    wallet.previousBalance = prevAmount;
-                    wallet.currentBalance = prevAmount + newAmount;
-                    yield wallet.save();
-                }
-            }
-            return (0, modules_1.handleResponse)(res, 200, true, "Payment sucessfully verified", { result: paystackResponse.data });
+            // if (created) {
+            //     const wallet = await Wallet.findOne({ where: { userId: id } })
+            //     if (wallet) {
+            //         let prevAmount = Number(wallet.currentBalance);
+            //         let newAmount = Number(transaction.amount);
+            //         wallet.previousBalance = prevAmount;
+            //         wallet.currentBalance = prevAmount + newAmount;
+            //         await wallet.save()
+            //     }
+            // }
+            // return handleResponse(res, 200, true, "Payment sucessfully verified", { result: paystackResponse.data })
         }
         return (0, modules_1.handleResponse)(res, 200, true, "Payment sucessfully verified", { result: paystackResponse.data });
     }
@@ -151,8 +158,10 @@ const finalizeTransfer = (req, res) => __awaiter(void 0, void 0, void 0, functio
 });
 exports.finalizeTransfer = finalizeTransfer;
 const handlePaystackWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d, _e, _f;
     const payload = req.body;
     console.log("webhook called");
+    console.log(payload.event);
     try {
         if (payload.event.includes('transfer')) {
             const transfer = yield Models_1.Transfer.findOne({
@@ -188,7 +197,82 @@ const handlePaystackWebhook = (req, res) => __awaiter(void 0, void 0, void 0, fu
                 default:
                     break;
             }
-            return (0, modules_1.handleResponse)(res, 200, false, 'Handled');
+            return (0, modules_1.handleResponse)(res, 200, true, 'Handled');
+        }
+        else if (payload.event.includes('charge.success')) {
+            const { reference, status, channel, paid_at } = payload.data;
+            const transaction = yield Models_1.Transaction.findOne({
+                where: { reference: reference },
+                include: [
+                    {
+                        model: Models_1.User,
+                        as: 'user',
+                        include: [Models_1.OnlineUser, Models_1.Wallet]
+                    }
+                ]
+            });
+            if (!transaction) {
+                return res.status(200).send('Transaction not found');
+            }
+            if (transaction.status === enum_1.TransactionStatus.SUCCESS) {
+                return res.status(200).send('Transaction already processed');
+            }
+            transaction.status = status;
+            transaction.channel = channel;
+            transaction.timestamp = new Date(paid_at);
+            yield transaction.save();
+            if (transaction.jobId && transaction.description.includes('job')) {
+                const job = yield Models_1.Job.findByPk(transaction.jobId, {
+                    include: [
+                        {
+                            model: Models_1.User,
+                            as: 'professional',
+                            include: [Models_1.Profile]
+                        },
+                        {
+                            model: Models_1.User,
+                            as: 'client',
+                            include: [Models_1.Profile]
+                        }
+                    ]
+                });
+                if (job) {
+                    job.status = enum_1.JobStatus.ONGOING;
+                    job.payStatus = enum_1.PayStatus.PAID;
+                    job.paymentRef = reference;
+                    yield job.save();
+                    (0, notification_1.sendPushNotification)(transaction.user.fcmToken, `Job Payment`, `Job titled: ${job === null || job === void 0 ? void 0 : job.title} has been paid by ${(_b = (_a = job === null || job === void 0 ? void 0 : job.client) === null || _a === void 0 ? void 0 : _a.profile) === null || _b === void 0 ? void 0 : _b.firstName} ${(_d = (_c = job === null || job === void 0 ? void 0 : job.client) === null || _c === void 0 ? void 0 : _c.profile) === null || _d === void 0 ? void 0 : _d.lastName}}`, {});
+                    const email = (0, messages_1.jobPaymentEmail)(job === null || job === void 0 ? void 0 : job.toJSON());
+                    const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.professional.email, email.title, email.body, job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName);
+                }
+            }
+            else {
+                if (transaction.user.wallet) {
+                    let prevAmount = Number(transaction.user.wallet.currentBalance);
+                    let newAmount = Number(transaction.amount);
+                    transaction.user.wallet.previousBalance = prevAmount;
+                    transaction.user.wallet.currentBalance = prevAmount + newAmount;
+                    yield transaction.user.wallet.save();
+                }
+            }
+            (0, notification_1.sendPushNotification)(transaction.user.fcmToken, `Payment Success`, `Your Payment of ${transaction.amount} was successful`, {});
+            const io = (0, chat_1.getIO)();
+            if ((_e = transaction.user.onlineUser) === null || _e === void 0 ? void 0 : _e.isOnline) {
+                io.to((_f = transaction.user.onlineUser) === null || _f === void 0 ? void 0 : _f.socketId).emit(events_1.Emit.PAYMENT_SUCCESS, {
+                    text: 'Payment Success', data: {
+                        id: transaction.id,
+                        status: transaction.status,
+                        channel: transaction.channel,
+                        amount: transaction.amount,
+                        reference: transaction.reference,
+                        timeStamp: transaction.timestamp,
+                        type: transaction.type,
+                        createdAt: transaction.createdAt,
+                        updatedAt: transaction.updatedAt,
+                    }
+                });
+            }
+            return (0, modules_1.handleResponse)(res, 200, true, 'Handled');
         }
         else {
             return (0, modules_1.handleResponse)(res, 400, false, 'Invalid event type');
