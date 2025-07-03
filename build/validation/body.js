@@ -580,10 +580,13 @@ exports.initPaymentSchema = zod_1.z
 })
     .refine((data) => {
     if (data.description === 'job payment') {
-        return typeof data.jobId === 'number';
+        return typeof data.jobId === 'number' && data.jobId > 0;
+    }
+    else if (data.description === 'wallet topup') {
+        return data.jobId === undefined || data.jobId === null;
     }
     return true;
 }, {
-    message: 'jobId is required when description is "Job Payment"',
+    message: 'jobId must be a positive integer for "Job Payment", and must be null or omitted for "Wallet Topup"',
     path: ['jobId'],
 });
