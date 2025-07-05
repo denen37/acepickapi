@@ -24,6 +24,8 @@ exports.getProductSchema = zod_1.z.object({
     categoryId: zod_1.z.coerce.number().optional(),
     locationId: zod_1.z.coerce.number().optional(),
     category: zod_1.z.string().optional(),
+    state: zod_1.z.string().optional(),
+    lga: zod_1.z.string().optional(),
     search: zod_1.z.string().optional(),
     page: zod_1.z.coerce.number().min(1).default(1),
     limit: zod_1.z.coerce.number().min(1).default(10),

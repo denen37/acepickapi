@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteProduct = exports.updateProduct = exports.addProduct = exports.getProducts = void 0;
+exports.deleteProduct = exports.updateProduct = exports.addProduct = exports.getMyProducts = exports.getProducts = void 0;
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const sequelize_1 = require("sequelize");
@@ -24,17 +24,45 @@ const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             errors: result.error.flatten().fieldErrors,
         });
     }
-    const { categoryId, category, search, locationId, page, limit } = result.data;
+    const { categoryId, category, search, state, lga, locationId, page, limit } = result.data;
+    //try {
+    const products = yield Models_1.Product.findAll({
+        where: Object.assign(Object.assign(Object.assign({}, (categoryId && { categoryId })), (search && { name: { [sequelize_1.Op.like]: `%${search}%` } })), (locationId && { locationId })),
+        limit: limit,
+        offset: (page - 1) * limit,
+        include: [
+            {
+                model: Models_1.Category,
+                attributes: ['id', 'name', 'description'],
+                where: Object.assign({}, (category && { name: { [sequelize_1.Op.like]: `%${category}%` } }))
+            },
+            {
+                model: Models_1.Location,
+                where: Object.assign(Object.assign({}, (state && { state: { [sequelize_1.Op.like]: `%${state}%` } })), (lga && { lga: { [sequelize_1.Op.like]: `%${lga}%` } }))
+                //attributes: ['id', 'name', 'description'],
+            },
+        ]
+    });
+    return (0, modules_1.successResponse)(res, 'success', products.map(product => {
+        const plainProduct = product.toJSON(); // or product.get({ plain: true });
+        return Object.assign(Object.assign({}, plainProduct), { images: JSON.parse(plainProduct.images || '[]') });
+    }));
+    // } catch (error) {
+    //     return errorResponse(res, 'error', 'Failed to retrieve products');
+    // }
+});
+exports.getProducts = getProducts;
+const getMyProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id, role } = req.user;
     try {
         const products = yield Models_1.Product.findAll({
-            where: Object.assign(Object.assign(Object.assign({}, (categoryId && { categoryId })), (search && { name: { [sequelize_1.Op.like]: `%${search}%` } })), (locationId && { locationId })),
-            limit: limit,
-            offset: (page - 1) * limit,
+            where: {
+                userId: id
+            },
             include: [
                 {
                     model: Models_1.Category,
                     attributes: ['id', 'name', 'description'],
-                    where: Object.assign({}, (category && { name: { [sequelize_1.Op.like]: `%${category}%` } }))
                 },
                 {
                     model: Models_1.Location,
@@ -51,7 +79,7 @@ const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         return (0, modules_1.errorResponse)(res, 'error', 'Failed to retrieve products');
     }
 });
-exports.getProducts = getProducts;
+exports.getMyProducts = getMyProducts;
 const addProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = body_1.createProductSchema.safeParse(req.body);

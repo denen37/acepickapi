@@ -18,7 +18,7 @@ import { addCertificate, deleteCertificate, getCertificates, updateCertificate }
 import { addExperience, deleteExperience, getExperiences, updateExperience } from "../controllers/experience";
 import { addPortfolio, deletePortfolio, getPortfolios, updatePortfolio } from "../controllers/portfolio";
 import { AccountInfo, updateProfile } from "../controllers/profiles";
-import { addProduct, deleteProduct, getProducts, updateProduct } from "../controllers/product";
+import { addProduct, deleteProduct, getProducts, getMyProducts, updateProduct } from "../controllers/product";
 import { addCategory, deleteCategory, getCategories, updateCategory } from "../controllers/category";
 import { uploads } from "../services/upload";
 import { uploadFiles } from "../controllers/upload";
@@ -117,6 +117,7 @@ routes.post('/transfer/finalize', finalizeTransfer);
 routes.post('/transfer/verify/:ref', verifyTransfer);
 
 routes.post('/products/upload', uploads.array('product', 5), uploadFiles);
+routes.get('/products/mine', getMyProducts);
 routes.get('/products', getProducts);
 routes.post('/products', addProduct);
 routes.put('/products/:id', updateProduct);

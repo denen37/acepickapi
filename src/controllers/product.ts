@@ -16,25 +16,64 @@ export const getProducts = async (req: Request, res: Response) => {
         });
     }
 
-    const { categoryId, category, search, locationId, page, limit } = result.data;
+    const { categoryId, category, search, state, lga, locationId, page, limit } = result.data;
 
+
+    //try {
+    const products = await Product.findAll({
+        where: {
+            ...(categoryId && { categoryId }),
+            ...(search && { name: { [Op.like]: `%${search}%` } }),
+            ...(locationId && { locationId }),
+        },
+        limit: limit,
+        offset: (page - 1) * limit,
+        include: [
+            {
+                model: Category,
+                attributes: ['id', 'name', 'description'],
+                where: {
+                    ...(category && { name: { [Op.like]: `%${category}%` } })
+                }
+            },
+            {
+                model: Location,
+                where: {
+                    ...(state && { state: { [Op.like]: `%${state}%` } }),
+                    ...(lga && { lga: { [Op.like]: `%${lga}%` } }),
+
+                }
+                //attributes: ['id', 'name', 'description'],
+            },
+        ]
+    })
+
+    return successResponse(res, 'success', products.map(product => {
+        const plainProduct = product.toJSON(); // or product.get({ plain: true });
+        return {
+            ...plainProduct,
+            images: JSON.parse(plainProduct.images || '[]'),
+        };
+    }));
+
+    // } catch (error) {
+    //     return errorResponse(res, 'error', 'Failed to retrieve products');
+    // }
+}
+
+
+export const getMyProducts = async (req: Request, res: Response) => {
+    const { id, role } = req.user
 
     try {
         const products = await Product.findAll({
             where: {
-                ...(categoryId && { categoryId }),
-                ...(search && { name: { [Op.like]: `%${search}%` } }),
-                ...(locationId && { locationId }),
+                userId: id
             },
-            limit: limit,
-            offset: (page - 1) * limit,
             include: [
                 {
                     model: Category,
                     attributes: ['id', 'name', 'description'],
-                    where: {
-                        ...(category && { name: { [Op.like]: `%${category}%` } })
-                    }
                 },
                 {
                     model: Location,
