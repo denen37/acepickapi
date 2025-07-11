@@ -7,22 +7,17 @@ import { Emit, Listen } from './utils/events';
 // import { ChatRoom } from './models/Models';
 // import { Op } from 'sequelize';
 import { ChatMessage, getContacts, getMsgs, getPrevChats, joinRoom, onConnect, onDisconnect, sendMessage, uploadFile } from './controllers/socket/chat';
+import { OnlineUser } from './models/OnlineUser';
 
 let io: Server;
 
 export const initSocket = (httpServer: any) => {
     io = new Server(httpServer, {
         path: '/chat',
-        // cors: {
-        //     origin: '*',
-        //     credentials: true,
-        // },
-
         cors: {
-            origin: "http://localhost:3000",
-            methods: ["GET", "POST"],
-            credentials: true,
-        },
+            origin: "*",          // not allowed
+            // credentials: true,
+        }
 
     });
 
@@ -31,16 +26,57 @@ export const initSocket = (httpServer: any) => {
         await socketAuthorize(socket, next);
     });
 
+    io.on("connection_error", (err) => {
+        console.error("Connection error:", err);
+    });
+
+
     io.on(Listen.CONNECTION, async (socket) => {
         await onConnect(socket)
 
         socket.emit(Emit.CONNECTED, socket.id)
 
-        socket.on("offer", (offer: any) => socket.broadcast.emit("offer", offer));
+        // socket.on("offer", (offer: any) => socket.broadcast.emit("offer", offer));
 
-        socket.on("answer", (answer: any) => socket.broadcast.emit("answer", answer));
+        // socket.on("answer", (answer: any) => socket.broadcast.emit("answer", answer));
 
-        socket.on("candidate", (candidate: any) => socket.broadcast.emit("candidate", candidate))
+        // socket.on("candidate", (candidate: any) => socket.broadcast.emit("candidate", candidate))
+
+        socket.on('call-user', async (data: any) => {
+            const partner = await OnlineUser.findOne({ where: { userId: data.to } })
+
+            if (!partner) return
+
+            io.to(partner?.socketId).emit('call-made', {
+                offer: data.offer,
+                from: socket.user.id,
+            });
+        });
+
+        // Answering the call
+        socket.on('make-answer', async (data: any) => {
+            const partner = await OnlineUser.findOne({ where: { userId: data.to } })
+
+            if (!partner) return
+
+            io.to(partner.socketId).emit('answer-made', {
+                answer: data.answer,
+                from: socket.user.id,
+            });
+        });
+
+        // Exchange ICE candidates
+        socket.on('ice-candidate', async (data: any) => {
+            const partner = await OnlineUser.findOne({ where: { userId: data.to } })
+
+            if (!partner) return
+
+            io.to(partner.socketId).emit('ice-candidate', {
+                candidate: data.candidate,
+                from: socket.user.id,
+            });
+        });
+
 
         socket.on(Listen.UPLOAD_FILE, (data: any) => uploadFile(io, socket, data));
 

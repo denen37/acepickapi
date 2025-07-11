@@ -9,12 +9,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteProduct = exports.updateProduct = exports.addProduct = exports.getMyProducts = exports.getProducts = void 0;
+exports.deleteProduct = exports.updateProduct = exports.addProduct = exports.getProductTransactions = exports.getMyProducts = exports.getProducts = void 0;
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const sequelize_1 = require("sequelize");
 const query_1 = require("../validation/query");
 const body_1 = require("../validation/body");
+const param_1 = require("../validation/param");
+const ProductTransaction_1 = require("../models/ProductTransaction");
+const enum_1 = require("../utils/enum");
 const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = query_1.getProductSchema.safeParse(req.query);
     if (!result.success) {
@@ -25,31 +28,32 @@ const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
     }
     const { categoryId, category, search, state, lga, locationId, page, limit } = result.data;
-    //try {
-    const products = yield Models_1.Product.findAll({
-        where: Object.assign(Object.assign(Object.assign({}, (categoryId && { categoryId })), (search && { name: { [sequelize_1.Op.like]: `%${search}%` } })), (locationId && { locationId })),
-        limit: limit,
-        offset: (page - 1) * limit,
-        include: [
-            {
-                model: Models_1.Category,
-                attributes: ['id', 'name', 'description'],
-                where: Object.assign({}, (category && { name: { [sequelize_1.Op.like]: `%${category}%` } }))
-            },
-            {
-                model: Models_1.Location,
-                where: Object.assign(Object.assign({}, (state && { state: { [sequelize_1.Op.like]: `%${state}%` } })), (lga && { lga: { [sequelize_1.Op.like]: `%${lga}%` } }))
-                //attributes: ['id', 'name', 'description'],
-            },
-        ]
-    });
-    return (0, modules_1.successResponse)(res, 'success', products.map(product => {
-        const plainProduct = product.toJSON(); // or product.get({ plain: true });
-        return Object.assign(Object.assign({}, plainProduct), { images: JSON.parse(plainProduct.images || '[]') });
-    }));
-    // } catch (error) {
-    //     return errorResponse(res, 'error', 'Failed to retrieve products');
-    // }
+    try {
+        const products = yield Models_1.Product.findAll({
+            where: Object.assign(Object.assign(Object.assign({}, (categoryId && { categoryId })), (search && { name: { [sequelize_1.Op.like]: `%${search}%` } })), (locationId && { locationId })),
+            limit: limit,
+            offset: (page - 1) * limit,
+            include: [
+                {
+                    model: Models_1.Category,
+                    attributes: ['id', 'name', 'description'],
+                    where: Object.assign({}, (category && { name: { [sequelize_1.Op.like]: `%${category}%` } }))
+                },
+                {
+                    model: Models_1.Location,
+                    where: Object.assign(Object.assign({}, (state && { state: { [sequelize_1.Op.like]: `%${state}%` } })), (lga && { lga: { [sequelize_1.Op.like]: `%${lga}%` } }))
+                    //attributes: ['id', 'name', 'description'],
+                },
+            ]
+        });
+        return (0, modules_1.successResponse)(res, 'success', products.map(product => {
+            const plainProduct = product.toJSON(); // or product.get({ plain: true });
+            return Object.assign(Object.assign({}, plainProduct), { images: JSON.parse(plainProduct.images || '[]') });
+        }));
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', 'Failed to retrieve products');
+    }
 });
 exports.getProducts = getProducts;
 const getMyProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -80,6 +84,39 @@ const getMyProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.getMyProducts = getMyProducts;
+const getProductTransactions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.user;
+    try {
+        const result = param_1.productTransactionSchema.safeParse(req.params);
+        if (!result.success) {
+            return res.status(400).json({ error: result.error.format() });
+        }
+        const { status } = result.data;
+        const productTransactions = yield ProductTransaction_1.ProductTransaction.findAll({
+            where: Object.assign({}, (status === enum_1.ProductTransactionStatus.BOUGHT ? { buyerId: id } : { sellerId: id })),
+            include: [{
+                    model: Models_1.Product,
+                }, {
+                    model: Models_1.User,
+                    as: status === enum_1.ProductTransactionStatus.BOUGHT ? 'seller' : 'buyer',
+                    attributes: { exclude: ['password'] },
+                    include: [
+                        {
+                            model: Models_1.Profile,
+                            attributes: ['id', 'avatar', 'firstName', 'lastName']
+                        }
+                    ]
+                }]
+        });
+        return (0, modules_1.successResponse)(res, 'success', productTransactions.map(productTransaction => {
+            return Object.assign(Object.assign({}, productTransaction.toJSON()), { product: Object.assign(Object.assign({}, productTransaction.product.toJSON()), { images: JSON.parse(productTransaction.product.images || '[]') }) });
+        }));
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error.message);
+    }
+});
+exports.getProductTransactions = getProductTransactions;
 const addProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = body_1.createProductSchema.safeParse(req.body);

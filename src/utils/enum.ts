@@ -81,3 +81,8 @@ export enum TransferStatus {
     FAILED = 'failed',
     PENDING = 'pending'
 }
+
+export enum ProductTransactionStatus {
+    SOLD = 'sold',
+    BOUGHT = 'bought'
+}

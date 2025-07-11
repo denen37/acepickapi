@@ -25,6 +25,7 @@ import { ChatRoom } from './ChatRoom'
 import { Message } from './Message'
 import { Category } from './Category'
 import { Product } from './Product'
+import { ProductTransaction } from './ProductTransaction'
 
 export {
     User,
@@ -54,4 +55,5 @@ export {
     Message,
     Category,
     Product,
+    ProductTransaction
 }

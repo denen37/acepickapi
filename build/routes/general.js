@@ -99,6 +99,7 @@ routes.post('/transfer/finalize', payment_1.finalizeTransfer);
 routes.post('/transfer/verify/:ref', payment_1.verifyTransfer);
 routes.post('/products/upload', upload_1.uploads.array('product', 5), upload_2.uploadFiles);
 routes.get('/products/mine', product_1.getMyProducts);
+routes.get('/products/transactions/:status', product_1.getProductTransactions);
 routes.get('/products', product_1.getProducts);
 routes.post('/products', product_1.addProduct);
 routes.put('/products/:id', product_1.updateProduct);

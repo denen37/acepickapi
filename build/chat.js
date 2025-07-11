@@ -19,30 +19,58 @@ const events_1 = require("./utils/events");
 // import { ChatRoom } from './models/Models';
 // import { Op } from 'sequelize';
 const chat_1 = require("./controllers/socket/chat");
+const OnlineUser_1 = require("./models/OnlineUser");
 let io;
 const initSocket = (httpServer) => {
     io = new socket_io_1.Server(httpServer, {
         path: '/chat',
-        // cors: {
-        //     origin: '*',
-        //     credentials: true,
-        // },
         cors: {
-            origin: "http://localhost:3000",
-            methods: ["GET", "POST"],
-            credentials: true,
-        },
+            origin: "*", // not allowed
+            // credentials: true,
+        }
     });
     io.use((socket, next) => __awaiter(void 0, void 0, void 0, function* () {
         console.log('Attempting to connect...');
         yield (0, authorize_1.socketAuthorize)(socket, next);
     }));
+    io.on("connection_error", (err) => {
+        console.error("Connection error:", err);
+    });
     io.on(events_1.Listen.CONNECTION, (socket) => __awaiter(void 0, void 0, void 0, function* () {
         yield (0, chat_1.onConnect)(socket);
         socket.emit(events_1.Emit.CONNECTED, socket.id);
-        socket.on("offer", (offer) => socket.broadcast.emit("offer", offer));
-        socket.on("answer", (answer) => socket.broadcast.emit("answer", answer));
-        socket.on("candidate", (candidate) => socket.broadcast.emit("candidate", candidate));
+        // socket.on("offer", (offer: any) => socket.broadcast.emit("offer", offer));
+        // socket.on("answer", (answer: any) => socket.broadcast.emit("answer", answer));
+        // socket.on("candidate", (candidate: any) => socket.broadcast.emit("candidate", candidate))
+        socket.on('call-user', (data) => __awaiter(void 0, void 0, void 0, function* () {
+            const partner = yield OnlineUser_1.OnlineUser.findOne({ where: { userId: data.to } });
+            if (!partner)
+                return;
+            io.to(partner === null || partner === void 0 ? void 0 : partner.socketId).emit('call-made', {
+                offer: data.offer,
+                from: socket.user.id,
+            });
+        }));
+        // Answering the call
+        socket.on('make-answer', (data) => __awaiter(void 0, void 0, void 0, function* () {
+            const partner = yield OnlineUser_1.OnlineUser.findOne({ where: { userId: data.to } });
+            if (!partner)
+                return;
+            io.to(partner.socketId).emit('answer-made', {
+                answer: data.answer,
+                from: socket.user.id,
+            });
+        }));
+        // Exchange ICE candidates
+        socket.on('ice-candidate', (data) => __awaiter(void 0, void 0, void 0, function* () {
+            const partner = yield OnlineUser_1.OnlineUser.findOne({ where: { userId: data.to } });
+            if (!partner)
+                return;
+            io.to(partner.socketId).emit('ice-candidate', {
+                candidate: data.candidate,
+                from: socket.user.id,
+            });
+        }));
         socket.on(events_1.Listen.UPLOAD_FILE, (data) => (0, chat_1.uploadFile)(io, socket, data));
         socket.on(events_1.Listen.SEND_MSG, (data) => __awaiter(void 0, void 0, void 0, function* () { return yield (0, chat_1.sendMessage)(io, socket, data); }));
         socket.on(events_1.Listen.DISCONNECT, () => (0, chat_1.onDisconnect)(socket));
