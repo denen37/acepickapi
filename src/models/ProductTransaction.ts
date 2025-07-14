@@ -1,6 +1,6 @@
-import { AllowNull, BelongsTo, Column, DataType, Default, ForeignKey, Model, Table } from "sequelize-typescript"
+import { AllowNull, BelongsTo, Column, DataType, Default, ForeignKey, HasOne, Model, Table, Unique } from "sequelize-typescript"
 import { Allow } from "stream-chat"
-import { Product, User } from "./Models"
+import { Product, User, Transaction } from "./Models"
 
 @Table({ timestamps: true, tableName: 'product_transactions' })
 export class ProductTransaction extends Model {
@@ -47,4 +47,7 @@ export class ProductTransaction extends Model {
 
     @BelongsTo(() => User, { foreignKey: 'sellerId' })
     seller!: User
+
+    @HasOne(() => Transaction)
+    transaction!: Transaction
 }

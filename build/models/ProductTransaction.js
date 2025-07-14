@@ -61,6 +61,10 @@ __decorate([
     (0, sequelize_typescript_1.BelongsTo)(() => Models_1.User, { foreignKey: 'sellerId' }),
     __metadata("design:type", Models_1.User)
 ], ProductTransaction.prototype, "seller", void 0);
+__decorate([
+    (0, sequelize_typescript_1.HasOne)(() => Models_1.Transaction),
+    __metadata("design:type", Models_1.Transaction)
+], ProductTransaction.prototype, "transaction", void 0);
 exports.ProductTransaction = ProductTransaction = __decorate([
     (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'product_transactions' })
 ], ProductTransaction);

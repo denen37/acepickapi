@@ -12,13 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.creditWallet = exports.forgotPin = exports.resetPin = exports.setPin = exports.debitWallet = exports.viewWallet = exports.createWallet = void 0;
+exports.creditWallet = exports.forgotPin = exports.resetPin = exports.setPin = exports.debitWalletForProduct = exports.debitWallet = exports.viewWallet = exports.createWallet = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const modules_1 = require("../utils/modules");
 const enum_1 = require("../utils/enum");
 const body_1 = require("../validation/body");
 const Models_1 = require("../models/Models");
-const crypto_1 = require("crypto");
 const messages_1 = require("../utils/messages");
 const gmail_1 = require("../services/gmail");
 const notification_1 = require("../services/notification");
@@ -111,7 +110,7 @@ const debitWallet = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
         yield wallet.save();
         job.payStatus = enum_1.PayStatus.PAID;
-        job.paymentRef = (0, crypto_1.randomUUID)();
+        job.paymentRef = (0, modules_1.randomId)(12);
         job.status = enum_1.JobStatus.ONGOING;
         yield job.save();
         job.client.profile.totalJobsOngoing = Number(job.client.profile.totalJobsOngoing || 0) + 1;
@@ -144,6 +143,80 @@ const debitWallet = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.debitWallet = debitWallet;
+const debitWalletForProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id, role } = req.user;
+    // Usage example
+    const result = body_1.productPaymentSchema.safeParse(req.body);
+    if (!result.success) {
+        return res.status(400).json({ errors: result.error.format() });
+    }
+    const { amount, pin, reason, productTransactionId } = result.data;
+    const productTransaction = yield Models_1.ProductTransaction.findByPk(productTransactionId, {
+        include: [
+            {
+                model: Models_1.User,
+                as: 'buyer',
+                include: [Models_1.Profile]
+            },
+            {
+                model: Models_1.User,
+                as: 'seller',
+                include: [Models_1.Profile]
+            },
+            {
+                model: Models_1.Product
+            }
+        ]
+    });
+    if (!productTransaction) {
+        return (0, modules_1.handleResponse)(res, 404, false, 'Product transaction not found');
+    }
+    try {
+        const wallet = yield Models_1.Wallet.findOne({ where: { userId: id } });
+        if (!wallet) {
+            return (0, modules_1.handleResponse)(res, 404, false, 'Wallet not found');
+        }
+        if (!wallet.pin) {
+            return (0, modules_1.handleResponse)(res, 400, false, 'Pin not set');
+        }
+        const match = yield bcryptjs_1.default.compare(pin, wallet.pin);
+        if (!match) {
+            return (0, modules_1.handleResponse)(res, 400, false, 'Incorrect pin');
+        }
+        let prevBalance = Number(wallet.currentBalance);
+        //console.log('prevBalance', prevBalance, typeof prevBalance, 'amount', amount, typeof amount);
+        if (prevBalance < amount) {
+            return (0, modules_1.handleResponse)(res, 400, false, 'Insufficient balance');
+        }
+        let currBalance = prevBalance - amount;
+        yield wallet.update({
+            currentBalance: currBalance,
+            previousBalance: prevBalance
+        });
+        yield wallet.save();
+        const transaction = yield Models_1.Transaction.create({
+            userId: id,
+            jobId: null,
+            amount: amount,
+            reference: (0, modules_1.randomId)(12),
+            status: 'success',
+            channel: 'wallet',
+            timestamp: Date.now(),
+            productTransactionId,
+            description: reason || 'Wallet payment',
+            type: enum_1.TransactionType.DEBIT,
+        });
+        const email = (0, messages_1.productPaymentEmail)(productTransaction);
+        const msgStat = yield (0, gmail_1.sendEmail)(productTransaction.seller.email, email.title, email.body, productTransaction.seller.profile.firstName + ' ' + productTransaction.seller.profile.lastName);
+        //Send notification to the client
+        (0, notification_1.sendPushNotification)(productTransaction.seller.fcmToken, `Product Payment`, `${productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.quantity} of your product: ${productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.product.name} has been paid by ${productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.buyer.profile.firstName} ${productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.buyer.profile.lastName}`, {});
+        return (0, modules_1.successResponse)(res, 'success', transaction);
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error.message);
+    }
+});
+exports.debitWalletForProduct = debitWalletForProduct;
 const setPin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, role } = req.user;
     const pinSchema = zod_1.default.object({

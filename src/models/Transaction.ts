@@ -2,6 +2,8 @@ import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNu
 import { TransactionStatus, TransactionType } from '../utils/enum';
 import { User } from './User';
 import { Job } from './Job';
+import { Product } from './Product';
+import { ProductTransaction } from './ProductTransaction';
 // import { User } from './Models';
 
 
@@ -69,6 +71,14 @@ export class Transaction extends Model {
     jobId!: number;
 
 
+
+    @ForeignKey(() => ProductTransaction)
+    @AllowNull(true)
+    @Column(DataType.INTEGER)
+    productTransactionId!: number;
+
+
+
     @ForeignKey(() => User)
     @AllowNull(false)
     @Column(DataType.UUID)
@@ -82,4 +92,8 @@ export class Transaction extends Model {
 
     @BelongsTo(() => Job, { onDelete: 'CASCADE' })
     job!: Job
+
+
+    @BelongsTo(() => ProductTransaction, { onDelete: 'CASCADE' })
+    productTransaction!: ProductTransaction
 }

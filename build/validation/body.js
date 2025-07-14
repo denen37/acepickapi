@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.initPaymentSchema = exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.selectProductSchema = exports.initPaymentSchema = exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.productPaymentSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum"); // adjust the path
 const enum_2 = require("../utils/enum");
@@ -233,6 +233,12 @@ exports.paymentSchema = zod_1.z.object({
     pin: zod_1.z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
     reason: zod_1.z.string().min(1, 'Reason is required'),
     jobId: zod_1.z.number().int().positive("Job ID must be a positive integer"),
+});
+exports.productPaymentSchema = zod_1.z.object({
+    amount: zod_1.z.number().positive('Amount must be a positive number'),
+    pin: zod_1.z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
+    reason: zod_1.z.string().min(1, 'Reason is required'),
+    productTransactionId: zod_1.z.number().int().positive("Job ID must be a positive integer"),
 });
 exports.withdrawSchema = zod_1.z.object({
     amount: zod_1.z
@@ -567,15 +573,21 @@ exports.initPaymentSchema = zod_1.z
         invalid_type_error: 'Amount must be a number',
     })
         .positive('Amount must be greater than zero'),
-    // Coerce and lowercase the description to allow case-insensitive matching
     description: zod_1.z
-        .preprocess((val) => (typeof val === 'string' ? val.toLowerCase() : val), zod_1.z.enum(['job payment', 'wallet topup'], {
-        errorMap: () => ({ message: 'Description must be "Job Payment" or "Wallet Topup"' }),
+        .preprocess((val) => (typeof val === 'string' ? val.toLowerCase() : val), zod_1.z.enum(['job payment', 'product payment', 'wallet topup'], {
+        errorMap: () => ({
+            message: 'Description must be "Job Payment", "Product Payment" or "Wallet Topup"',
+        }),
     })),
     jobId: zod_1.z
         .number()
         .int('jobId must be an integer')
         .positive('jobId must be a positive number')
+        .optional(),
+    productTransactionId: zod_1.z
+        .number()
+        .int('productTransactionId must be an integer')
+        .positive('productTransactionId must be a positive number')
         .optional(),
 })
     .refine((data) => {
@@ -589,4 +601,31 @@ exports.initPaymentSchema = zod_1.z
 }, {
     message: 'jobId must be a positive integer for "Job Payment", and must be null or omitted for "Wallet Topup"',
     path: ['jobId'],
+})
+    .refine((data) => {
+    if (data.description === 'product payment') {
+        return typeof data.productTransactionId === 'number' && data.productTransactionId > 0;
+    }
+    else {
+        return data.productTransactionId === undefined || data.productTransactionId === null;
+    }
+}, {
+    message: 'productTransactionId must be a positive integer for "Product Payment", and must be null or omitted otherwise',
+    path: ['productTransactionId'],
+});
+exports.selectProductSchema = zod_1.z.object({
+    productId: zod_1.z
+        .number({
+        required_error: 'productId is required',
+        invalid_type_error: 'productId must be a number',
+    })
+        .int('productId must be an integer')
+        .positive('productId must be a positive number'),
+    quantity: zod_1.z
+        .number({
+        invalid_type_error: 'quantity must be a number',
+    })
+        .int('quantity must be an integer')
+        .positive('quantity must be a positive number')
+        .default(1),
 });

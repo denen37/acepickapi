@@ -3,7 +3,7 @@ import { Product, Category, Location, Profile, User } from '../models/Models';
 import { successResponse, errorResponse } from '../utils/modules';
 import { Op } from 'sequelize';
 import { getProductSchema } from '../validation/query';
-import { createProductSchema, updateProductSchema } from '../validation/body';
+import { createProductSchema, selectProductSchema, updateProductSchema } from '../validation/body';
 import { productTransactionSchema } from '../validation/param';
 import { ProductTransaction } from '../models/ProductTransaction';
 import { ProductTransactionStatus } from '../utils/enum';
@@ -138,6 +138,38 @@ export const getProductTransactions = async (req: Request, res: Response) => {
                 }
             }
         }))
+    } catch (error: any) {
+        return errorResponse(res, 'error', error.message);
+    }
+}
+
+
+export const selectProduct = async (req: Request, res: Response) => {
+    try {
+        const result = selectProductSchema.safeParse(req.body);
+
+        if (!result.success) {
+            return res.status(400).json({ error: result.error.format() });
+        }
+
+        const { productId, quantity } = result.data;
+
+        const product = await Product.findByPk(productId);
+
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        const productTransaction = await ProductTransaction.create({
+            productId,
+            quantity,
+            buyerId: req.user.id,
+            sellerId: product.userId,
+            price: product.price * quantity - product.discount * quantity,
+            date: new Date()
+        })
+
+        return successResponse(res, 'success', productTransaction)
     } catch (error: any) {
         return errorResponse(res, 'error', error.message);
     }

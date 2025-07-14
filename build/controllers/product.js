@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteProduct = exports.updateProduct = exports.addProduct = exports.getProductTransactions = exports.getMyProducts = exports.getProducts = void 0;
+exports.deleteProduct = exports.updateProduct = exports.addProduct = exports.selectProduct = exports.getProductTransactions = exports.getMyProducts = exports.getProducts = void 0;
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const sequelize_1 = require("sequelize");
@@ -117,6 +117,32 @@ const getProductTransactions = (req, res) => __awaiter(void 0, void 0, void 0, f
     }
 });
 exports.getProductTransactions = getProductTransactions;
+const selectProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = body_1.selectProductSchema.safeParse(req.body);
+        if (!result.success) {
+            return res.status(400).json({ error: result.error.format() });
+        }
+        const { productId, quantity } = result.data;
+        const product = yield Models_1.Product.findByPk(productId);
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+        const productTransaction = yield ProductTransaction_1.ProductTransaction.create({
+            productId,
+            quantity,
+            buyerId: req.user.id,
+            sellerId: product.userId,
+            price: product.price * quantity - product.discount * quantity,
+            date: new Date()
+        });
+        return (0, modules_1.successResponse)(res, 'success', productTransaction);
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error.message);
+    }
+});
+exports.selectProduct = selectProduct;
 const addProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = body_1.createProductSchema.safeParse(req.body);

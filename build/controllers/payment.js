@@ -27,42 +27,44 @@ const messages_1 = require("../utils/messages");
 const gmail_1 = require("../services/gmail");
 const initiatePayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, email, role } = req.user;
-    // try {
-    const result = body_1.initPaymentSchema.safeParse(req.body);
-    if (!result.success) {
-        return res.status(400).json({
-            status: false,
-            message: 'Validation error',
-            errors: result.error.flatten().fieldErrors,
+    try {
+        const result = body_1.initPaymentSchema.safeParse(req.body);
+        if (!result.success) {
+            return res.status(400).json({
+                status: false,
+                message: 'Validation error',
+                errors: result.error.flatten().fieldErrors,
+            });
+        }
+        const { amount, description, jobId, productTransactionId } = result.data;
+        // Initiate payment with Paystack API
+        const paystackResponseInit = yield axios_1.default.post("https://api.paystack.co/transaction/initialize", {
+            email: email,
+            amount: amount * 100,
+        }, {
+            headers: {
+                Authorization: `Bearer ${configSetup_1.default.PAYSTACK_SECRET_KEY}`,
+            },
         });
+        const data = paystackResponseInit.data.data;
+        const transaction = yield Models_1.Transaction.create({
+            userId: id,
+            amount: amount,
+            reference: data.reference,
+            status: enum_1.TransactionStatus.PENDING,
+            //channel: data.channel,
+            currency: data.currency,
+            timestamp: new Date(),
+            description: description,
+            jobId: description.toString().includes('job') ? jobId : null,
+            productTransactionId: description.toString().includes('product') ? productTransactionId : null,
+            type: enum_1.TransactionType.CREDIT,
+        });
+        return (0, modules_1.successResponse)(res, 'success', data);
     }
-    const { amount, description, jobId } = result.data;
-    // Initiate payment with Paystack API
-    const paystackResponseInit = yield axios_1.default.post("https://api.paystack.co/transaction/initialize", {
-        email: email,
-        amount: amount * 100,
-    }, {
-        headers: {
-            Authorization: `Bearer ${configSetup_1.default.PAYSTACK_SECRET_KEY}`,
-        },
-    });
-    const data = paystackResponseInit.data.data;
-    const transaction = yield Models_1.Transaction.create({
-        userId: id,
-        amount: amount,
-        reference: data.reference,
-        status: enum_1.TransactionStatus.PENDING,
-        //channel: data.channel,
-        currency: data.currency,
-        timestamp: new Date(),
-        description: description,
-        jobId: description.toString().includes('job') ? jobId : null,
-        type: enum_1.TransactionType.CREDIT,
-    });
-    return (0, modules_1.successResponse)(res, 'success', data);
-    // } catch (error) {
-    //     return handleResponse(res, 500, false, 'An error occurred while initiating payment')
-    // }
+    catch (error) {
+        return (0, modules_1.handleResponse)(res, 500, false, 'An error occurred while initiating payment');
+    }
 });
 exports.initiatePayment = initiatePayment;
 const verifyPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -244,6 +246,32 @@ const handlePaystackWebhook = (req, res) => __awaiter(void 0, void 0, void 0, fu
                     (0, notification_1.sendPushNotification)(transaction.user.fcmToken, `Job Payment`, `Job titled: ${job === null || job === void 0 ? void 0 : job.title} has been paid by ${(_b = (_a = job === null || job === void 0 ? void 0 : job.client) === null || _a === void 0 ? void 0 : _a.profile) === null || _b === void 0 ? void 0 : _b.firstName} ${(_d = (_c = job === null || job === void 0 ? void 0 : job.client) === null || _c === void 0 ? void 0 : _c.profile) === null || _d === void 0 ? void 0 : _d.lastName}}`, {});
                     const email = (0, messages_1.jobPaymentEmail)(job === null || job === void 0 ? void 0 : job.toJSON());
                     const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.professional.email, email.title, email.body, job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName);
+                }
+            }
+            else if (transaction.productTransactionId && transaction.description.includes('product')) {
+                const productTransaction = yield Models_1.ProductTransaction.findByPk(transaction.productTransactionId, {
+                    include: [
+                        {
+                            model: Models_1.User,
+                            as: 'buyer',
+                            include: [Models_1.Profile]
+                        },
+                        {
+                            model: Models_1.User,
+                            as: 'seller',
+                            include: [Models_1.Profile]
+                        },
+                        {
+                            model: Models_1.Product
+                        }
+                    ]
+                });
+                if (productTransaction) {
+                    //send notification to buyer
+                    (0, notification_1.sendPushNotification)(transaction.user.fcmToken, `Product Payment`, `${productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.quantity} of your product: ${productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.product.name} has been paid by ${productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.buyer.profile.firstName} ${productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.buyer.profile.lastName}`, {});
+                    //send email to buyer
+                    const email = (0, messages_1.productPaymentEmail)(productTransaction);
+                    const msgStat = yield (0, gmail_1.sendEmail)(productTransaction.seller.email, email.title, email.body, productTransaction.seller.profile.firstName + ' ' + productTransaction.seller.profile.lastName);
                 }
             }
             else {

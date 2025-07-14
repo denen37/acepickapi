@@ -1,4 +1,5 @@
-import { Dispute, Job, User } from "../models/Models"
+import { title } from "process"
+import { Dispute, Job, ProductTransaction, User } from "../models/Models"
 
 interface Message {
     title: string,
@@ -224,6 +225,21 @@ export const jobPaymentEmail = (job: Job) => {
     }
 }
 
+export const productPaymentEmail = (productTrans: ProductTransaction) => {
+    return {
+        title: `Product Payment`,
+        body: `Your Product - ${productTrans.product.name} has been paid by ${productTrans.buyer.profile.firstName} ${productTrans.buyer.profile.lastName}
+        <br>
+        <h3>Summary</h3>
+        <p><b>Product name: </b>${productTrans.product.name}</p>
+        <p><b>Product description: </b>${productTrans.product.description}</p>
+        <p><b>Price: </b>${productTrans.price}
+        <p><b>Quantity: </b>${productTrans.quantity}</p>
+        <p><b>Date: </b>${productTrans.date}
+        `
+    }
+}
+
 export const jobCancelledEmail = (job: Job) => {
     return {
         title: `Job Cancelled`,
@@ -235,3 +251,4 @@ export const jobCancelledEmail = (job: Job) => {
         `
     }
 }
+

@@ -272,6 +272,14 @@ export const paymentSchema = z.object({
 });
 
 
+export const productPaymentSchema = z.object({
+    amount: z.number().positive('Amount must be a positive number'),
+    pin: z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
+    reason: z.string().min(1, 'Reason is required'),
+    productTransactionId: z.number().int().positive("Job ID must be a positive integer"),
+});
+
+
 export const withdrawSchema = z.object({
     amount: z
         .number({
@@ -701,12 +709,14 @@ export const initPaymentSchema = z
             })
             .positive('Amount must be greater than zero'),
 
-        // Coerce and lowercase the description to allow case-insensitive matching
         description: z
             .preprocess(
                 (val) => (typeof val === 'string' ? val.toLowerCase() : val),
-                z.enum(['job payment', 'wallet topup'], {
-                    errorMap: () => ({ message: 'Description must be "Job Payment" or "Wallet Topup"' }),
+                z.enum(['job payment', 'product payment', 'wallet topup'], {
+                    errorMap: () => ({
+                        message:
+                            'Description must be "Job Payment", "Product Payment" or "Wallet Topup"',
+                    }),
                 })
             ),
 
@@ -714,6 +724,12 @@ export const initPaymentSchema = z
             .number()
             .int('jobId must be an integer')
             .positive('jobId must be a positive number')
+            .optional(),
+
+        productTransactionId: z
+            .number()
+            .int('productTransactionId must be an integer')
+            .positive('productTransactionId must be a positive number')
             .optional(),
     })
     .refine(
@@ -730,6 +746,39 @@ export const initPaymentSchema = z
                 'jobId must be a positive integer for "Job Payment", and must be null or omitted for "Wallet Topup"',
             path: ['jobId'],
         }
+    )
+    .refine(
+        (data) => {
+            if (data.description === 'product payment') {
+                return typeof data.productTransactionId === 'number' && data.productTransactionId > 0;
+            } else {
+                return data.productTransactionId === undefined || data.productTransactionId === null;
+            }
+        },
+        {
+            message:
+                'productTransactionId must be a positive integer for "Product Payment", and must be null or omitted otherwise',
+            path: ['productTransactionId'],
+        }
     );
+
+export const selectProductSchema = z.object({
+    productId: z
+        .number({
+            required_error: 'productId is required',
+            invalid_type_error: 'productId must be a number',
+        })
+        .int('productId must be an integer')
+        .positive('productId must be a positive number'),
+
+    quantity: z
+        .number({
+            invalid_type_error: 'quantity must be a number',
+        })
+        .int('quantity must be an integer')
+        .positive('quantity must be a positive number')
+        .default(1),
+});
+
 
 

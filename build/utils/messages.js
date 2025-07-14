@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.jobCancelledEmail = exports.jobPaymentEmail = exports.disputedJobEmail = exports.approveJobEmail = exports.completeJobEmail = exports.invoiceUpdatedEmail = exports.invoiceGeneratedEmail = exports.jobDisputeEmail = exports.jobResponseEmail = exports.jobUpdatedEmail = exports.jobCreatedEmail = exports.forgotPasswordEmail = exports.sendOTPEmail = exports.sendOTPPhone = exports.registerEmail = void 0;
+exports.jobCancelledEmail = exports.productPaymentEmail = exports.jobPaymentEmail = exports.disputedJobEmail = exports.approveJobEmail = exports.completeJobEmail = exports.invoiceUpdatedEmail = exports.invoiceGeneratedEmail = exports.jobDisputeEmail = exports.jobResponseEmail = exports.jobUpdatedEmail = exports.jobCreatedEmail = exports.forgotPasswordEmail = exports.sendOTPEmail = exports.sendOTPPhone = exports.registerEmail = void 0;
 const registerEmail = (user) => {
     var _a, _b;
     return {
@@ -215,6 +215,21 @@ const jobPaymentEmail = (job) => {
     };
 };
 exports.jobPaymentEmail = jobPaymentEmail;
+const productPaymentEmail = (productTrans) => {
+    return {
+        title: `Product Payment`,
+        body: `Your Product - ${productTrans.product.name} has been paid by ${productTrans.buyer.profile.firstName} ${productTrans.buyer.profile.lastName}
+        <br>
+        <h3>Summary</h3>
+        <p><b>Product name: </b>${productTrans.product.name}</p>
+        <p><b>Product description: </b>${productTrans.product.description}</p>
+        <p><b>Price: </b>${productTrans.price}
+        <p><b>Quantity: </b>${productTrans.quantity}</p>
+        <p><b>Date: </b>${productTrans.date}
+        `
+    };
+};
+exports.productPaymentEmail = productPaymentEmail;
 const jobCancelledEmail = (job) => {
     return {
         title: `Job Cancelled`,

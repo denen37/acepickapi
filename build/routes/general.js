@@ -85,6 +85,7 @@ routes.delete('/accounts/:recipientCode', (0, allowRoles_1.allowRoles)(enum_1.Us
 routes.post('/create-wallet', /*allowRoles(UserRole.SEEKER),*/ wallet_1.createWallet);
 routes.get('/view-wallet', /*allowRoles(UserRole.SEEKER),*/ wallet_1.viewWallet);
 routes.post('/debit-wallet', /*allowRoles(UserRole.SEEKER),*/ wallet_1.debitWallet);
+routes.post('/debit-wallet/product', /*allowRoles(UserRole.SEEKER),*/ wallet_1.debitWalletForProduct);
 routes.post('/credit-wallet', /*allowRoles(UserRole.SEEKER),*/ wallet_1.creditWallet);
 routes.post('/set-pin', /*allowRoles(UserRole.SEEKER),*/ wallet_1.setPin);
 routes.post('/reset-pin', wallet_1.resetPin);
@@ -98,6 +99,7 @@ routes.post('/transfer/initiate', /*allowRoles(UserRole.PROVIDER),*/ payment_1.i
 routes.post('/transfer/finalize', payment_1.finalizeTransfer);
 routes.post('/transfer/verify/:ref', payment_1.verifyTransfer);
 routes.post('/products/upload', upload_1.uploads.array('product', 5), upload_2.uploadFiles);
+routes.post('/products/select', product_1.selectProduct);
 routes.get('/products/mine', product_1.getMyProducts);
 routes.get('/products/transactions/:status', product_1.getProductTransactions);
 routes.get('/products', product_1.getProducts);

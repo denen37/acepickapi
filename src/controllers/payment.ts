@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Transfer, Transaction, Wallet, User, OnlineUser, Job, Profile } from "../models/Models";
+import { Transfer, Transaction, Wallet, User, OnlineUser, Job, Profile, ProductTransaction, Product } from "../models/Models";
 import { randomId, errorResponse, handleResponse, successResponse } from "../utils/modules";
 import config from "../config/configSetup"
 import axios from 'axios'
@@ -11,7 +11,7 @@ import { initPaymentSchema, withdrawSchema } from "../validation/body";
 import bcrypt from 'bcryptjs';
 import { getIO } from "../chat";
 import { Emit } from "../utils/events";
-import { jobPaymentEmail } from "../utils/messages";
+import { jobPaymentEmail, productPaymentEmail } from "../utils/messages";
 import { sendEmail } from "../services/gmail";
 
 
@@ -19,53 +19,55 @@ import { sendEmail } from "../services/gmail";
 export const initiatePayment = async (req: Request, res: Response) => {
     const { id, email, role } = req.user
 
-    // try {
-    const result = initPaymentSchema.safeParse(req.body);
+    try {
+        const result = initPaymentSchema.safeParse(req.body);
 
-    if (!result.success) {
-        return res.status(400).json({
-            status: false,
-            message: 'Validation error',
-            errors: result.error.flatten().fieldErrors,
-        });
-    }
-
-    const { amount, description, jobId } = result.data;
-
-    // Initiate payment with Paystack API
-    const paystackResponseInit = await axios.post(
-        "https://api.paystack.co/transaction/initialize",
-        {
-            email: email,
-            amount: amount * 100,
-        },
-        {
-            headers: {
-                Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`,
-            },
+        if (!result.success) {
+            return res.status(400).json({
+                status: false,
+                message: 'Validation error',
+                errors: result.error.flatten().fieldErrors,
+            });
         }
-    );
 
-    const data = paystackResponseInit.data.data;
+        const { amount, description, jobId, productTransactionId } = result.data;
+
+        // Initiate payment with Paystack API
+        const paystackResponseInit = await axios.post(
+            "https://api.paystack.co/transaction/initialize",
+            {
+                email: email,
+                amount: amount * 100,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`,
+                },
+            }
+        );
+
+        const data = paystackResponseInit.data.data;
 
 
-    const transaction = await Transaction.create({
-        userId: id,
-        amount: amount,
-        reference: data.reference,
-        status: TransactionStatus.PENDING,
-        //channel: data.channel,
-        currency: data.currency,
-        timestamp: new Date(),
-        description: description,
-        jobId: description.toString().includes('job') ? jobId : null,
-        type: TransactionType.CREDIT,
-    })
+        const transaction = await Transaction.create({
+            userId: id,
+            amount: amount,
+            reference: data.reference,
+            status: TransactionStatus.PENDING,
+            //channel: data.channel,
+            currency: data.currency,
+            timestamp: new Date(),
+            description: description,
+            jobId: description.toString().includes('job') ? jobId : null,
+            productTransactionId: description.toString().includes('product') ? productTransactionId : null,
+            type: TransactionType.CREDIT,
+        })
 
-    return successResponse(res, 'success', data)
-    // } catch (error) {
-    //     return handleResponse(res, 500, false, 'An error occurred while initiating payment')
-    // }
+
+        return successResponse(res, 'success', data)
+    } catch (error) {
+        return handleResponse(res, 500, false, 'An error occurred while initiating payment')
+    }
 }
 
 export const verifyPayment = async (req: Request, res: Response) => {
@@ -328,6 +330,46 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
                         job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName
                     )
                 }
+            } else if (transaction.productTransactionId && transaction.description.includes('product')) {
+                const productTransaction = await ProductTransaction.findByPk(transaction.productTransactionId, {
+                    include: [
+                        {
+                            model: User,
+                            as: 'buyer',
+                            include: [Profile]
+                        },
+                        {
+                            model: User,
+                            as: 'seller',
+                            include: [Profile]
+                        },
+                        {
+                            model: Product
+                        }
+                    ]
+                });
+
+                if (productTransaction) {
+                    //send notification to buyer
+
+                    sendPushNotification(
+                        transaction.user.fcmToken,
+                        `Product Payment`,
+                        `${productTransaction?.quantity} of your product: ${productTransaction?.product.name} has been paid by ${productTransaction?.buyer.profile.firstName} ${productTransaction?.buyer.profile.lastName}`,
+                        {}
+                    );
+
+                    //send email to buyer
+                    const email = productPaymentEmail(productTransaction);
+
+                    const msgStat = await sendEmail(
+                        productTransaction.seller.email,
+                        email.title,
+                        email.body,
+                        productTransaction.seller.profile.firstName + ' ' + productTransaction.seller.profile.lastName,
+                    )
+                }
+
             } else {
                 if (transaction.user.wallet) {
                     let prevAmount = Number(transaction.user.wallet.currentBalance);

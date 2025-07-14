@@ -10,7 +10,7 @@ import { findPersonsNearby, sendEmailTest, sendSMSTest, testNotification } from 
 import { updateLocation } from "../controllers/location";
 import { getClient } from "../controllers/client";
 import { addAccount, deleteAccount, getAccounts, getBanks, resolveAccount, updateAccount } from "../controllers/account";
-import { createWallet, creditWallet, debitWallet, forgotPin, resetPin, setPin, viewWallet } from "../controllers/wallet";
+import { createWallet, creditWallet, debitWallet, debitWalletForProduct, forgotPin, resetPin, setPin, viewWallet } from "../controllers/wallet";
 import { getAllTransactions, getTransactionById } from "../controllers/transactions";
 import { initiatePayment, initiateTransfer, finalizeTransfer, verifyPayment, verifyTransfer, handlePaystackWebhook } from "../controllers/payment";
 import { addEducation, deleteEducation, getEducation, updateEducation } from "../controllers/education";
@@ -18,7 +18,7 @@ import { addCertificate, deleteCertificate, getCertificates, updateCertificate }
 import { addExperience, deleteExperience, getExperiences, updateExperience } from "../controllers/experience";
 import { addPortfolio, deletePortfolio, getPortfolios, updatePortfolio } from "../controllers/portfolio";
 import { AccountInfo, updateProfile } from "../controllers/profiles";
-import { addProduct, deleteProduct, getProducts, getMyProducts, updateProduct, getProductTransactions } from "../controllers/product";
+import { addProduct, deleteProduct, getProducts, getMyProducts, updateProduct, getProductTransactions, selectProduct } from "../controllers/product";
 import { addCategory, deleteCategory, getCategories, updateCategory } from "../controllers/category";
 import { uploads } from "../services/upload";
 import { uploadFiles } from "../controllers/upload";
@@ -101,6 +101,7 @@ routes.delete('/accounts/:recipientCode', allowRoles(UserRole.PROFESSIONAL, User
 routes.post('/create-wallet', /*allowRoles(UserRole.SEEKER),*/ createWallet);
 routes.get('/view-wallet', /*allowRoles(UserRole.SEEKER),*/ viewWallet);
 routes.post('/debit-wallet', /*allowRoles(UserRole.SEEKER),*/ debitWallet);
+routes.post('/debit-wallet/product', /*allowRoles(UserRole.SEEKER),*/ debitWalletForProduct);
 routes.post('/credit-wallet', /*allowRoles(UserRole.SEEKER),*/ creditWallet);
 routes.post('/set-pin', /*allowRoles(UserRole.SEEKER),*/ setPin);
 routes.post('/reset-pin', resetPin);
@@ -117,6 +118,7 @@ routes.post('/transfer/finalize', finalizeTransfer);
 routes.post('/transfer/verify/:ref', verifyTransfer);
 
 routes.post('/products/upload', uploads.array('product', 5), uploadFiles);
+routes.post('/products/select', selectProduct);
 routes.get('/products/mine', getMyProducts);
 routes.get('/products/transactions/:status', getProductTransactions);
 routes.get('/products', getProducts);

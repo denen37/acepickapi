@@ -1,12 +1,12 @@
 import { Request, Response } from "express"
 import bcrypt from "bcryptjs"
-import { errorResponse, handleResponse, successResponse } from "../utils/modules";
+import { errorResponse, handleResponse, successResponse, randomId } from "../utils/modules";
 import { JobStatus, PayStatus, TransactionType } from "../utils/enum";
 import { v4 as uuidv4 } from 'uuid';
-import { paymentSchema, pinForgotSchema, pinResetSchema } from "../validation/body";
-import { Job, Wallet, Transaction, User, Profile } from "../models/Models";
+import { paymentSchema, pinForgotSchema, pinResetSchema, productPaymentSchema } from "../validation/body";
+import { Job, Wallet, Transaction, User, Profile, ProductTransaction, Product } from "../models/Models";
 import { randomUUID } from "crypto";
-import { jobPaymentEmail } from "../utils/messages";
+import { jobPaymentEmail, productPaymentEmail } from "../utils/messages";
 import { sendEmail } from "../services/gmail";
 import { sendPushNotification } from "../services/notification";
 import z from "zod";
@@ -124,7 +124,7 @@ export const debitWallet = async (req: Request, res: Response) => {
 
         job.payStatus = PayStatus.PAID;
 
-        job.paymentRef = randomUUID();
+        job.paymentRef = randomId(12);
 
         job.status = JobStatus.ONGOING;
 
@@ -170,6 +170,114 @@ export const debitWallet = async (req: Request, res: Response) => {
                 {}
             );
         }
+
+
+        return successResponse(res, 'success', transaction)
+
+    } catch (error: any) {
+        return errorResponse(res, 'error', error.message)
+    }
+}
+
+export const debitWalletForProduct = async (req: Request, res: Response) => {
+    const { id, role } = req.user;
+
+    // Usage example
+    const result = productPaymentSchema.safeParse(req.body);
+
+    if (!result.success) {
+        return res.status(400).json({ errors: result.error.format() });
+    }
+
+    const { amount, pin, reason, productTransactionId } = result.data;
+
+
+    const productTransaction = await ProductTransaction.findByPk(productTransactionId, {
+        include: [
+            {
+                model: User,
+                as: 'buyer',
+                include: [Profile]
+            },
+            {
+                model: User,
+                as: 'seller',
+                include: [Profile]
+            },
+            {
+                model: Product
+            }
+        ]
+    });
+
+    if (!productTransaction) {
+        return handleResponse(res, 404, false, 'Product transaction not found');
+    }
+
+    try {
+        const wallet = await Wallet.findOne({ where: { userId: id } });
+
+        if (!wallet) {
+            return handleResponse(res, 404, false, 'Wallet not found')
+        }
+
+        if (!wallet.pin) {
+            return handleResponse(res, 400, false, 'Pin not set')
+        }
+
+        const match = await bcrypt.compare(pin, wallet.pin);
+
+        if (!match) {
+            return handleResponse(res, 400, false, 'Incorrect pin')
+        }
+
+        let prevBalance = Number(wallet.currentBalance);
+
+        //console.log('prevBalance', prevBalance, typeof prevBalance, 'amount', amount, typeof amount);
+
+        if (prevBalance < amount) {
+            return handleResponse(res, 400, false, 'Insufficient balance')
+        }
+
+        let currBalance = prevBalance - amount;
+
+        await wallet.update({
+            currentBalance: currBalance,
+            previousBalance: prevBalance
+        });
+
+        await wallet.save();
+
+        const transaction = await Transaction.create({
+            userId: id,
+            jobId: null,
+            amount: amount,
+            reference: randomId(12),
+            status: 'success',
+            channel: 'wallet',
+            timestamp: Date.now(),
+            productTransactionId,
+            description: reason || 'Wallet payment',
+            type: TransactionType.DEBIT,
+        })
+
+        const email = productPaymentEmail(productTransaction);
+
+        const msgStat = await sendEmail(
+            productTransaction.seller.email,
+            email.title,
+            email.body,
+            productTransaction.seller.profile.firstName + ' ' + productTransaction.seller.profile.lastName,
+        )
+
+        //Send notification to the client
+        sendPushNotification(
+            productTransaction.seller.fcmToken,
+            `Product Payment`,
+            `${productTransaction?.quantity} of your product: ${productTransaction?.product.name} has been paid by ${productTransaction?.buyer.profile.firstName} ${productTransaction?.buyer.profile.lastName}`,
+            {}
+        );
+
 
 
         return successResponse(res, 'success', transaction)
