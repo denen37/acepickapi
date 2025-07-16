@@ -43,6 +43,7 @@ export const initSocket = (httpServer: any) => {
         // socket.on("candidate", (candidate: any) => socket.broadcast.emit("candidate", candidate))
 
         socket.on('call-user', async (data: any) => {
+            console.log('call-user', data)
             const partner = await OnlineUser.findOne({ where: { userId: data.to } })
 
             if (!partner) return
@@ -76,6 +77,26 @@ export const initSocket = (httpServer: any) => {
                 from: socket.user.id,
             });
         });
+
+        socket.on('end-call', async (data: any) => {
+            const partner = await OnlineUser.findOne({ where: { userId: data.to } })
+
+            if (!partner) return
+
+            io.to(partner.socketId).emit('call-ended', {
+                from: socket.user.id,
+            });
+        })
+
+        socket.on('reject-call', async (data: any) => {
+            const partner = await OnlineUser.findOne({ where: { userId: data.to } })
+
+            if (!partner) return
+
+            io.to(partner.socketId).emit('call-rejected', {
+                from: socket.user.id,
+            })
+        })
 
 
         socket.on(Listen.UPLOAD_FILE, (data: any) => uploadFile(io, socket, data));

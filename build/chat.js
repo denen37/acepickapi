@@ -43,6 +43,7 @@ const initSocket = (httpServer) => {
         // socket.on("answer", (answer: any) => socket.broadcast.emit("answer", answer));
         // socket.on("candidate", (candidate: any) => socket.broadcast.emit("candidate", candidate))
         socket.on('call-user', (data) => __awaiter(void 0, void 0, void 0, function* () {
+            console.log('call-user', data);
             const partner = yield OnlineUser_1.OnlineUser.findOne({ where: { userId: data.to } });
             if (!partner)
                 return;
@@ -68,6 +69,22 @@ const initSocket = (httpServer) => {
                 return;
             io.to(partner.socketId).emit('ice-candidate', {
                 candidate: data.candidate,
+                from: socket.user.id,
+            });
+        }));
+        socket.on('end-call', (data) => __awaiter(void 0, void 0, void 0, function* () {
+            const partner = yield OnlineUser_1.OnlineUser.findOne({ where: { userId: data.to } });
+            if (!partner)
+                return;
+            io.to(partner.socketId).emit('call-ended', {
+                from: socket.user.id,
+            });
+        }));
+        socket.on('reject-call', (data) => __awaiter(void 0, void 0, void 0, function* () {
+            const partner = yield OnlineUser_1.OnlineUser.findOne({ where: { userId: data.to } });
+            if (!partner)
+                return;
+            io.to(partner.socketId).emit('call-rejected', {
                 from: socket.user.id,
             });
         }));
