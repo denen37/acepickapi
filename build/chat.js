@@ -39,9 +39,6 @@ const initSocket = (httpServer) => {
     io.on(events_1.Listen.CONNECTION, (socket) => __awaiter(void 0, void 0, void 0, function* () {
         yield (0, chat_1.onConnect)(socket);
         socket.emit(events_1.Emit.CONNECTED, socket.id);
-        // socket.on("offer", (offer: any) => socket.broadcast.emit("offer", offer));
-        // socket.on("answer", (answer: any) => socket.broadcast.emit("answer", answer));
-        // socket.on("candidate", (candidate: any) => socket.broadcast.emit("candidate", candidate))
         socket.on('call-user', (data) => __awaiter(void 0, void 0, void 0, function* () {
             console.log('call-user', data);
             const partner = yield OnlineUser_1.OnlineUser.findOne({ where: { userId: data.to } });

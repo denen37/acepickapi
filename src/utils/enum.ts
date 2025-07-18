@@ -82,7 +82,14 @@ export enum TransferStatus {
     PENDING = 'pending'
 }
 
-export enum ProductTransactionStatus {
+export enum ProductStatus {
     SOLD = 'sold',
     BOUGHT = 'bought'
+}
+
+
+export enum ProductTransactionStatus {
+    PENDING = 'pending',
+    ORDERED = 'ordered',
+    DELIVERED = 'delivered',
 }

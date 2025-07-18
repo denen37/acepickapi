@@ -267,6 +267,10 @@ const handlePaystackWebhook = (req, res) => __awaiter(void 0, void 0, void 0, fu
                     ]
                 });
                 if (productTransaction) {
+                    productTransaction.status = enum_1.ProductTransactionStatus.ORDERED;
+                    yield productTransaction.save();
+                    productTransaction.product.quantity -= productTransaction.quantity;
+                    yield productTransaction.product.save();
                     //send notification to buyer
                     (0, notification_1.sendPushNotification)(transaction.user.fcmToken, `Product Payment`, `${productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.quantity} of your product: ${productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.product.name} has been paid by ${productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.buyer.profile.firstName} ${productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.buyer.profile.lastName}`, {});
                     //send email to buyer

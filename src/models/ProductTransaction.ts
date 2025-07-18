@@ -1,6 +1,7 @@
 import { AllowNull, BelongsTo, Column, DataType, Default, ForeignKey, HasOne, Model, Table, Unique } from "sequelize-typescript"
 import { Allow } from "stream-chat"
 import { Product, User, Transaction } from "./Models"
+import { ProductTransactionStatus } from "../utils/enum"
 
 @Table({ timestamps: true, tableName: 'product_transactions' })
 export class ProductTransaction extends Model {
@@ -33,6 +34,12 @@ export class ProductTransaction extends Model {
     @AllowNull(false)
     @Column(DataType.DECIMAL(10, 2))
     price!: number
+
+
+    @AllowNull(false)
+    @Default(ProductTransactionStatus.PENDING)
+    @Column(DataType.ENUM(...Object.values(ProductTransactionStatus)))
+    status!: string
 
 
     @AllowNull(false)

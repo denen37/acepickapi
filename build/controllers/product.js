@@ -9,13 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteProduct = exports.updateProduct = exports.addProduct = exports.selectProduct = exports.getProductTransactions = exports.getMyProducts = exports.getProducts = void 0;
+exports.deleteProduct = exports.updateProduct = exports.addProduct = exports.selectProduct = exports.acceptProduct = exports.restockProduct = exports.soldProducts = exports.boughtProducts = exports.getMyProducts = exports.getProduct = exports.getProducts = void 0;
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const sequelize_1 = require("sequelize");
 const query_1 = require("../validation/query");
 const body_1 = require("../validation/body");
-const param_1 = require("../validation/param");
 const ProductTransaction_1 = require("../models/ProductTransaction");
 const enum_1 = require("../utils/enum");
 const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -56,6 +55,30 @@ const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getProducts = getProducts;
+const getProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    try {
+        const product = yield Models_1.Product.findByPk(id, {
+            include: [{
+                    model: Models_1.Category,
+                }, {
+                    model: Models_1.Location,
+                }, {
+                    model: Models_1.User,
+                    attributes: { exclude: ['password', 'fcmToken'] },
+                    include: [{
+                            model: Models_1.Profile
+                        }]
+                }]
+        });
+        const productObj = product === null || product === void 0 ? void 0 : product.toJSON();
+        return (0, modules_1.successResponse)(res, 'success', Object.assign(Object.assign({}, productObj), { images: JSON.parse(productObj.images || '[]') }));
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', 'Failed to retrieve product');
+    }
+});
+exports.getProduct = getProduct;
 const getMyProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, role } = req.user;
     try {
@@ -84,39 +107,129 @@ const getMyProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.getMyProducts = getMyProducts;
-const getProductTransactions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { id } = req.user;
+const boughtProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id, role } = req.user;
     try {
-        const result = param_1.productTransactionSchema.safeParse(req.params);
+        const result = query_1.boughtProductSchema.safeParse(req.query);
         if (!result.success) {
             return res.status(400).json({ error: result.error.format() });
         }
         const { status } = result.data;
-        const productTransactions = yield ProductTransaction_1.ProductTransaction.findAll({
-            where: Object.assign({}, (status === enum_1.ProductTransactionStatus.BOUGHT ? { buyerId: id } : { sellerId: id })),
+        const productsTrans = yield ProductTransaction_1.ProductTransaction.findAll({
+            where: Object.assign({ buyerId: id }, (status ? { status } : {})),
             include: [{
                     model: Models_1.Product,
                 }, {
                     model: Models_1.User,
-                    as: status === enum_1.ProductTransactionStatus.BOUGHT ? 'seller' : 'buyer',
-                    attributes: { exclude: ['password'] },
-                    include: [
-                        {
+                    as: 'seller',
+                    attributes: { exclude: ['password', 'fcmToken'] },
+                    include: [{
                             model: Models_1.Profile,
                             attributes: ['id', 'avatar', 'firstName', 'lastName']
-                        }
-                    ]
-                }]
+                        }]
+                }],
+            order: [['updatedAt', 'DESC']]
         });
-        return (0, modules_1.successResponse)(res, 'success', productTransactions.map(productTransaction => {
-            return Object.assign(Object.assign({}, productTransaction.toJSON()), { product: Object.assign(Object.assign({}, productTransaction.product.toJSON()), { images: JSON.parse(productTransaction.product.images || '[]') }) });
+        return (0, modules_1.successResponse)(res, 'success', productsTrans.map((bought) => {
+            const boughtObj = bought.toJSON();
+            return Object.assign(Object.assign({}, boughtObj), { product: Object.assign(Object.assign({}, boughtObj.product), { images: JSON.parse(boughtObj.product.images) }) });
         }));
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', 'Failed to retrieve product transactions');
+    }
+});
+exports.boughtProducts = boughtProducts;
+const soldProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id, role } = req.user;
+    try {
+        const result = query_1.boughtProductSchema.safeParse(req.query);
+        if (!result.success) {
+            return res.status(400).json({ error: result.error.format() });
+        }
+        const { status } = result.data;
+        const productsTrans = yield ProductTransaction_1.ProductTransaction.findAll({
+            where: Object.assign({ sellerId: id }, (status ? { status } : {})),
+            include: [{
+                    model: Models_1.Product,
+                }, {
+                    model: Models_1.User,
+                    as: 'buyer',
+                    attributes: { exclude: ['password', 'fcmToken'] },
+                    include: [{
+                            model: Models_1.Profile,
+                            attributes: ['id', 'avatar', 'firstName', 'lastName']
+                        }]
+                }],
+            order: [['updatedAt', 'DESC']]
+        });
+        return (0, modules_1.successResponse)(res, 'success', productsTrans.map((sold) => {
+            const soldObj = sold.toJSON();
+            return Object.assign(Object.assign({}, soldObj), { product: Object.assign(Object.assign({}, soldObj.product), { images: JSON.parse(soldObj.product.images) }) });
+        }));
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', 'Failed to retrieve product transactions');
+    }
+});
+exports.soldProducts = soldProducts;
+const restockProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = body_1.restockProductSchema.safeParse(req.body);
+        if (!result.success) {
+            return res.status(400).json({ error: result.error.format() });
+        }
+        const { productId, quantity } = result.data;
+        const product = yield Models_1.Product.findByPk(productId);
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+        product.quantity += quantity;
+        yield product.save();
+        return (0, modules_1.successResponse)(res, 'success', Object.assign(Object.assign({}, product.toJSON()), { images: JSON.parse(product.images) }));
     }
     catch (error) {
         return (0, modules_1.errorResponse)(res, 'error', error.message);
     }
 });
-exports.getProductTransactions = getProductTransactions;
+exports.restockProduct = restockProduct;
+const acceptProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = body_1.productTransactionIdSchema.safeParse(req.body);
+        if (!result.success) {
+            return res.status(400).json({ error: result.error.format() });
+        }
+        const { productTransactionId } = result.data;
+        const productTransaction = yield ProductTransaction_1.ProductTransaction.findByPk(productTransactionId, {
+            include: [
+                {
+                    model: Models_1.User,
+                    as: 'seller',
+                    include: [Models_1.Wallet]
+                }
+            ]
+        });
+        if ((productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.status) !== enum_1.ProductTransactionStatus.ORDERED) {
+            return res.status(400).json({ error: 'Product transaction is not ordered' });
+        }
+        if (!productTransaction) {
+            return res.status(404).json({ error: 'Product transaction not found' });
+        }
+        productTransaction.status = enum_1.ProductTransactionStatus.DELIVERED;
+        yield productTransaction.save();
+        //Credit seller
+        let prevAmount = Number(productTransaction.seller.wallet.currentBalance);
+        let newPrice = Number(productTransaction.price);
+        productTransaction.seller.wallet.previousBalance = prevAmount;
+        productTransaction.seller.wallet.currentBalance = prevAmount + newPrice;
+        yield productTransaction.seller.wallet.save();
+        return (0, modules_1.successResponse)(res, 'success', 'Product transaction accepted');
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error.message);
+    }
+});
+exports.acceptProduct = acceptProduct;
 const selectProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = body_1.selectProductSchema.safeParse(req.body);
@@ -127,6 +240,9 @@ const selectProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const product = yield Models_1.Product.findByPk(productId);
         if (!product) {
             return res.status(404).json({ error: 'Product not found' });
+        }
+        if (product.quantity < quantity) {
+            return res.status(400).json({ error: 'Product quantity is not enough' });
         }
         const productTransaction = yield ProductTransaction_1.ProductTransaction.create({
             productId,

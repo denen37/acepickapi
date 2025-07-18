@@ -18,7 +18,7 @@ import { addCertificate, deleteCertificate, getCertificates, updateCertificate }
 import { addExperience, deleteExperience, getExperiences, updateExperience } from "../controllers/experience";
 import { addPortfolio, deletePortfolio, getPortfolios, updatePortfolio } from "../controllers/portfolio";
 import { AccountInfo, updateProfile } from "../controllers/profiles";
-import { addProduct, deleteProduct, getProducts, getMyProducts, updateProduct, getProductTransactions, selectProduct } from "../controllers/product";
+import { addProduct, deleteProduct, getProducts, getMyProducts, updateProduct, selectProduct, restockProduct, soldProducts, boughtProducts, getProduct, acceptProduct } from "../controllers/product";
 import { addCategory, deleteCategory, getCategories, updateCategory } from "../controllers/category";
 import { uploads } from "../services/upload";
 import { uploadFiles } from "../controllers/upload";
@@ -117,14 +117,19 @@ routes.post('/transfer/initiate', /*allowRoles(UserRole.PROVIDER),*/ initiateTra
 routes.post('/transfer/finalize', finalizeTransfer);
 routes.post('/transfer/verify/:ref', verifyTransfer);
 
-routes.post('/products/upload', uploads.array('product', 5), uploadFiles);
-routes.post('/products/select', selectProduct);
-routes.get('/products/mine', getMyProducts);
-routes.get('/products/transactions/:status', getProductTransactions);
+
 routes.get('/products', getProducts);
+routes.get('/products/:id', getProduct);
 routes.post('/products', addProduct);
 routes.put('/products/:id', updateProduct);
 routes.delete('/products/:id', deleteProduct);
+routes.post('/products/upload', uploads.array('product', 5), uploadFiles);
+routes.post('/products/select', selectProduct);
+routes.get('/products/mine', getMyProducts);
+routes.post('/products/restock', restockProduct);
+routes.get('/products/transactions/sold', soldProducts);
+routes.get('/products/transactions/bought', boughtProducts);
+routes.post('/products/transactions/accept', acceptProduct);
 
 routes.get('/categories', getCategories);
 routes.post('/categories', addCategory);

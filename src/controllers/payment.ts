@@ -3,7 +3,7 @@ import { Transfer, Transaction, Wallet, User, OnlineUser, Job, Profile, ProductT
 import { randomId, errorResponse, handleResponse, successResponse } from "../utils/modules";
 import config from "../config/configSetup"
 import axios from 'axios'
-import { JobStatus, PayStatus, TransactionStatus, TransactionType, TransferStatus } from "../utils/enum";
+import { JobStatus, PayStatus, ProductStatus, ProductTransactionStatus, TransactionStatus, TransactionType, TransferStatus } from "../utils/enum";
 import { v4 as uuidv4 } from 'uuid';
 import { where } from "sequelize";
 import { sendPushNotification } from "../services/notification";
@@ -350,6 +350,11 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
                 });
 
                 if (productTransaction) {
+                    productTransaction.status = ProductTransactionStatus.ORDERED;
+                    await productTransaction.save();
+
+                    productTransaction.product.quantity -= productTransaction.quantity;
+                    await productTransaction.product.save();
                     //send notification to buyer
 
                     sendPushNotification(

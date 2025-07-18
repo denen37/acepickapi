@@ -36,11 +36,6 @@ export const initSocket = (httpServer: any) => {
 
         socket.emit(Emit.CONNECTED, socket.id)
 
-        // socket.on("offer", (offer: any) => socket.broadcast.emit("offer", offer));
-
-        // socket.on("answer", (answer: any) => socket.broadcast.emit("answer", answer));
-
-        // socket.on("candidate", (candidate: any) => socket.broadcast.emit("candidate", candidate))
 
         socket.on('call-user', async (data: any) => {
             console.log('call-user', data)

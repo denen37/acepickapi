@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProductSchema = exports.professionalSearchQuerySchema = exports.jobStatusQuerySchema = void 0;
+exports.boughtProductSchema = exports.getProductSchema = exports.professionalSearchQuerySchema = exports.jobStatusQuerySchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum");
 exports.jobStatusQuerySchema = zod_1.z.object({
@@ -29,4 +29,7 @@ exports.getProductSchema = zod_1.z.object({
     search: zod_1.z.string().optional(),
     page: zod_1.z.coerce.number().min(1).default(1),
     limit: zod_1.z.coerce.number().min(1).default(10),
+});
+exports.boughtProductSchema = zod_1.z.object({
+    status: zod_1.z.nativeEnum(enum_1.ProductTransactionStatus).optional(),
 });

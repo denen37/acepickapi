@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.selectProductSchema = exports.initPaymentSchema = exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.productPaymentSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.productTransactionIdSchema = exports.restockProductSchema = exports.selectProductSchema = exports.initPaymentSchema = exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.productPaymentSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum"); // adjust the path
 const enum_2 = require("../utils/enum");
@@ -628,4 +628,29 @@ exports.selectProductSchema = zod_1.z.object({
         .int('quantity must be an integer')
         .positive('quantity must be a positive number')
         .default(1),
+});
+exports.restockProductSchema = zod_1.z.object({
+    productId: zod_1.z
+        .number({
+        required_error: 'productId is required',
+        invalid_type_error: 'productId must be a number',
+    })
+        .int('productId must be an integer')
+        .positive('productId must be a positive number'),
+    quantity: zod_1.z
+        .number({
+        required_error: 'quantity is required',
+        invalid_type_error: 'quantity must be a number',
+    })
+        .int('quantity must be an integer')
+        .positive('quantity must be a positive number')
+});
+exports.productTransactionIdSchema = zod_1.z.object({
+    productTransactionId: zod_1.z
+        .number({
+        required_error: 'productTransactionId is required',
+        invalid_type_error: 'productTransactionId must be a number',
+    })
+        .int('productTransactionId must be an integer')
+        .positive('productTransactionId must be a positive number'),
 });

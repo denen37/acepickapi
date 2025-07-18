@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ProductTransactionStatus } from "../utils/enum";
+import { ProductStatus, ProductTransactionStatus } from "../utils/enum";
 
 export const jobIdParamSchema = z.object({
     jobId: z.string()
@@ -10,8 +10,9 @@ export const jobIdParamSchema = z.object({
 
 
 
-export const productTransactionSchema = z.object({
-    status: z.enum([ProductTransactionStatus.SOLD, ProductTransactionStatus.BOUGHT]),
-});
+// export const productTransactionSchema = z.object({
+//     status: z.enum([ProductStatus.SOLD, ProductStatus.BOUGHT]),
+// });
+
 
 

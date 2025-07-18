@@ -15,10 +15,11 @@ export class Product extends Model {
     @Column(DataType.TEXT)
     description!: string;
 
-    @AllowNull(false)
-    @Default(true)
-    @Column(DataType.BOOLEAN)
-    available!: boolean;
+
+    // @AllowNull(false)
+    // @Default(true)
+    // @Column(DataType.BOOLEAN)
+    // available!: boolean;
 
 
     @AllowNull(true)

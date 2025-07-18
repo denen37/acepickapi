@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
-import { Product, Category, Location, Profile, User } from '../models/Models';
+import { Product, Category, Location, Profile, User, Wallet } from '../models/Models';
 import { successResponse, errorResponse } from '../utils/modules';
 import { Op } from 'sequelize';
-import { getProductSchema } from '../validation/query';
-import { createProductSchema, selectProductSchema, updateProductSchema } from '../validation/body';
-import { productTransactionSchema } from '../validation/param';
+import { boughtProductSchema, getProductSchema } from '../validation/query';
+import { createProductSchema, productTransactionIdSchema, restockProductSchema, selectProductSchema, updateProductSchema } from '../validation/body';
 import { ProductTransaction } from '../models/ProductTransaction';
-import { ProductTransactionStatus } from '../utils/enum';
+import { ProductStatus, ProductTransactionStatus } from '../utils/enum';
+import { Fn } from 'sequelize/types/utils';
 
 export const getProducts = async (req: Request, res: Response) => {
     const result = getProductSchema.safeParse(req.query);
@@ -65,6 +65,36 @@ export const getProducts = async (req: Request, res: Response) => {
 }
 
 
+export const getProduct = async (req: Request, res: Response) => {
+    const { id } = req.params
+
+    try {
+        const product = await Product.findByPk(id, {
+            include: [{
+                model: Category,
+            }, {
+                model: Location,
+            }, {
+                model: User,
+                attributes: { exclude: ['password', 'fcmToken'] },
+                include: [{
+                    model: Profile
+                }]
+            }]
+        })
+
+        const productObj = product?.toJSON();
+
+        return successResponse(res, 'success', {
+            ...productObj,
+            images: JSON.parse(productObj.images || '[]'),
+        })
+    } catch (error) {
+        return errorResponse(res, 'error', 'Failed to retrieve product');
+    }
+}
+
+
 export const getMyProducts = async (req: Request, res: Response) => {
     const { id, role } = req.user
 
@@ -98,11 +128,11 @@ export const getMyProducts = async (req: Request, res: Response) => {
     }
 }
 
-export const getProductTransactions = async (req: Request, res: Response) => {
-    const { id } = req.user;
+export const boughtProducts = async (req: Request, res: Response) => {
+    const { id, role } = req.user
 
     try {
-        const result = productTransactionSchema.safeParse(req.params);
+        const result = boughtProductSchema.safeParse(req.query);
 
         if (!result.success) {
             return res.status(400).json({ error: result.error.format() });
@@ -110,34 +140,157 @@ export const getProductTransactions = async (req: Request, res: Response) => {
 
         const { status } = result.data;
 
-        const productTransactions = await ProductTransaction.findAll({
+        const productsTrans = await ProductTransaction.findAll({
             where: {
-                ...(status === ProductTransactionStatus.BOUGHT ? { buyerId: id } : { sellerId: id }),
+                buyerId: id,
+                ...(status ? { status } : {})
             },
+
             include: [{
                 model: Product,
             }, {
                 model: User,
-                as: status === ProductTransactionStatus.BOUGHT ? 'seller' : 'buyer',
-                attributes: { exclude: ['password'] },
-                include: [
-                    {
-                        model: Profile,
-                        attributes: ['id', 'avatar', 'firstName', 'lastName']
-                    }
-                ]
-            }]
+                as: 'seller',
+                attributes: { exclude: ['password', 'fcmToken'] },
+                include: [{
+                    model: Profile,
+                    attributes: ['id', 'avatar', 'firstName', 'lastName']
+                }]
+            }],
+
+            order: [['updatedAt', 'DESC']]
         })
 
-        return successResponse(res, 'success', productTransactions.map(productTransaction => {
+        return successResponse(res, 'success', productsTrans.map((bought) => {
+            const boughtObj = bought.toJSON();
             return {
-                ...productTransaction.toJSON(),
-                product: {
-                    ...productTransaction.product.toJSON(),
-                    images: JSON.parse(productTransaction.product.images || '[]')
-                }
+                ...boughtObj,
+                product: { ...boughtObj.product, images: JSON.parse(boughtObj.product.images) },
             }
         }))
+    } catch (error) {
+        return errorResponse(res, 'error', 'Failed to retrieve product transactions');
+    }
+}
+
+
+export const soldProducts = async (req: Request, res: Response) => {
+    const { id, role } = req.user
+
+    try {
+        const result = boughtProductSchema.safeParse(req.query);
+
+        if (!result.success) {
+            return res.status(400).json({ error: result.error.format() });
+        }
+
+        const { status } = result.data;
+
+
+        const productsTrans = await ProductTransaction.findAll({
+            where: {
+                sellerId: id,
+                ...(status ? { status } : {})
+            },
+
+            include: [{
+                model: Product,
+            }, {
+                model: User,
+                as: 'buyer',
+                attributes: { exclude: ['password', 'fcmToken'] },
+                include: [{
+                    model: Profile,
+                    attributes: ['id', 'avatar', 'firstName', 'lastName']
+                }]
+            }],
+
+            order: [['updatedAt', 'DESC']]
+        })
+
+        return successResponse(res, 'success', productsTrans.map((sold) => {
+            const soldObj = sold.toJSON();
+            return {
+                ...soldObj,
+                product: { ...soldObj.product, images: JSON.parse(soldObj.product.images) },
+            }
+        }))
+    } catch (error) {
+        return errorResponse(res, 'error', 'Failed to retrieve product transactions');
+    }
+}
+
+
+export const restockProduct = async (req: Request, res: Response) => {
+    try {
+        const result = restockProductSchema.safeParse(req.body);
+
+        if (!result.success) {
+            return res.status(400).json({ error: result.error.format() });
+        }
+
+        const { productId, quantity } = result.data;
+
+        const product = await Product.findByPk(productId);
+
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        product.quantity += quantity;
+        await product.save();
+
+        return successResponse(res, 'success', {
+            ...product.toJSON(), images: JSON.parse(product.images)
+        });
+    } catch (error: any) {
+        return errorResponse(res, 'error', error.message);
+    }
+}
+
+
+export const acceptProduct = async (req: Request, res: Response) => {
+    try {
+        const result = productTransactionIdSchema.safeParse(req.body);
+
+        if (!result.success) {
+            return res.status(400).json({ error: result.error.format() });
+        }
+
+        const { productTransactionId } = result.data;
+
+        const productTransaction = await ProductTransaction.findByPk(productTransactionId, {
+            include: [
+                {
+                    model: User,
+                    as: 'seller',
+                    include: [Wallet]
+                }
+            ]
+        });
+
+        if (productTransaction?.status !== ProductTransactionStatus.ORDERED) {
+            return res.status(400).json({ error: 'Product transaction is not ordered' });
+        }
+
+        if (!productTransaction) {
+            return res.status(404).json({ error: 'Product transaction not found' });
+        }
+
+        productTransaction.status = ProductTransactionStatus.DELIVERED;
+
+        await productTransaction.save();
+
+        //Credit seller
+        let prevAmount = Number(productTransaction.seller.wallet.currentBalance);
+        let newPrice = Number(productTransaction.price);
+
+        productTransaction.seller.wallet.previousBalance = prevAmount;
+        productTransaction.seller.wallet.currentBalance = prevAmount + newPrice;
+
+        await productTransaction.seller.wallet.save();
+
+        return successResponse(res, 'success', 'Product transaction accepted')
     } catch (error: any) {
         return errorResponse(res, 'error', error.message);
     }
@@ -156,8 +309,14 @@ export const selectProduct = async (req: Request, res: Response) => {
 
         const product = await Product.findByPk(productId);
 
+
         if (!product) {
             return res.status(404).json({ error: 'Product not found' });
+        }
+
+        if (product.quantity < quantity) {
+            return res.status(400).json({ error: 'Product quantity is not enough' });
+
         }
 
         const productTransaction = await ProductTransaction.create({

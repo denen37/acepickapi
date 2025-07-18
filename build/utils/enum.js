@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ProductTransactionStatus = exports.TransferStatus = exports.TransactionType = exports.TransactionStatus = exports.PaidFor = exports.JobStatus = exports.PayStatus = exports.JobMode = exports.UserState = exports.UserStatus = exports.UserRole = exports.VerificationType = exports.OTPReason = void 0;
+exports.ProductTransactionStatus = exports.ProductStatus = exports.TransferStatus = exports.TransactionType = exports.TransactionStatus = exports.PaidFor = exports.JobStatus = exports.PayStatus = exports.JobMode = exports.UserState = exports.UserStatus = exports.UserRole = exports.VerificationType = exports.OTPReason = void 0;
 var OTPReason;
 (function (OTPReason) {
     OTPReason["VERIFICATION"] = "verification";
@@ -79,8 +79,14 @@ var TransferStatus;
     TransferStatus["FAILED"] = "failed";
     TransferStatus["PENDING"] = "pending";
 })(TransferStatus || (exports.TransferStatus = TransferStatus = {}));
+var ProductStatus;
+(function (ProductStatus) {
+    ProductStatus["SOLD"] = "sold";
+    ProductStatus["BOUGHT"] = "bought";
+})(ProductStatus || (exports.ProductStatus = ProductStatus = {}));
 var ProductTransactionStatus;
 (function (ProductTransactionStatus) {
-    ProductTransactionStatus["SOLD"] = "sold";
-    ProductTransactionStatus["BOUGHT"] = "bought";
+    ProductTransactionStatus["PENDING"] = "pending";
+    ProductTransactionStatus["ORDERED"] = "ordered";
+    ProductTransactionStatus["DELIVERED"] = "delivered";
 })(ProductTransactionStatus || (exports.ProductTransactionStatus = ProductTransactionStatus = {}));

@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductTransaction = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
 const Models_1 = require("./Models");
+const enum_1 = require("../utils/enum");
 let ProductTransaction = class ProductTransaction extends sequelize_typescript_1.Model {
 };
 exports.ProductTransaction = ProductTransaction;
@@ -44,6 +45,12 @@ __decorate([
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DECIMAL(10, 2)),
     __metadata("design:type", Number)
 ], ProductTransaction.prototype, "price", void 0);
+__decorate([
+    (0, sequelize_typescript_1.AllowNull)(false),
+    (0, sequelize_typescript_1.Default)(enum_1.ProductTransactionStatus.PENDING),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(...Object.values(enum_1.ProductTransactionStatus))),
+    __metadata("design:type", String)
+], ProductTransaction.prototype, "status", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DATE),

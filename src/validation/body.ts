@@ -781,4 +781,32 @@ export const selectProductSchema = z.object({
 });
 
 
+export const restockProductSchema = z.object({
+    productId: z
+        .number({
+            required_error: 'productId is required',
+            invalid_type_error: 'productId must be a number',
+        })
+        .int('productId must be an integer')
+        .positive('productId must be a positive number'),
+
+    quantity: z
+        .number({
+            required_error: 'quantity is required',
+            invalid_type_error: 'quantity must be a number',
+        })
+        .int('quantity must be an integer')
+        .positive('quantity must be a positive number')
+});
+
+
+export const productTransactionIdSchema = z.object({
+    productTransactionId: z
+        .number({
+            required_error: 'productTransactionId is required',
+            invalid_type_error: 'productTransactionId must be a number',
+        })
+        .int('productTransactionId must be an integer')
+        .positive('productTransactionId must be a positive number'),
+});
 
