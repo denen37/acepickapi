@@ -85,6 +85,53 @@ const initSocket = (httpServer) => {
                 from: socket.user.id,
             });
         }));
+        //Video call
+        socket.on('video-call-user', (data) => __awaiter(void 0, void 0, void 0, function* () {
+            console.log('video-call-user', data);
+            const partner = yield OnlineUser_1.OnlineUser.findOne({ where: { userId: data.to } });
+            if (!partner)
+                return;
+            io.to(partner === null || partner === void 0 ? void 0 : partner.socketId).emit('video-call-made', {
+                offer: data.offer,
+                from: socket.user.id,
+            });
+        }));
+        // Answering the call
+        socket.on('video-make-answer', (data) => __awaiter(void 0, void 0, void 0, function* () {
+            const partner = yield OnlineUser_1.OnlineUser.findOne({ where: { userId: data.to } });
+            if (!partner)
+                return;
+            io.to(partner.socketId).emit('video-answer-made', {
+                answer: data.answer,
+                from: socket.user.id,
+            });
+        }));
+        // Exchange ICE candidates
+        socket.on('video-ice-candidate', (data) => __awaiter(void 0, void 0, void 0, function* () {
+            const partner = yield OnlineUser_1.OnlineUser.findOne({ where: { userId: data.to } });
+            if (!partner)
+                return;
+            io.to(partner.socketId).emit('video-ice-candidate', {
+                candidate: data.candidate,
+                from: socket.user.id,
+            });
+        }));
+        socket.on('video-end-call', (data) => __awaiter(void 0, void 0, void 0, function* () {
+            const partner = yield OnlineUser_1.OnlineUser.findOne({ where: { userId: data.to } });
+            if (!partner)
+                return;
+            io.to(partner.socketId).emit('video-call-ended', {
+                from: socket.user.id,
+            });
+        }));
+        socket.on('video-reject-call', (data) => __awaiter(void 0, void 0, void 0, function* () {
+            const partner = yield OnlineUser_1.OnlineUser.findOne({ where: { userId: data.to } });
+            if (!partner)
+                return;
+            io.to(partner.socketId).emit('video-call-rejected', {
+                from: socket.user.id,
+            });
+        }));
         socket.on(events_1.Listen.UPLOAD_FILE, (data) => (0, chat_1.uploadFile)(io, socket, data));
         socket.on(events_1.Listen.SEND_MSG, (data) => __awaiter(void 0, void 0, void 0, function* () { return yield (0, chat_1.sendMessage)(io, socket, data); }));
         socket.on(events_1.Listen.DISCONNECT, () => (0, chat_1.onDisconnect)(socket));

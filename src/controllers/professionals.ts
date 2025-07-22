@@ -425,7 +425,8 @@ export const getProfessionalByUserId = async (req: Request, res: Response) => {
             Certification,
             Portfolio
           ]
-        }, {
+        },
+        {
           model: Location,
         }, {
           model: Review,

@@ -56,7 +56,7 @@ routes.put("/professions/:id", professions_1.updateProfession);
 routes.delete("/professions/:id", professions_1.deleteProfession);
 routes.get("/professionals", professionals_1.getProfessionals);
 routes.get("/professionals/:professionalId", professionals_1.getProfessionalById);
-routes.get('/professionals/:userId', professionals_1.getProfessionalByUserId); // Allow any role to get professional by userId
+routes.get('/professionals/user/:userId', professionals_1.getProfessionalByUserId); // Allow any role to get professional by userId
 routes.get("/cooperates", cooperates_1.getCooperates);
 routes.get('/jobs/latest', Jobs_1.getLatestJob);
 routes.get('/jobs', (0, allowRoles_1.allowRoles)(enum_1.UserRole.CLIENT, enum_1.UserRole.PROFESSIONAL), Jobs_1.getJobs);

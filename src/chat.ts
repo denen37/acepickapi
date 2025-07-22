@@ -93,6 +93,63 @@ export const initSocket = (httpServer: any) => {
             })
         })
 
+        //Video call
+        socket.on('video-call-user', async (data: any) => {
+            console.log('video-call-user', data)
+            const partner = await OnlineUser.findOne({ where: { userId: data.to } })
+
+            if (!partner) return
+
+            io.to(partner?.socketId).emit('video-call-made', {
+                offer: data.offer,
+                from: socket.user.id,
+            });
+        });
+
+        // Answering the call
+        socket.on('video-make-answer', async (data: any) => {
+            const partner = await OnlineUser.findOne({ where: { userId: data.to } })
+
+            if (!partner) return
+
+            io.to(partner.socketId).emit('video-answer-made', {
+                answer: data.answer,
+                from: socket.user.id,
+            });
+        });
+
+        // Exchange ICE candidates
+        socket.on('video-ice-candidate', async (data: any) => {
+            const partner = await OnlineUser.findOne({ where: { userId: data.to } })
+
+            if (!partner) return
+
+            io.to(partner.socketId).emit('video-ice-candidate', {
+                candidate: data.candidate,
+                from: socket.user.id,
+            });
+        });
+
+        socket.on('video-end-call', async (data: any) => {
+            const partner = await OnlineUser.findOne({ where: { userId: data.to } })
+
+            if (!partner) return
+
+            io.to(partner.socketId).emit('video-call-ended', {
+                from: socket.user.id,
+            });
+        })
+
+        socket.on('video-reject-call', async (data: any) => {
+            const partner = await OnlineUser.findOne({ where: { userId: data.to } })
+
+            if (!partner) return
+
+            io.to(partner.socketId).emit('video-call-rejected', {
+                from: socket.user.id,
+            })
+        })
+
 
         socket.on(Listen.UPLOAD_FILE, (data: any) => uploadFile(io, socket, data));
 

@@ -64,7 +64,7 @@ routes.delete("/professions/:id", deleteProfession);
 
 routes.get("/professionals", getProfessionals);
 routes.get("/professionals/:professionalId", getProfessionalById);
-routes.get('/professionals/:userId', getProfessionalByUserId); // Allow any role to get professional by userId
+routes.get('/professionals/user/:userId', getProfessionalByUserId); // Allow any role to get professional by userId
 
 routes.get("/cooperates", getCooperates);
 

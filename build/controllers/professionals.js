@@ -433,7 +433,8 @@ const getProfessionalByUserId = (req, res) => __awaiter(void 0, void 0, void 0, 
                         Models_1.Certification,
                         Models_1.Portfolio
                     ]
-                }, {
+                },
+                {
                     model: Models_1.Location,
                 }, {
                     model: Models_1.Review,
