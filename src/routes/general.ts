@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { createSector, deleteSector, getSectors, getSectorsMetrics, updateSector } from "../controllers/sector";
 import { createProfession, deleteProfession, getProfessionById, getProfessions, updateProfession } from "../controllers/professions";
-import { getProfessionalById, getProfessionals } from "../controllers/professionals";
+import { getProfessionalById, getProfessionalByUserId, getProfessionals } from "../controllers/professionals";
 import { getCooperates } from "../controllers/cooperates";
 import { approveJob, cancelJob, completeJob, createJobOrder, disputeJob, generateInvoice, getJobById, getJobs, getLatestJob, respondToJob, updateInvoice, updateJob, viewInvoice } from "../controllers/Jobs";
 import { UserRole } from "../utils/enum";
@@ -63,7 +63,8 @@ routes.put("/professions/:id", updateProfession);
 routes.delete("/professions/:id", deleteProfession);
 
 routes.get("/professionals", getProfessionals);
-routes.get('/professionals/:professionalId', getProfessionalById); // Allow any role to get professional by userId
+routes.get("/professionals/:professionalId", getProfessionalById);
+routes.get('/professionals/:userId', getProfessionalByUserId); // Allow any role to get professional by userId
 
 routes.get("/cooperates", getCooperates);
 

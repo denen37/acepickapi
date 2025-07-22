@@ -45,7 +45,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProfessionalById = exports.getProfessionals = void 0;
+exports.getProfessionalByUserId = exports.getProfessionalById = exports.getProfessionals = void 0;
 const { Op } = require('sequelize');
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
@@ -410,3 +410,51 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.getProfessionalById = getProfessionalById;
+const getProfessionalByUserId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { userId } = req.params;
+        const user = yield Models_1.User.findByPk(userId, {
+            attributes: { exclude: ['password', 'fcmToken'] },
+            include: [
+                {
+                    model: Models_1.Profile,
+                    include: [
+                        {
+                            model: Models_1.Professional,
+                            include: [
+                                {
+                                    model: Models_1.Profession,
+                                    include: [Models_1.Sector]
+                                }
+                            ]
+                        },
+                        Models_1.Education,
+                        Models_1.Experience,
+                        Models_1.Certification,
+                        Models_1.Portfolio
+                    ]
+                }, {
+                    model: Models_1.Location,
+                }, {
+                    model: Models_1.Review,
+                    as: 'professionalReviews',
+                    include: [
+                        {
+                            model: Models_1.User,
+                            as: 'clientUser',
+                            include: [Models_1.Profile]
+                        }
+                    ]
+                }
+            ]
+        });
+        if (!user) {
+            return (0, modules_1.handleResponse)(res, 404, false, 'Professional not found');
+        }
+        return (0, modules_1.successResponse)(res, 'success', user);
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error.message || 'Something went wrong');
+    }
+});
+exports.getProfessionalByUserId = getProfessionalByUserId;

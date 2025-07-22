@@ -39,14 +39,9 @@ const storeImage = () => {
         case 'product':
           cb(null, pathExistsOrCreate('uploads/products'));
           break;
-        // case 'category':
-        //   cb(null, pathExistsOrCreate('uploads/categories'));
-        //   break;
         default:
           cb(new Error('Invalid field name'), '');
       }
-
-      //cb(null, pathExistsOrCreate( + folder))
     },
     filename: (req, file, cb) => {
       let filename = Date.now() + '.' + file.mimetype.split('/')[1];
