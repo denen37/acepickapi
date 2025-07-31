@@ -45,7 +45,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProfessionalByUserId = exports.getProfessionalById = exports.getProfessionals = void 0;
+exports.toggleAvailable = exports.getDeliveryMen = exports.getProfessionalByUserId = exports.getProfessionalById = exports.getProfessionals = void 0;
 const { Op } = require('sequelize');
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
@@ -459,3 +459,32 @@ const getProfessionalByUserId = (req, res) => __awaiter(void 0, void 0, void 0, 
     }
 });
 exports.getProfessionalByUserId = getProfessionalByUserId;
+const getDeliveryMen = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.getDeliveryMen = getDeliveryMen;
+const toggleAvailable = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id, role } = req.user;
+    const { available } = req.body;
+    try {
+        const user = yield Models_1.User.findByPk(id, {
+            attributes: ['id'],
+            include: [{
+                    model: Models_1.Profile,
+                    attributes: ['id', 'userId'],
+                    include: [Models_1.Professional]
+                }]
+        });
+        if (!user) {
+            return (0, modules_1.handleResponse)(res, 404, false, 'User not found');
+        }
+        if (!user.profile.professional) {
+            return (0, modules_1.handleResponse)(res, 404, false, 'User is not a professional');
+        }
+        user.profile.professional.available = available;
+        yield user.profile.professional.save();
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error.message || 'Something went wrong');
+    }
+});
+exports.toggleAvailable = toggleAvailable;

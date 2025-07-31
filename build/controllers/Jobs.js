@@ -439,6 +439,7 @@ const generateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function
 });
 exports.generateInvoice = generateInvoice;
 const updateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d, _e;
     const { jobId } = req.params;
     const result = body_1.jobCostingUpdateSchema.safeParse(req.body);
     if (!result.success) {
@@ -448,7 +449,19 @@ const updateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
     }
     const { durationUnit, durationValue, workmanship, materials } = result.data;
-    const job = yield Models_1.Job.findByPk(jobId);
+    const job = yield Models_1.Job.findByPk(jobId, {
+        include: [
+            {
+                model: Models_1.User,
+                as: 'client'
+            },
+            {
+                model: Models_1.User,
+                as: 'professional',
+                include: [Models_1.Profile]
+            }
+        ]
+    });
     if (!job) {
         return (0, modules_1.handleResponse)(res, 404, false, 'Job not found');
     }
@@ -487,9 +500,10 @@ const updateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         // Optional: assign created/updated materials to job
         //job.materials = [...created, ...materials.filter(mat => mat.id)];
     }
+    const jobObj = job.toJSON();
     //send an email to the client
-    const emailTosend = (0, messages_1.invoiceUpdatedEmail)(job.dataValues);
-    const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.client.email, emailTosend.title, emailTosend.body, job.dataValues.client.profile.firstName + ' ' + job.dataValues.client.profile.lastName
+    const emailTosend = (0, messages_1.invoiceUpdatedEmail)(jobObj);
+    const msgStat = yield (0, gmail_1.sendEmail)(job.client.email, emailTosend.title, emailTosend.body, (_e = ((_d = (_b = (_a = jobObj.client.profile) === null || _a === void 0 ? void 0 : _a.firstName) !== null && _b !== void 0 ? _b : '' + ' ' + ((_c = jobObj.client.profile) === null || _c === void 0 ? void 0 : _c.lastName)) !== null && _d !== void 0 ? _d : '').toString().trim()) !== null && _e !== void 0 ? _e : 'User'
     //'User'
     );
     //Send notification to the client

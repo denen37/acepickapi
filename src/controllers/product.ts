@@ -305,7 +305,7 @@ export const selectProduct = async (req: Request, res: Response) => {
             return res.status(400).json({ error: result.error.format() });
         }
 
-        const { productId, quantity } = result.data;
+        const { productId, quantity, orderMethod } = result.data;
 
         const product = await Product.findByPk(productId);
 
@@ -325,6 +325,7 @@ export const selectProduct = async (req: Request, res: Response) => {
             buyerId: req.user.id,
             sellerId: product.userId,
             price: product.price * quantity - product.discount * quantity,
+            orderMethod,
             date: new Date()
         })
 

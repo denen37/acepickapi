@@ -53,6 +53,12 @@ __decorate([
 ], ProductTransaction.prototype, "status", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
+    (0, sequelize_typescript_1.Default)(enum_1.OrderMethod.SELF_PICKUP),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(...Object.values(enum_1.OrderMethod))),
+    __metadata("design:type", String)
+], ProductTransaction.prototype, "orderMethod", void 0);
+__decorate([
+    (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DATE),
     __metadata("design:type", Date)
 ], ProductTransaction.prototype, "date", void 0);

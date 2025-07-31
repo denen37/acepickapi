@@ -3,7 +3,7 @@ import { Transfer, Transaction, Wallet, User, OnlineUser, Job, Profile, ProductT
 import { randomId, errorResponse, handleResponse, successResponse } from "../utils/modules";
 import config from "../config/configSetup"
 import axios from 'axios'
-import { JobStatus, PayStatus, ProductStatus, ProductTransactionStatus, TransactionStatus, TransactionType, TransferStatus } from "../utils/enum";
+import { JobStatus, PayStatus, ProductStatus, ProductTransactionStatus, TransactionDescription, TransactionStatus, TransactionType, TransferStatus } from "../utils/enum";
 import { v4 as uuidv4 } from 'uuid';
 import { where } from "sequelize";
 import { sendPushNotification } from "../services/notification";
@@ -57,7 +57,7 @@ export const initiatePayment = async (req: Request, res: Response) => {
             //channel: data.channel,
             currency: data.currency,
             timestamp: new Date(),
-            description: description,
+            description: description.toLowerCase(),
             jobId: description.toString().includes('job') ? jobId : null,
             productTransactionId: description.toString().includes('product') ? productTransactionId : null,
             type: TransactionType.CREDIT,
@@ -291,7 +291,9 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
 
             await transaction.save();
 
-            if (transaction.jobId && transaction.description.includes('job')) {
+            if (transaction.jobId
+                && (transaction.description === TransactionDescription.JOB_PAYMENT
+                    || transaction.description === TransactionDescription.PRODUCT_JOB_PAYMENT)) {
                 const job = await Job.findByPk(transaction.jobId, {
                     include: [
                         {
@@ -330,7 +332,11 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
                         job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName
                     )
                 }
-            } else if (transaction.productTransactionId && transaction.description.includes('product')) {
+            }
+
+            if (transaction.productTransactionId
+                && (transaction.description === TransactionDescription.PRODUCT_PAYMENT
+                    || transaction.description === TransactionDescription.PRODUCT_JOB_PAYMENT)) {
                 const productTransaction = await ProductTransaction.findByPk(transaction.productTransactionId, {
                     include: [
                         {
@@ -375,7 +381,8 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
                     )
                 }
 
-            } else {
+            }
+            if (transaction.description === TransactionDescription.WALLET_TOPUP) {
                 if (transaction.user.wallet) {
                     let prevAmount = Number(transaction.user.wallet.currentBalance);
                     let newAmount = Number(transaction.amount);

@@ -55,7 +55,7 @@ const initiatePayment = (req, res) => __awaiter(void 0, void 0, void 0, function
             //channel: data.channel,
             currency: data.currency,
             timestamp: new Date(),
-            description: description,
+            description: description.toLowerCase(),
             jobId: description.toString().includes('job') ? jobId : null,
             productTransactionId: description.toString().includes('product') ? productTransactionId : null,
             type: enum_1.TransactionType.CREDIT,
@@ -223,7 +223,9 @@ const handlePaystackWebhook = (req, res) => __awaiter(void 0, void 0, void 0, fu
             transaction.channel = channel;
             transaction.timestamp = new Date(paid_at);
             yield transaction.save();
-            if (transaction.jobId && transaction.description.includes('job')) {
+            if (transaction.jobId
+                && (transaction.description === enum_1.TransactionDescription.JOB_PAYMENT
+                    || transaction.description === enum_1.TransactionDescription.PRODUCT_JOB_PAYMENT)) {
                 const job = yield Models_1.Job.findByPk(transaction.jobId, {
                     include: [
                         {
@@ -248,7 +250,9 @@ const handlePaystackWebhook = (req, res) => __awaiter(void 0, void 0, void 0, fu
                     const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.professional.email, email.title, email.body, job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName);
                 }
             }
-            else if (transaction.productTransactionId && transaction.description.includes('product')) {
+            if (transaction.productTransactionId
+                && (transaction.description === enum_1.TransactionDescription.PRODUCT_PAYMENT
+                    || transaction.description === enum_1.TransactionDescription.PRODUCT_JOB_PAYMENT)) {
                 const productTransaction = yield Models_1.ProductTransaction.findByPk(transaction.productTransactionId, {
                     include: [
                         {
@@ -278,7 +282,7 @@ const handlePaystackWebhook = (req, res) => __awaiter(void 0, void 0, void 0, fu
                     const msgStat = yield (0, gmail_1.sendEmail)(productTransaction.seller.email, email.title, email.body, productTransaction.seller.profile.firstName + ' ' + productTransaction.seller.profile.lastName);
                 }
             }
-            else {
+            if (transaction.description === enum_1.TransactionDescription.WALLET_TOPUP) {
                 if (transaction.user.wallet) {
                     let prevAmount = Number(transaction.user.wallet.currentBalance);
                     let newAmount = Number(transaction.amount);

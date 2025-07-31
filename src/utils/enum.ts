@@ -93,3 +93,15 @@ export enum ProductTransactionStatus {
     ORDERED = 'ordered',
     DELIVERED = 'delivered',
 }
+
+export enum OrderMethod {
+    SELF_PICKUP = "self_pickup",
+    DELIVERY = "delivery",
+}
+
+export enum TransactionDescription {
+    JOB_PAYMENT = 'job payment',
+    PRODUCT_PAYMENT = 'product payment',
+    PRODUCT_JOB_PAYMENT = 'product_job payment',
+    WALLET_TOPUP = 'wallet topup'
+}

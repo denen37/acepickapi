@@ -601,7 +601,19 @@ export const updateInvoice = async (req: Request, res: Response) => {
 
     const { durationUnit, durationValue, workmanship, materials } = result.data;
 
-    const job = await Job.findByPk(jobId);
+    const job = await Job.findByPk(jobId, {
+        include: [
+            {
+                model: User,
+                as: 'client'
+            },
+            {
+                model: User,
+                as: 'professional',
+                include: [Profile]
+            }
+        ]
+    });
 
     if (!job) {
         return handleResponse(res, 404, false, 'Job not found')
@@ -669,14 +681,16 @@ export const updateInvoice = async (req: Request, res: Response) => {
         //job.materials = [...created, ...materials.filter(mat => mat.id)];
     }
 
+    const jobObj = job.toJSON();
+
     //send an email to the client
-    const emailTosend = invoiceUpdatedEmail(job.dataValues);
+    const emailTosend = invoiceUpdatedEmail(jobObj);
 
     const msgStat = await sendEmail(
-        job.dataValues.client.email,
+        job.client.email,
         emailTosend.title,
         emailTosend.body,
-        job.dataValues.client.profile.firstName + ' ' + job.dataValues.client.profile.lastName
+        (jobObj.client.profile?.firstName ?? '' + ' ' + jobObj.client.profile?.lastName ?? '').toString().trim() ?? 'User'
         //'User'
     )
 

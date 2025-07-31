@@ -159,9 +159,6 @@ export const getProfessionals = async (req: Request, res: Response) => {
 
 
     return successResponse(res, 'success', nestedProfessionals);
-
-
-
   } catch (error: any) {
     return errorResponse(res, 'error', error.message || 'Something went wrong');
   }
@@ -453,5 +450,41 @@ export const getProfessionalByUserId = async (req: Request, res: Response) => {
   }
 }
 
+
+
+export const getDeliveryMen = async (req: Request, res: Response) => {
+
+}
+
+export const toggleAvailable = async (req: Request, res: Response) => {
+  const { id, role } = req.user
+
+  const { available } = req.body
+
+  try {
+    const user = await User.findByPk(id, {
+      attributes: ['id'],
+      include: [{
+        model: Profile,
+        attributes: ['id', 'userId'],
+        include: [Professional]
+      }]
+    })
+
+    if (!user) {
+      return handleResponse(res, 404, false, 'User not found');
+    }
+
+    if (!user.profile.professional) {
+      return handleResponse(res, 404, false, 'User is not a professional');
+    }
+
+    user.profile.professional.available = available
+
+    await user.profile.professional.save()
+  } catch (error: any) {
+    return errorResponse(res, 'error', error.message || 'Something went wrong');
+  }
+}
 
 

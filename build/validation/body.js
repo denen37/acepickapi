@@ -573,45 +573,70 @@ exports.initPaymentSchema = zod_1.z
         invalid_type_error: 'Amount must be a number',
     })
         .positive('Amount must be greater than zero'),
-    description: zod_1.z
-        .preprocess((val) => (typeof val === 'string' ? val.toLowerCase() : val), zod_1.z.enum(['job payment', 'product payment', 'wallet topup'], {
+    description: zod_1.z.preprocess((val) => (typeof val === 'string' ? val.toLowerCase() : val), zod_1.z.enum(['job payment', 'product payment', 'product_job payment', 'wallet topup'], {
         errorMap: () => ({
-            message: 'Description must be "Job Payment", "Product Payment" or "Wallet Topup"',
+            message: 'Description must be one of: "Job Payment", "Product Payment", "Product_Job Payment", or "Wallet Topup"',
         }),
     })),
     jobId: zod_1.z
-        .number()
+        .number({
+        invalid_type_error: 'jobId must be a number',
+    })
         .int('jobId must be an integer')
         .positive('jobId must be a positive number')
         .optional(),
     productTransactionId: zod_1.z
-        .number()
+        .number({
+        invalid_type_error: 'productTransactionId must be a number',
+    })
         .int('productTransactionId must be an integer')
         .positive('productTransactionId must be a positive number')
         .optional(),
 })
+    // Validate jobId for job payment
     .refine((data) => {
-    if (data.description === 'job payment') {
-        return typeof data.jobId === 'number' && data.jobId > 0;
-    }
-    else if (data.description === 'wallet topup') {
-        return data.jobId === undefined || data.jobId === null;
-    }
-    return true;
+    if (data.description !== 'job payment')
+        return true;
+    return typeof data.jobId === 'number' && data.jobId > 0;
 }, {
-    message: 'jobId must be a positive integer for "Job Payment", and must be null or omitted for "Wallet Topup"',
+    message: 'jobId must be a positive integer for "Job Payment", and must be null or omitted otherwise',
     path: ['jobId'],
 })
+    // Validate jobId for wallet topup
     .refine((data) => {
-    if (data.description === 'product payment') {
-        return typeof data.productTransactionId === 'number' && data.productTransactionId > 0;
-    }
-    else {
-        return data.productTransactionId === undefined || data.productTransactionId === null;
-    }
+    if (data.description !== 'wallet topup')
+        return true;
+    return data.jobId === undefined || data.jobId === null;
+}, {
+    message: 'jobId must be null or omitted for "Wallet Topup"',
+    path: ['jobId'],
+})
+    // Validate productTransactionId for product payment
+    .refine((data) => {
+    if (data.description !== 'product payment')
+        return true;
+    return typeof data.productTransactionId === 'number' && data.productTransactionId > 0;
 }, {
     message: 'productTransactionId must be a positive integer for "Product Payment", and must be null or omitted otherwise',
     path: ['productTransactionId'],
+})
+    // Validate productTransactionId for product_job payment
+    .refine((data) => {
+    if (data.description !== 'product_job payment')
+        return true;
+    return typeof data.productTransactionId === 'number' && data.productTransactionId > 0;
+}, {
+    message: 'productTransactionId must be a positive integer for "Product_Job Payment", and must be null or omitted otherwise',
+    path: ['productTransactionId'],
+})
+    // Validate jobId for product_job payment
+    .refine((data) => {
+    if (data.description !== 'product_job payment')
+        return true;
+    return typeof data.jobId === 'number' && data.jobId > 0;
+}, {
+    message: 'jobId must be a positive integer for "Product_Job Payment", and must be null or omitted otherwise',
+    path: ['jobId'],
 });
 exports.selectProductSchema = zod_1.z.object({
     productId: zod_1.z
@@ -628,6 +653,7 @@ exports.selectProductSchema = zod_1.z.object({
         .int('quantity must be an integer')
         .positive('quantity must be a positive number')
         .default(1),
+    orderMethod: zod_1.z.enum(['delivery', 'self_pickup']).optional()
 });
 exports.restockProductSchema = zod_1.z.object({
     productId: zod_1.z

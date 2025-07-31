@@ -236,7 +236,7 @@ const selectProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         if (!result.success) {
             return res.status(400).json({ error: result.error.format() });
         }
-        const { productId, quantity } = result.data;
+        const { productId, quantity, orderMethod } = result.data;
         const product = yield Models_1.Product.findByPk(productId);
         if (!product) {
             return res.status(404).json({ error: 'Product not found' });
@@ -250,6 +250,7 @@ const selectProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             buyerId: req.user.id,
             sellerId: product.userId,
             price: product.price * quantity - product.discount * quantity,
+            orderMethod,
             date: new Date()
         });
         return (0, modules_1.successResponse)(res, 'success', productTransaction);

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ProductTransactionStatus = exports.ProductStatus = exports.TransferStatus = exports.TransactionType = exports.TransactionStatus = exports.PaidFor = exports.JobStatus = exports.PayStatus = exports.JobMode = exports.UserState = exports.UserStatus = exports.UserRole = exports.VerificationType = exports.OTPReason = void 0;
+exports.TransactionDescription = exports.OrderMethod = exports.ProductTransactionStatus = exports.ProductStatus = exports.TransferStatus = exports.TransactionType = exports.TransactionStatus = exports.PaidFor = exports.JobStatus = exports.PayStatus = exports.JobMode = exports.UserState = exports.UserStatus = exports.UserRole = exports.VerificationType = exports.OTPReason = void 0;
 var OTPReason;
 (function (OTPReason) {
     OTPReason["VERIFICATION"] = "verification";
@@ -90,3 +90,15 @@ var ProductTransactionStatus;
     ProductTransactionStatus["ORDERED"] = "ordered";
     ProductTransactionStatus["DELIVERED"] = "delivered";
 })(ProductTransactionStatus || (exports.ProductTransactionStatus = ProductTransactionStatus = {}));
+var OrderMethod;
+(function (OrderMethod) {
+    OrderMethod["SELF_PICKUP"] = "self_pickup";
+    OrderMethod["DELIVERY"] = "delivery";
+})(OrderMethod || (exports.OrderMethod = OrderMethod = {}));
+var TransactionDescription;
+(function (TransactionDescription) {
+    TransactionDescription["JOB_PAYMENT"] = "job payment";
+    TransactionDescription["PRODUCT_PAYMENT"] = "product payment";
+    TransactionDescription["PRODUCT_JOB_PAYMENT"] = "product_job payment";
+    TransactionDescription["WALLET_TOPUP"] = "wallet topup";
+})(TransactionDescription || (exports.TransactionDescription = TransactionDescription = {}));

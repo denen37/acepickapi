@@ -95,11 +95,14 @@ export const initSocket = (httpServer: any) => {
 
         //Video call
         socket.on('video-call-user', async (data: any) => {
-            console.log('video-call-user', data)
             const partner = await OnlineUser.findOne({ where: { userId: data.to } })
+
+            console.log('partnerr', partner?.toJSON())
 
             if (!partner) return
 
+
+            console.log('video-call-made')
             io.to(partner?.socketId).emit('video-call-made', {
                 offer: data.offer,
                 from: socket.user.id,
