@@ -26,6 +26,9 @@ import { Message } from './Message'
 import { Category } from './Category'
 import { Product } from './Product'
 import { ProductTransaction } from './ProductTransaction'
+import { Order } from './Order'
+import { Rider } from './Rider'
+import { DeliveryPricing } from './DeliveryPricing'
 
 export {
     User,
@@ -55,5 +58,8 @@ export {
     Message,
     Category,
     Product,
-    ProductTransaction
+    ProductTransaction,
+    Order,
+    Rider,
+    DeliveryPricing
 }

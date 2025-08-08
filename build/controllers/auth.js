@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.corperateReg = exports.deleteUsers = exports.updatePushToken = exports.login = exports.passwordChange = exports.registerCorperate = exports.registerProfessional = exports.register = exports.verifyOtp = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
+exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.corperateReg = exports.deleteUsers = exports.updatePushToken = exports.login = exports.passwordChange = exports.updateRider = exports.registerRider = exports.registerCorperate = exports.registerProfessional = exports.register = exports.verifyOtp = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
 const modules_1 = require("../utils/modules");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
 const axios_1 = __importDefault(require("axios"));
@@ -26,6 +26,7 @@ const bcryptjs_2 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_2 = require("jsonwebtoken");
 const sms_1 = require("../services/sms");
 const gmail_1 = require("../services/gmail");
+const db_1 = __importDefault(require("../config/db"));
 // yarn add stream-chat
 const stream_chat_1 = require("stream-chat");
 // instantiate your stream client using the API key and secret
@@ -380,7 +381,9 @@ const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, functi
         });
         const wallet = yield Models_1.Wallet.create({
             userId: user.id,
-            balance: 0,
+            currentBalance: 0,
+            previouBalance: 0,
+            pin: null
         });
         user.password = null;
         wallet.pin = null;
@@ -397,6 +400,81 @@ const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.registerCorperate = registerCorperate;
+const registerRider = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const t = yield db_1.default.transaction();
+    try {
+        const result = body_1.registerRiderSchema.safeParse(req.body);
+        if (!result.success)
+            return res.status(400).json({
+                error: "Invalid input",
+                issues: result.error.format()
+            });
+        const { email, phone, password, confirmPassword, agreed, avatar, firstName, lastName, address, state, lga, rider } = result.data;
+        const hashedPassword = yield bcryptjs_2.default.hash(password, 10);
+        const user = yield Models_1.User.create({
+            email,
+            phone,
+            password: hashedPassword,
+            role: enum_1.UserRole.DELIVERY
+        });
+        const location = yield Models_1.Location.create({
+            userId: user.id,
+            lga: lga,
+            state: state,
+            address: address,
+        });
+        const profile = yield Models_1.Profile.create({
+            avatar: avatar,
+            userId: user.id,
+            firstName,
+            lastName,
+        });
+        const newRider = yield Models_1.Rider.create({
+            userId: user.id,
+            vehicleType: rider.vehicleType,
+            licenseNumber: rider.licenseNumber,
+            status: enum_1.RiderStatus.AVAILABLE
+        });
+        const wallet = yield Models_1.Wallet.create({
+            userId: user.id,
+            currentBalance: 0,
+            previouBalance: 0,
+            pin: null
+        });
+        yield t.commit();
+        let token = (0, jsonwebtoken_2.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
+        let regEmail = (0, messages_1.registerEmail)(user.dataValues);
+        let messageId = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, (profile === null || profile === void 0 ? void 0 : profile.firstName) || 'User');
+        let emailSendStatus = Boolean(messageId);
+        return (0, modules_1.successResponse)(res, "success", { user, token, emailSendStatus });
+    }
+    catch (error) {
+        yield t.rollback();
+        return (0, modules_1.errorResponse)(res, "error", 'Error registering rider');
+    }
+});
+exports.registerRider = registerRider;
+const updateRider = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.user;
+    const result = body_1.updateRiderSchema.safeParse(req.body);
+    if (!result.success)
+        return res.status(400).json({
+            error: "Invalid input",
+            issues: result.error.format()
+        });
+    try {
+        const rider = yield Models_1.Rider.update(result.data, {
+            where: {
+                userId: id
+            }
+        });
+        return (0, modules_1.successResponse)(res, "Rider updated successfully", rider);
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, "Error updating rider", error);
+    }
+});
+exports.updateRider = updateRider;
 const passwordChange = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { password, confirmPassword } = req.body;
     const { id } = req.user;

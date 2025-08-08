@@ -38,7 +38,6 @@ export const initSocket = (httpServer: any) => {
 
 
         socket.on('call-user', async (data: any) => {
-            console.log('call-user', data)
             const partner = await OnlineUser.findOne({ where: { userId: data.to } })
 
             if (!partner) return
@@ -97,12 +96,9 @@ export const initSocket = (httpServer: any) => {
         socket.on('video-call-user', async (data: any) => {
             const partner = await OnlineUser.findOne({ where: { userId: data.to } })
 
-            console.log('partnerr', partner?.toJSON())
-
             if (!partner) return
 
 
-            console.log('video-call-made')
             io.to(partner?.socketId).emit('video-call-made', {
                 offer: data.offer,
                 from: socket.user.id,

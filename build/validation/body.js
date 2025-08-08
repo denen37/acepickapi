@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.productTransactionIdSchema = exports.restockProductSchema = exports.selectProductSchema = exports.initPaymentSchema = exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.productPaymentSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.deliverySchema = exports.productTransactionIdSchema = exports.restockProductSchema = exports.selectProductSchema = exports.initPaymentSchema = exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.productPaymentSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerRiderSchema = exports.updateRiderSchema = exports.riderSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum"); // adjust the path
 const enum_2 = require("../utils/enum");
@@ -117,6 +117,34 @@ exports.registerCoporateSchema = zod_1.z.object({
     lastName: zod_1.z.string().min(1, "Last name is required"),
     position: zod_1.z.string().min(1, "Position is required"),
     cooperation: cooperationSchema,
+}).refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+});
+exports.riderSchema = zod_1.z.object({
+    vehicleType: zod_1.z.nativeEnum(enum_1.VehicleType).optional().default(enum_1.VehicleType.BIKE),
+    licenseNumber: zod_1.z.string().min(1, "License number is required"),
+});
+exports.updateRiderSchema = zod_1.z.object({
+    vehicleType: zod_1.z.nativeEnum(enum_1.VehicleType).optional(),
+    licenseNumber: zod_1.z.string().min(1, "License number is required").optional(),
+    status: zod_1.z.nativeEnum(enum_1.RiderStatus).optional(),
+});
+exports.registerRiderSchema = zod_1.z.object({
+    email: zod_1.z.string().email("Invalid email address"),
+    phone: zod_1.z.string().min(10, "Phone number is required"),
+    password: zod_1.z.string().min(4, "Password must be at least 6 characters"),
+    confirmPassword: zod_1.z.string().min(4, "Confirm Password is required"),
+    avatar: zod_1.z.string().url("Avatar must be a valid URL").optional(),
+    agreed: zod_1.z.literal(true, {
+        errorMap: () => ({ message: "You must agree to the terms and conditions" }),
+    }),
+    firstName: zod_1.z.string().min(1, "First name is required"),
+    lastName: zod_1.z.string().min(1, "Last name is required"),
+    lga: zod_1.z.string().min(1, "LGA is required"),
+    state: zod_1.z.string().min(1, "State is required"),
+    address: zod_1.z.string().min(1, "Address is required"),
+    rider: exports.riderSchema,
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
@@ -679,4 +707,25 @@ exports.productTransactionIdSchema = zod_1.z.object({
     })
         .int('productTransactionId must be an integer')
         .positive('productTransactionId must be a positive number'),
+});
+exports.deliverySchema = zod_1.z.object({
+    productTransactionId: zod_1.z.number().positive().min(1, 'Product transaction ID is required'),
+    locationId: zod_1.z.number().positive().optional().nullable(),
+    receiverLat: zod_1.z.number().nullable().optional(),
+    receiverLong: zod_1.z.number().nullable().optional(),
+    address: zod_1.z.string().optional().nullable(),
+    vehicleType: zod_1.z.nativeEnum(enum_1.VehicleType).default(enum_1.VehicleType.BIKE),
+}).refine((data) => {
+    if (data.locationId) {
+        return ((data.receiverLat === null || data.receiverLat === undefined) &&
+            (data.receiverLong === null || data.receiverLong === undefined) &&
+            (data.address === null || data.address === undefined));
+    }
+    else {
+        return (typeof data.receiverLat === 'number' &&
+            typeof data.receiverLong === 'number');
+    }
+}, {
+    message: 'If locationId is provided, receiverLat, receiverLong, and address must be null or undefined. Otherwise, receiverLat and receiverLong are required.',
+    path: ['locationId'],
 });

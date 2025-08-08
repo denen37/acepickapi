@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { JobMode, OTPReason, UserRole } from "../utils/enum"; // adjust the path
+import { JobMode, OTPReason, RiderStatus, UserRole, VehicleType } from "../utils/enum"; // adjust the path
 import { VerificationType } from "../utils/enum";
 
 
@@ -134,6 +134,39 @@ export const registerCoporateSchema = z.object({
     message: "Passwords do not match",
     path: ["confirmPassword"],
 });
+
+
+export const riderSchema = z.object({
+    vehicleType: z.nativeEnum(VehicleType).optional().default(VehicleType.BIKE),
+    licenseNumber: z.string().min(1, "License number is required"),
+})
+
+export const updateRiderSchema = z.object({
+    vehicleType: z.nativeEnum(VehicleType).optional(),
+    licenseNumber: z.string().min(1, "License number is required").optional(),
+    status: z.nativeEnum(RiderStatus).optional(),
+})
+
+export const registerRiderSchema = z.object({
+    email: z.string().email("Invalid email address"),
+    phone: z.string().min(10, "Phone number is required"),
+    password: z.string().min(4, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(4, "Confirm Password is required"),
+    avatar: z.string().url("Avatar must be a valid URL").optional(),
+    agreed: z.literal(true, {
+        errorMap: () => ({ message: "You must agree to the terms and conditions" }),
+    }),
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    lga: z.string().min(1, "LGA is required"),
+    state: z.string().min(1, "State is required"),
+    address: z.string().min(1, "Address is required"),
+    rider: riderSchema,
+}).refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+});
+
 
 
 export const updateUserProfileSchema = z.object({
@@ -852,3 +885,28 @@ export const productTransactionIdSchema = z.object({
         .positive('productTransactionId must be a positive number'),
 });
 
+
+export const deliverySchema = z.object({
+    productTransactionId: z.number().positive().min(1, 'Product transaction ID is required'),
+    locationId: z.number().positive().optional().nullable(),
+    receiverLat: z.number().nullable().optional(),
+    receiverLong: z.number().nullable().optional(),
+    address: z.string().optional().nullable(),
+    vehicleType: z.nativeEnum(VehicleType).default(VehicleType.BIKE),
+}).refine((data) => {
+    if (data.locationId) {
+        return (
+            (data.receiverLat === null || data.receiverLat === undefined) &&
+            (data.receiverLong === null || data.receiverLong === undefined) &&
+            (data.address === null || data.address === undefined)
+        );
+    } else {
+        return (
+            typeof data.receiverLat === 'number' &&
+            typeof data.receiverLong === 'number'
+        );
+    }
+}, {
+    message: 'If locationId is provided, receiverLat, receiverLong, and address must be null or undefined. Otherwise, receiverLat and receiverLong are required.',
+    path: ['locationId'],
+});

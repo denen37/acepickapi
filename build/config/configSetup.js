@@ -72,6 +72,7 @@ const getConfig = () => {
             '/api/auth/upload_avatar',
             '/api/auth/register-professional',
             '/api/auth/register-corperate',
+            '/api/auth/register-rider',
             '/api/sectors',
             '/api/professions',
             '/api/webhook',

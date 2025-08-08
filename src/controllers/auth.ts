@@ -3,10 +3,10 @@ import config from "../config/configSetup"
 import { Request, Response } from 'express';
 import axios from "axios";
 import { basename } from "path";
-import { VerificationType, UserState, UserStatus, UserRole, OTPReason } from "../utils/enum";
-import { User, Director, Professional, Profession, Sector, Review, Wallet, Profile, Cooperation, Location, Verify } from "../models/Models"
+import { VerificationType, UserState, UserStatus, UserRole, OTPReason, VehicleType, RiderStatus } from "../utils/enum";
+import { User, Director, Professional, Profession, Sector, Review, Wallet, Profile, Cooperation, Location, Verify, Rider } from "../models/Models"
 import { forgotPasswordEmail, registerEmail, sendOTPEmail } from "../utils/messages";
-import { otpRequestSchema, registerCoporateSchema, registrationProfSchema, registrationSchema, verifyOTPSchema } from "../validation/body";
+import { otpRequestSchema, registerCoporateSchema, registerRiderSchema, registrationProfSchema, registrationSchema, updateRiderSchema, verifyOTPSchema } from "../validation/body";
 import { compare, hash } from "bcryptjs";
 import { verify } from "jsonwebtoken";
 import bcrypt from "bcryptjs";
@@ -16,6 +16,7 @@ import { sendEmail } from "../services/gmail";
 import { } from "../models/Location";
 import { verifyBvn, verifyBvnWithPaystack } from "../services/bvn";
 import { compareTwoStrings } from 'string-similarity';
+import dbsequelize from '../config/db'
 
 // yarn add stream-chat
 import { StreamChat } from 'stream-chat';
@@ -507,7 +508,9 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
 
         const wallet = await Wallet.create({
             userId: user.id,
-            balance: 0,
+            currentBalance: 0,
+            previouBalance: 0,
+            pin: null
         })
 
         user.password = null
@@ -537,6 +540,104 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
     }
 }
 
+
+export const registerRider = async (req: Request, res: Response) => {
+    const t = await dbsequelize.transaction();
+
+    try {
+        const result = registerRiderSchema.safeParse(req.body)
+
+        if (!result.success)
+            return res.status(400).json({
+                error: "Invalid input",
+                issues: result.error.format()
+            })
+
+        const { email, phone, password, confirmPassword, agreed, avatar, firstName, lastName, address, state, lga, rider } = result.data
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = await User.create({
+            email,
+            phone,
+            password: hashedPassword,
+            role: UserRole.DELIVERY
+        })
+
+        const location = await Location.create({
+            userId: user.id,
+            lga: lga,
+            state: state,
+            address: address,
+        })
+
+        const profile = await Profile.create({
+            avatar: avatar,
+            userId: user.id,
+            firstName,
+            lastName,
+        })
+
+        const newRider = await Rider.create({
+            userId: user.id,
+            vehicleType: rider.vehicleType,
+            licenseNumber: rider.licenseNumber,
+            status: RiderStatus.AVAILABLE
+        })
+
+        const wallet = await Wallet.create({
+            userId: user.id,
+            currentBalance: 0,
+            previouBalance: 0,
+            pin: null
+        })
+
+        await t.commit();
+
+        let token = sign({ id: user.id, email: user.email, role: user.role }, config.TOKEN_SECRET);
+
+        let regEmail = registerEmail(user.dataValues);
+
+        let messageId = await sendEmail(
+            email,
+            regEmail.title,
+            regEmail.body,
+            profile?.firstName || 'User'
+        )
+
+        let emailSendStatus = Boolean(messageId);
+
+        return successResponse(res, "success", { user, token, emailSendStatus });
+    } catch (error) {
+        await t.rollback();
+
+        return errorResponse(res, "error", 'Error registering rider');
+    }
+}
+
+
+export const updateRider = async (req: Request, res: Response) => {
+    const { id } = req.user;
+
+    const result = updateRiderSchema.safeParse(req.body)
+
+    if (!result.success)
+        return res.status(400).json({
+            error: "Invalid input",
+            issues: result.error.format()
+        })
+
+    try {
+        const rider = await Rider.update(result.data, {
+            where: {
+                userId: id
+            }
+        })
+
+        return successResponse(res, "Rider updated successfully", rider)
+    } catch (error) {
+        return errorResponse(res, "Error updating rider", error)
+    }
+}
 
 
 export const passwordChange = async (req: Request, res: Response) => {

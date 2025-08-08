@@ -40,7 +40,6 @@ const initSocket = (httpServer) => {
         yield (0, chat_1.onConnect)(socket);
         socket.emit(events_1.Emit.CONNECTED, socket.id);
         socket.on('call-user', (data) => __awaiter(void 0, void 0, void 0, function* () {
-            console.log('call-user', data);
             const partner = yield OnlineUser_1.OnlineUser.findOne({ where: { userId: data.to } });
             if (!partner)
                 return;
@@ -88,10 +87,8 @@ const initSocket = (httpServer) => {
         //Video call
         socket.on('video-call-user', (data) => __awaiter(void 0, void 0, void 0, function* () {
             const partner = yield OnlineUser_1.OnlineUser.findOne({ where: { userId: data.to } });
-            console.log('partnerr', partner === null || partner === void 0 ? void 0 : partner.toJSON());
             if (!partner)
                 return;
-            console.log('video-call-made');
             io.to(partner === null || partner === void 0 ? void 0 : partner.socketId).emit('video-call-made', {
                 offer: data.offer,
                 from: socket.user.id,

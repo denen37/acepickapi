@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TransactionDescription = exports.OrderMethod = exports.ProductTransactionStatus = exports.ProductStatus = exports.TransferStatus = exports.TransactionType = exports.TransactionStatus = exports.PaidFor = exports.JobStatus = exports.PayStatus = exports.JobMode = exports.UserState = exports.UserStatus = exports.UserRole = exports.VerificationType = exports.OTPReason = void 0;
+exports.RiderStatus = exports.VehicleType = exports.TransactionDescription = exports.OrderStatus = exports.OrderMethod = exports.ProductTransactionStatus = exports.ProductStatus = exports.TransferStatus = exports.TransactionType = exports.TransactionStatus = exports.PaidFor = exports.JobStatus = exports.PayStatus = exports.JobMode = exports.UserState = exports.UserStatus = exports.UserRole = exports.VerificationType = exports.OTPReason = void 0;
 var OTPReason;
 (function (OTPReason) {
     OTPReason["VERIFICATION"] = "verification";
@@ -18,6 +18,7 @@ var UserRole;
     UserRole["PROFESSIONAL"] = "professional";
     UserRole["CLIENT"] = "client";
     UserRole["CORPERATE"] = "corperate";
+    UserRole["DELIVERY"] = "delivery";
 })(UserRole || (exports.UserRole = UserRole = {}));
 var UserStatus;
 (function (UserStatus) {
@@ -41,7 +42,7 @@ var PayStatus;
 (function (PayStatus) {
     PayStatus["UNPAID"] = "unpaid";
     PayStatus["PAID"] = "paid";
-    PayStatus["PARTIALLY_PAID"] = "partially_paid";
+    //PARTIALLY_PAID = 'partially_paid',
     PayStatus["REFUNDED"] = "refunded";
     PayStatus["RELEASED"] = "released";
 })(PayStatus || (exports.PayStatus = PayStatus = {}));
@@ -95,6 +96,17 @@ var OrderMethod;
     OrderMethod["SELF_PICKUP"] = "self_pickup";
     OrderMethod["DELIVERY"] = "delivery";
 })(OrderMethod || (exports.OrderMethod = OrderMethod = {}));
+var OrderStatus;
+(function (OrderStatus) {
+    OrderStatus["PENDING"] = "pending";
+    OrderStatus["ACCEPTED"] = "accepted";
+    OrderStatus["PICKED_UP"] = "picked_up";
+    OrderStatus["CONFIRM_PICKUP"] = "confirm_pickup";
+    OrderStatus["IN_TRANSIT"] = "in_transit";
+    OrderStatus["DELIVERED"] = "delivered";
+    OrderStatus["CONFIRM_DELIVERY"] = "confirm_delivery";
+    OrderStatus["CANCELLED"] = "cancelled";
+})(OrderStatus || (exports.OrderStatus = OrderStatus = {}));
 var TransactionDescription;
 (function (TransactionDescription) {
     TransactionDescription["JOB_PAYMENT"] = "job payment";
@@ -102,3 +114,18 @@ var TransactionDescription;
     TransactionDescription["PRODUCT_JOB_PAYMENT"] = "product_job payment";
     TransactionDescription["WALLET_TOPUP"] = "wallet topup";
 })(TransactionDescription || (exports.TransactionDescription = TransactionDescription = {}));
+var VehicleType;
+(function (VehicleType) {
+    VehicleType["CAR"] = "car";
+    VehicleType["BIKE"] = "bike";
+    VehicleType["BUS"] = "bus";
+    VehicleType["TRUCK"] = "truck";
+    VehicleType["KEKE"] = "keke";
+})(VehicleType || (exports.VehicleType = VehicleType = {}));
+var RiderStatus;
+(function (RiderStatus) {
+    RiderStatus["BUSY"] = "busy";
+    RiderStatus["AVAILABLE"] = "available";
+    RiderStatus["SUSPENDED"] = "suspended";
+    RiderStatus["INACTIVE"] = "inactive";
+})(RiderStatus || (exports.RiderStatus = RiderStatus = {}));

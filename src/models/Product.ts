@@ -33,6 +33,11 @@ export class Product extends Model {
     categoryId!: number;
 
 
+    @AllowNull(true)
+    @Column(DataType.DECIMAL(10, 2))
+    weightPerUnit!: number;
+
+
     @AllowNull(false)
     @Default(1)
     @Column(DataType.INTEGER)
@@ -61,8 +66,8 @@ export class Product extends Model {
     locationId!: number;
 
 
-    @BelongsTo(() => Location, { onDelete: 'CASCADE' })
-    location!: Location;
+    @BelongsTo(() => Location, { as: 'pickupLocation', foreignKey: 'locationId' })
+    pickupLocation!: Location;
 
 
     @BelongsTo(() => Category, { onDelete: 'CASCADE' })

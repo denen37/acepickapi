@@ -18,10 +18,11 @@ import { addCertificate, deleteCertificate, getCertificates, updateCertificate }
 import { addExperience, deleteExperience, getExperiences, updateExperience } from "../controllers/experience";
 import { addPortfolio, deletePortfolio, getPortfolios, updatePortfolio } from "../controllers/portfolio";
 import { AccountInfo, updateProfile } from "../controllers/profiles";
-import { addProduct, deleteProduct, getProducts, getMyProducts, updateProduct, selectProduct, restockProduct, soldProducts, boughtProducts, getProduct, acceptProduct } from "../controllers/product";
+import { addProduct, deleteProduct, getProducts, getMyProducts, updateProduct, selectProduct, restockProduct, soldProducts, boughtProducts, getProduct } from "../controllers/product";
 import { addCategory, deleteCategory, getCategories, updateCategory } from "../controllers/category";
 import { uploads } from "../services/upload";
 import { uploadFiles } from "../controllers/upload";
+import { acceptOrder, cancelOrder, confirmDelivery, confirmPickup, createOrder, deliverOrder, getNearestPendingOrders, getOrdersClient, getOrdersRider, pickupOrder, transportOrder } from "../controllers/order";
 
 const routes = Router();
 
@@ -130,13 +131,24 @@ routes.get('/products/mine', getMyProducts);
 routes.post('/products/restock', restockProduct);
 routes.get('/products/transactions/sold', soldProducts);
 routes.get('/products/transactions/bought', boughtProducts);
-routes.post('/products/transactions/accept', acceptProduct);
+//routes.post('/products/transactions/accept', acceptProduct);
 
 routes.get('/categories', getCategories);
 routes.post('/categories', addCategory);
 routes.put('/categories/:id', updateCategory);
 routes.delete('/categories/:id', deleteCategory);
 
+routes.post('/create-order', allowRoles(UserRole.CLIENT), createOrder);
+routes.get('/pending-orders', allowRoles(UserRole.DELIVERY), getNearestPendingOrders);
+routes.get('/rider-orders', allowRoles(UserRole.DELIVERY), getOrdersRider);
+routes.get('/client-orders', allowRoles(UserRole.CLIENT), getOrdersClient);
+routes.put('/orders/accept/:orderId', allowRoles(UserRole.DELIVERY), acceptOrder);
+routes.put('/orders/pickup/:orderId', allowRoles(UserRole.DELIVERY), pickupOrder);
+routes.put('/orders/confirm_pickup/:orderId', allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), confirmPickup);
+routes.put('/orders/transport/:orderId', allowRoles(UserRole.DELIVERY), transportOrder);
+routes.put('/orders/deliver/:orderId', allowRoles(UserRole.DELIVERY), deliverOrder);
+routes.put('/orders/confirm_delivery/:orderId', allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), confirmDelivery);
+routes.put('/orders/cancel/:orderId', allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), cancelOrder);
 
 
 export default routes;

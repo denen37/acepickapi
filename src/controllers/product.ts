@@ -5,7 +5,6 @@ import { Op } from 'sequelize';
 import { boughtProductSchema, getProductSchema } from '../validation/query';
 import { createProductSchema, productTransactionIdSchema, restockProductSchema, selectProductSchema, updateProductSchema } from '../validation/body';
 import { ProductTransaction } from '../models/ProductTransaction';
-import { ProductStatus, ProductTransactionStatus } from '../utils/enum';
 import { Fn } from 'sequelize/types/utils';
 
 export const getProducts = async (req: Request, res: Response) => {
@@ -249,52 +248,52 @@ export const restockProduct = async (req: Request, res: Response) => {
 }
 
 
-export const acceptProduct = async (req: Request, res: Response) => {
-    try {
-        const result = productTransactionIdSchema.safeParse(req.body);
+// export const acceptProduct = async (req: Request, res: Response) => {
+//     try {
+//         const result = productTransactionIdSchema.safeParse(req.body);
 
-        if (!result.success) {
-            return res.status(400).json({ error: result.error.format() });
-        }
+//         if (!result.success) {
+//             return res.status(400).json({ error: result.error.format() });
+//         }
 
-        const { productTransactionId } = result.data;
+//         const { productTransactionId } = result.data;
 
-        const productTransaction = await ProductTransaction.findByPk(productTransactionId, {
-            include: [
-                {
-                    model: User,
-                    as: 'seller',
-                    include: [Wallet]
-                }
-            ]
-        });
+//         const productTransaction = await ProductTransaction.findByPk(productTransactionId, {
+//             include: [
+//                 {
+//                     model: User,
+//                     as: 'seller',
+//                     include: [Wallet]
+//                 }
+//             ]
+//         });
 
-        if (productTransaction?.status !== ProductTransactionStatus.ORDERED) {
-            return res.status(400).json({ error: 'Product transaction is not ordered' });
-        }
+//         if (productTransaction?.status !== ProductTransactionStatus.ORDERED) {
+//             return res.status(400).json({ error: 'Product transaction is not ordered' });
+//         }
 
-        if (!productTransaction) {
-            return res.status(404).json({ error: 'Product transaction not found' });
-        }
+//         if (!productTransaction) {
+//             return res.status(404).json({ error: 'Product transaction not found' });
+//         }
 
-        productTransaction.status = ProductTransactionStatus.DELIVERED;
+//         productTransaction.status = ProductTransactionStatus.DELIVERED;
 
-        await productTransaction.save();
+//         await productTransaction.save();
 
-        //Credit seller
-        let prevAmount = Number(productTransaction.seller.wallet.currentBalance);
-        let newPrice = Number(productTransaction.price);
+//         //Credit seller
+//         let prevAmount = Number(productTransaction.seller.wallet.currentBalance);
+//         let newPrice = Number(productTransaction.price);
 
-        productTransaction.seller.wallet.previousBalance = prevAmount;
-        productTransaction.seller.wallet.currentBalance = prevAmount + newPrice;
+//         productTransaction.seller.wallet.previousBalance = prevAmount;
+//         productTransaction.seller.wallet.currentBalance = prevAmount + newPrice;
 
-        await productTransaction.seller.wallet.save();
+//         await productTransaction.seller.wallet.save();
 
-        return successResponse(res, 'success', 'Product transaction accepted')
-    } catch (error: any) {
-        return errorResponse(res, 'error', error.message);
-    }
-}
+//         return successResponse(res, 'success', 'Product transaction accepted')
+//     } catch (error: any) {
+//         return errorResponse(res, 'error', error.message);
+//     }
+// }
 
 
 export const selectProduct = async (req: Request, res: Response) => {
@@ -328,6 +327,7 @@ export const selectProduct = async (req: Request, res: Response) => {
             orderMethod,
             date: new Date()
         })
+
 
         return successResponse(res, 'success', productTransaction)
     } catch (error: any) {

@@ -75,6 +75,10 @@ __decorate([
     __metadata("design:type", Models_1.User)
 ], ProductTransaction.prototype, "seller", void 0);
 __decorate([
+    (0, sequelize_typescript_1.HasOne)(() => Models_1.Order),
+    __metadata("design:type", Models_1.Order)
+], ProductTransaction.prototype, "order", void 0);
+__decorate([
     (0, sequelize_typescript_1.HasOne)(() => Models_1.Transaction),
     __metadata("design:type", Models_1.Transaction)
 ], ProductTransaction.prototype, "transaction", void 0);

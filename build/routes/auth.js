@@ -15,6 +15,8 @@ routes.post('/update-profile', auth_1.updateProfile);
 routes.post('/register', auth_1.register);
 routes.post('/register-professional', auth_1.registerProfessional);
 routes.post('/register-corperate', auth_1.registerCorperate);
+routes.post('/register-rider', auth_1.registerRider);
+routes.put('/update-rider', auth_1.updateRider);
 routes.post('/upload_avatar', upload_1.uploads.single('avatar'), upload_2.uploadAvatar);
 routes.post('/login', auth_1.login);
 routes.post('/change-password-loggedin', auth_1.passwordChange);

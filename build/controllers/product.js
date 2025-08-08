@@ -9,14 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteProduct = exports.updateProduct = exports.addProduct = exports.selectProduct = exports.acceptProduct = exports.restockProduct = exports.soldProducts = exports.boughtProducts = exports.getMyProducts = exports.getProduct = exports.getProducts = void 0;
+exports.deleteProduct = exports.updateProduct = exports.addProduct = exports.selectProduct = exports.restockProduct = exports.soldProducts = exports.boughtProducts = exports.getMyProducts = exports.getProduct = exports.getProducts = void 0;
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const sequelize_1 = require("sequelize");
 const query_1 = require("../validation/query");
 const body_1 = require("../validation/body");
 const ProductTransaction_1 = require("../models/ProductTransaction");
-const enum_1 = require("../utils/enum");
 const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = query_1.getProductSchema.safeParse(req.query);
     if (!result.success) {
@@ -193,43 +192,41 @@ const restockProduct = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.restockProduct = restockProduct;
-const acceptProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const result = body_1.productTransactionIdSchema.safeParse(req.body);
-        if (!result.success) {
-            return res.status(400).json({ error: result.error.format() });
-        }
-        const { productTransactionId } = result.data;
-        const productTransaction = yield ProductTransaction_1.ProductTransaction.findByPk(productTransactionId, {
-            include: [
-                {
-                    model: Models_1.User,
-                    as: 'seller',
-                    include: [Models_1.Wallet]
-                }
-            ]
-        });
-        if ((productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.status) !== enum_1.ProductTransactionStatus.ORDERED) {
-            return res.status(400).json({ error: 'Product transaction is not ordered' });
-        }
-        if (!productTransaction) {
-            return res.status(404).json({ error: 'Product transaction not found' });
-        }
-        productTransaction.status = enum_1.ProductTransactionStatus.DELIVERED;
-        yield productTransaction.save();
-        //Credit seller
-        let prevAmount = Number(productTransaction.seller.wallet.currentBalance);
-        let newPrice = Number(productTransaction.price);
-        productTransaction.seller.wallet.previousBalance = prevAmount;
-        productTransaction.seller.wallet.currentBalance = prevAmount + newPrice;
-        yield productTransaction.seller.wallet.save();
-        return (0, modules_1.successResponse)(res, 'success', 'Product transaction accepted');
-    }
-    catch (error) {
-        return (0, modules_1.errorResponse)(res, 'error', error.message);
-    }
-});
-exports.acceptProduct = acceptProduct;
+// export const acceptProduct = async (req: Request, res: Response) => {
+//     try {
+//         const result = productTransactionIdSchema.safeParse(req.body);
+//         if (!result.success) {
+//             return res.status(400).json({ error: result.error.format() });
+//         }
+//         const { productTransactionId } = result.data;
+//         const productTransaction = await ProductTransaction.findByPk(productTransactionId, {
+//             include: [
+//                 {
+//                     model: User,
+//                     as: 'seller',
+//                     include: [Wallet]
+//                 }
+//             ]
+//         });
+//         if (productTransaction?.status !== ProductTransactionStatus.ORDERED) {
+//             return res.status(400).json({ error: 'Product transaction is not ordered' });
+//         }
+//         if (!productTransaction) {
+//             return res.status(404).json({ error: 'Product transaction not found' });
+//         }
+//         productTransaction.status = ProductTransactionStatus.DELIVERED;
+//         await productTransaction.save();
+//         //Credit seller
+//         let prevAmount = Number(productTransaction.seller.wallet.currentBalance);
+//         let newPrice = Number(productTransaction.price);
+//         productTransaction.seller.wallet.previousBalance = prevAmount;
+//         productTransaction.seller.wallet.currentBalance = prevAmount + newPrice;
+//         await productTransaction.seller.wallet.save();
+//         return successResponse(res, 'success', 'Product transaction accepted')
+//     } catch (error: any) {
+//         return errorResponse(res, 'error', error.message);
+//     }
+// }
 const selectProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = body_1.selectProductSchema.safeParse(req.body);

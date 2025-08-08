@@ -14,7 +14,8 @@ export enum VerificationType {
 export enum UserRole {
     PROFESSIONAL = 'professional',
     CLIENT = 'client',
-    CORPERATE = 'corperate'
+    CORPERATE = 'corperate',
+    DELIVERY = 'delivery',
 }
 
 
@@ -42,7 +43,7 @@ export enum JobMode {
 export enum PayStatus {
     UNPAID = 'unpaid',
     PAID = 'paid',
-    PARTIALLY_PAID = 'partially_paid',
+    //PARTIALLY_PAID = 'partially_paid',
     REFUNDED = 'refunded',
     RELEASED = 'released',
 }
@@ -99,9 +100,35 @@ export enum OrderMethod {
     DELIVERY = "delivery",
 }
 
+export enum OrderStatus {
+    PENDING = 'pending',
+    ACCEPTED = 'accepted',
+    PICKED_UP = 'picked_up',
+    CONFIRM_PICKUP = 'confirm_pickup',
+    IN_TRANSIT = 'in_transit',
+    DELIVERED = 'delivered',
+    CONFIRM_DELIVERY = 'confirm_delivery',
+    CANCELLED = 'cancelled',
+}
+
 export enum TransactionDescription {
     JOB_PAYMENT = 'job payment',
     PRODUCT_PAYMENT = 'product payment',
     PRODUCT_JOB_PAYMENT = 'product_job payment',
     WALLET_TOPUP = 'wallet topup'
+}
+
+export enum VehicleType {
+    CAR = 'car',
+    BIKE = 'bike',
+    BUS = 'bus',
+    TRUCK = 'truck',
+    KEKE = 'keke'
+}
+
+export enum RiderStatus {
+    BUSY = 'busy',
+    AVAILABLE = 'available',
+    SUSPENDED = 'suspended',
+    INACTIVE = 'inactive',
 }

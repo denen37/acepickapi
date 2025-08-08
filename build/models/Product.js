@@ -37,6 +37,11 @@ __decorate([
     __metadata("design:type", Number)
 ], Product.prototype, "categoryId", void 0);
 __decorate([
+    (0, sequelize_typescript_1.AllowNull)(true),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DECIMAL(10, 2)),
+    __metadata("design:type", Number)
+], Product.prototype, "weightPerUnit", void 0);
+__decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.Default)(1),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.INTEGER),
@@ -65,9 +70,9 @@ __decorate([
     __metadata("design:type", Number)
 ], Product.prototype, "locationId", void 0);
 __decorate([
-    (0, sequelize_typescript_1.BelongsTo)(() => Models_1.Location, { onDelete: 'CASCADE' }),
+    (0, sequelize_typescript_1.BelongsTo)(() => Models_1.Location, { as: 'pickupLocation', foreignKey: 'locationId' }),
     __metadata("design:type", Models_1.Location)
-], Product.prototype, "location", void 0);
+], Product.prototype, "pickupLocation", void 0);
 __decorate([
     (0, sequelize_typescript_1.BelongsTo)(() => Models_1.Category, { onDelete: 'CASCADE' }),
     __metadata("design:type", Models_1.Category)

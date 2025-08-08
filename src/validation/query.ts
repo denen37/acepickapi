@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { JobStatus, ProductTransactionStatus } from "../utils/enum";
+import { JobStatus, OrderStatus, ProductTransactionStatus } from "../utils/enum";
 
 export const jobStatusQuerySchema = z.object({
     status: z.nativeEnum(JobStatus).optional(),
@@ -39,3 +39,8 @@ export const boughtProductSchema = z.object({
     status: z.nativeEnum(ProductTransactionStatus).optional(),
 });
 
+export const getOrdersSchema = z.object({
+    status: z.nativeEnum(OrderStatus).optional(),
+    page: z.coerce.number().min(1).default(1),
+    limit: z.coerce.number().min(1).default(10)
+})
