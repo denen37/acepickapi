@@ -450,6 +450,7 @@ const registerRider = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     catch (error) {
         yield t.rollback();
+        console.log(error);
         return (0, modules_1.errorResponse)(res, "error", 'Error registering rider');
     }
 });

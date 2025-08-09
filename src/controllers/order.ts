@@ -145,7 +145,7 @@ export const getNearestPendingOrders = async (req: Request, res: Response) => {
         const orders = await Order.findAll({
             where: {
                 riderId: null,
-                status: OrderStatus.PENDING,
+                status: OrderStatus.PAID,
             },
             include: [
                 {
@@ -292,8 +292,8 @@ export const acceptOrder = async (req: Request, res: Response) => {
             return handleResponse(res, 404, false, 'Order not found')
         }
 
-        if (order.status !== OrderStatus.PENDING) {
-            return handleResponse(res, 400, false, 'Order already accepted')
+        if (order.status !== OrderStatus.PAID) {
+            return handleResponse(res, 400, false, 'Order has not been paid yet')
         }
 
         order.status = OrderStatus.ACCEPTED;

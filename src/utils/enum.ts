@@ -102,6 +102,7 @@ export enum OrderMethod {
 
 export enum OrderStatus {
     PENDING = 'pending',
+    PAID = 'paid',
     ACCEPTED = 'accepted',
     PICKED_UP = 'picked_up',
     CONFIRM_PICKUP = 'confirm_pickup',
@@ -114,7 +115,7 @@ export enum OrderStatus {
 export enum TransactionDescription {
     JOB_PAYMENT = 'job payment',
     PRODUCT_PAYMENT = 'product payment',
-    PRODUCT_JOB_PAYMENT = 'product_job payment',
+    PRODUCT_ORDER_PAYMENT = 'product_order payment',
     WALLET_TOPUP = 'wallet topup'
 }
 

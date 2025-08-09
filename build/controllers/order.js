@@ -126,7 +126,7 @@ const getNearestPendingOrders = (req, res) => __awaiter(void 0, void 0, void 0, 
         const orders = yield Models_1.Order.findAll({
             where: {
                 riderId: null,
-                status: enum_1.OrderStatus.PENDING,
+                status: enum_1.OrderStatus.PAID,
             },
             include: [
                 {
@@ -237,8 +237,8 @@ const acceptOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!order) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Order not found');
         }
-        if (order.status !== enum_1.OrderStatus.PENDING) {
-            return (0, modules_1.handleResponse)(res, 400, false, 'Order already accepted');
+        if (order.status !== enum_1.OrderStatus.PAID) {
+            return (0, modules_1.handleResponse)(res, 400, false, 'Order has not been paid yet');
         }
         order.status = enum_1.OrderStatus.ACCEPTED;
         order.riderId = id;

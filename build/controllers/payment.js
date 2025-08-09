@@ -224,8 +224,7 @@ const handlePaystackWebhook = (req, res) => __awaiter(void 0, void 0, void 0, fu
             transaction.timestamp = new Date(paid_at);
             yield transaction.save();
             if (transaction.jobId
-                && (transaction.description === enum_1.TransactionDescription.JOB_PAYMENT
-                    || transaction.description === enum_1.TransactionDescription.PRODUCT_JOB_PAYMENT)) {
+                && (transaction.description === enum_1.TransactionDescription.JOB_PAYMENT)) {
                 const job = yield Models_1.Job.findByPk(transaction.jobId, {
                     include: [
                         {
@@ -252,7 +251,7 @@ const handlePaystackWebhook = (req, res) => __awaiter(void 0, void 0, void 0, fu
             }
             if (transaction.productTransactionId
                 && (transaction.description === enum_1.TransactionDescription.PRODUCT_PAYMENT
-                    || transaction.description === enum_1.TransactionDescription.PRODUCT_JOB_PAYMENT)) {
+                    || transaction.description === enum_1.TransactionDescription.PRODUCT_ORDER_PAYMENT)) {
                 const productTransaction = yield Models_1.ProductTransaction.findByPk(transaction.productTransactionId, {
                     include: [
                         {
@@ -280,6 +279,18 @@ const handlePaystackWebhook = (req, res) => __awaiter(void 0, void 0, void 0, fu
                     //send email to buyer
                     const email = (0, messages_1.productPaymentEmail)(productTransaction);
                     const msgStat = yield (0, gmail_1.sendEmail)(productTransaction.seller.email, email.title, email.body, productTransaction.seller.profile.firstName + ' ' + productTransaction.seller.profile.lastName);
+                }
+            }
+            if (transaction.description === enum_1.TransactionDescription.PRODUCT_ORDER_PAYMENT) {
+                const order = yield Models_1.Order.findOne({
+                    where: {
+                        productTransactionId: transaction.productTransactionId,
+                        status: enum_1.OrderStatus.PENDING,
+                    }
+                });
+                if (order) {
+                    order.status = enum_1.OrderStatus.PAID;
+                    yield order.save();
                 }
             }
             if (transaction.description === enum_1.TransactionDescription.WALLET_TOPUP) {

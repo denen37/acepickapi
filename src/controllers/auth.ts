@@ -610,6 +610,8 @@ export const registerRider = async (req: Request, res: Response) => {
     } catch (error) {
         await t.rollback();
 
+        console.log(error);
+
         return errorResponse(res, "error", 'Error registering rider');
     }
 }

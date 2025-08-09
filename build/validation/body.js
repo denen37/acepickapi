@@ -601,9 +601,9 @@ exports.initPaymentSchema = zod_1.z
         invalid_type_error: 'Amount must be a number',
     })
         .positive('Amount must be greater than zero'),
-    description: zod_1.z.preprocess((val) => (typeof val === 'string' ? val.toLowerCase() : val), zod_1.z.enum(['job payment', 'product payment', 'product_job payment', 'wallet topup'], {
+    description: zod_1.z.preprocess((val) => (typeof val === 'string' ? val.toLowerCase() : val), zod_1.z.enum(['job payment', 'product payment', 'product_order payment', 'wallet topup'], {
         errorMap: () => ({
-            message: 'Description must be one of: "Job Payment", "Product Payment", "Product_Job Payment", or "Wallet Topup"',
+            message: 'Description must be one of: "Job Payment", "Product Payment", "Product_Order Payment", or "Wallet Topup"',
         }),
     })),
     jobId: zod_1.z
@@ -650,22 +650,25 @@ exports.initPaymentSchema = zod_1.z
 })
     // Validate productTransactionId for product_job payment
     .refine((data) => {
-    if (data.description !== 'product_job payment')
+    if (data.description !== 'product_order payment')
         return true;
     return typeof data.productTransactionId === 'number' && data.productTransactionId > 0;
 }, {
-    message: 'productTransactionId must be a positive integer for "Product_Job Payment", and must be null or omitted otherwise',
+    message: 'productTransactionId must be a positive integer for "Product_Order Payment", and must be null or omitted otherwise',
     path: ['productTransactionId'],
-})
-    // Validate jobId for product_job payment
-    .refine((data) => {
-    if (data.description !== 'product_job payment')
-        return true;
-    return typeof data.jobId === 'number' && data.jobId > 0;
-}, {
-    message: 'jobId must be a positive integer for "Product_Job Payment", and must be null or omitted otherwise',
-    path: ['jobId'],
 });
+// Validate jobId for product_job payment
+// .refine(
+//     (data) => {
+//         if (data.description !== 'product_job payment') return true;
+//         return typeof data.jobId === 'number' && data.jobId > 0;
+//     },
+//     {
+//         message:
+//             'jobId must be a positive integer for "Product_Job Payment", and must be null or omitted otherwise',
+//         path: ['jobId'],
+//     }
+// );
 exports.selectProductSchema = zod_1.z.object({
     productId: zod_1.z
         .number({

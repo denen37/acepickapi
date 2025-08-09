@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import { Transfer, Transaction, Wallet, User, OnlineUser, Job, Profile, ProductTransaction, Product } from "../models/Models";
+import { Transfer, Transaction, Wallet, User, OnlineUser, Job, Profile, ProductTransaction, Product, Order } from "../models/Models";
 import { randomId, errorResponse, handleResponse, successResponse } from "../utils/modules";
 import config from "../config/configSetup"
 import axios from 'axios'
-import { JobStatus, PayStatus, ProductStatus, ProductTransactionStatus, TransactionDescription, TransactionStatus, TransactionType, TransferStatus } from "../utils/enum";
+import { JobStatus, OrderStatus, PayStatus, ProductStatus, ProductTransactionStatus, TransactionDescription, TransactionStatus, TransactionType, TransferStatus } from "../utils/enum";
 import { v4 as uuidv4 } from 'uuid';
 import { where } from "sequelize";
 import { sendPushNotification } from "../services/notification";
@@ -292,8 +292,7 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
             await transaction.save();
 
             if (transaction.jobId
-                && (transaction.description === TransactionDescription.JOB_PAYMENT
-                    || transaction.description === TransactionDescription.PRODUCT_JOB_PAYMENT)) {
+                && (transaction.description === TransactionDescription.JOB_PAYMENT)) {
                 const job = await Job.findByPk(transaction.jobId, {
                     include: [
                         {
@@ -336,7 +335,7 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
 
             if (transaction.productTransactionId
                 && (transaction.description === TransactionDescription.PRODUCT_PAYMENT
-                    || transaction.description === TransactionDescription.PRODUCT_JOB_PAYMENT)) {
+                    || transaction.description === TransactionDescription.PRODUCT_ORDER_PAYMENT)) {
                 const productTransaction = await ProductTransaction.findByPk(transaction.productTransactionId, {
                     include: [
                         {
@@ -382,6 +381,22 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
                 }
 
             }
+
+            if (transaction.description === TransactionDescription.PRODUCT_ORDER_PAYMENT) {
+                const order = await Order.findOne({
+                    where: {
+                        productTransactionId: transaction.productTransactionId,
+                        status: OrderStatus.PENDING,
+                    }
+                })
+
+
+                if (order) {
+                    order.status = OrderStatus.PAID;
+                    await order.save();
+                }
+            }
+
             if (transaction.description === TransactionDescription.WALLET_TOPUP) {
                 if (transaction.user.wallet) {
                     let prevAmount = Number(transaction.user.wallet.currentBalance);

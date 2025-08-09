@@ -99,6 +99,7 @@ var OrderMethod;
 var OrderStatus;
 (function (OrderStatus) {
     OrderStatus["PENDING"] = "pending";
+    OrderStatus["PAID"] = "paid";
     OrderStatus["ACCEPTED"] = "accepted";
     OrderStatus["PICKED_UP"] = "picked_up";
     OrderStatus["CONFIRM_PICKUP"] = "confirm_pickup";
@@ -111,7 +112,7 @@ var TransactionDescription;
 (function (TransactionDescription) {
     TransactionDescription["JOB_PAYMENT"] = "job payment";
     TransactionDescription["PRODUCT_PAYMENT"] = "product payment";
-    TransactionDescription["PRODUCT_JOB_PAYMENT"] = "product_job payment";
+    TransactionDescription["PRODUCT_ORDER_PAYMENT"] = "product_order payment";
     TransactionDescription["WALLET_TOPUP"] = "wallet topup";
 })(TransactionDescription || (exports.TransactionDescription = TransactionDescription = {}));
 var VehicleType;
