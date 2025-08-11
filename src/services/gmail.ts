@@ -8,18 +8,18 @@ const transporter = nodemailer.createTransport({
     service: config.EMAIL_SERVICE,
     port: config.EMAIL_PORT,
     secure: true,
-    auth: {
-        user: config.EMAIL_USER,
-        pass: config.EMAIL_PASS
-    },
+    // auth: {
+    //     user: config.EMAIL_USER,
+    //     pass: config.EMAIL_PASS
+    // },
     tls: {
-        rejectUnauthorized: false 
+        rejectUnauthorized: false
     }
 });
 
 export async function sendEmail(to: string, subject: string, text: string, username: string | undefined) {
     const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: config.EMAIL_FROM,
         to: to,
         subject: subject,
         text: '',

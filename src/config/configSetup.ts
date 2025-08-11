@@ -17,6 +17,7 @@ type Config = {
     EMAIL_SERVICE: string | undefined;
     EMAIL_PORT: number | undefined;
     EMAIL_USER: string | undefined;
+    EMAIL_FROM: string | undefined;
     EMAIL_PASS: string | undefined;
     EMAIL_HOST: string | undefined;
     PUBLIC_ROUTES: string[] | [];
@@ -47,6 +48,7 @@ const getConfig = (): Config => {
         EMAIL_SERVICE: process.env.EMAIL_SERVICE,
         EMAIL_PORT: Number(process.env.EMAIL_PORT),
         EMAIL_USER: process.env.EMAIL_USER,
+        EMAIL_FROM: process.env.EMAIL_FROM,
         EMAIL_PASS: process.env.EMAIL_PASS,
         EMAIL_HOST: process.env.EMAIL_HOST,
         OTP_EXPIRY_TIME: Number(process.env.OTP_EXPIRY_TIME || 5),

@@ -20,10 +20,10 @@ const transporter = nodemailer.createTransport({
     service: configSetup_1.default.EMAIL_SERVICE,
     port: configSetup_1.default.EMAIL_PORT,
     secure: true,
-    auth: {
-        user: configSetup_1.default.EMAIL_USER,
-        pass: configSetup_1.default.EMAIL_PASS
-    },
+    // auth: {
+    //     user: config.EMAIL_USER,
+    //     pass: config.EMAIL_PASS
+    // },
     tls: {
         rejectUnauthorized: false
     }
@@ -31,7 +31,7 @@ const transporter = nodemailer.createTransport({
 function sendEmail(to, subject, text, username) {
     return __awaiter(this, void 0, void 0, function* () {
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: configSetup_1.default.EMAIL_FROM,
             to: to,
             subject: subject,
             text: '',
