@@ -17,9 +17,9 @@ const nodemailer = require('nodemailer');
 const configSetup_1 = __importDefault(require("../config/configSetup"));
 const template_1 = require("../config/template");
 const transporter = nodemailer.createTransport({
-    service: configSetup_1.default.EMAIL_SERVICE,
+    host: configSetup_1.default.EMAIL_HOST,
     port: configSetup_1.default.EMAIL_PORT,
-    secure: true,
+    secure: false,
     auth: {
         user: configSetup_1.default.EMAIL_USER,
         pass: configSetup_1.default.EMAIL_PASS

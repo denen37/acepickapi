@@ -5,9 +5,9 @@ import { templateData } from '../config/template';
 
 
 const transporter = nodemailer.createTransport({
-    service: config.EMAIL_SERVICE,
+    host: config.EMAIL_HOST,
     port: config.EMAIL_PORT,
-    secure: true,
+    secure: false,
     auth: {
         user: config.EMAIL_USER,
         pass: config.EMAIL_PASS
@@ -16,6 +16,7 @@ const transporter = nodemailer.createTransport({
         rejectUnauthorized: false
     }
 });
+
 
 export async function sendEmail(to: string, subject: string, text: string, username: string | undefined) {
     const mailOptions = {
