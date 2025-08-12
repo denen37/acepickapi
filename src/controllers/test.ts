@@ -35,7 +35,7 @@ export const sendEmailTest = async (req: Request, res: Response) => {
 
     let emailSendStatus = Boolean(messageId);
 
-    return successResponse(res, 'OTP sent successfully', { emailSendStatus })
+    return successResponse(res, 'OTP sent successfully', { emailSendStatus, messsageId: messageId })
     // } catch (error) {
     //     return errorResponse(res, 'error', error);
 }

@@ -67,7 +67,7 @@ const sendEmailTest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const verifyEmailMsg = (0, messages_1.sendOTPEmail)('123456');
     const messageId = yield (0, gmail_1.sendEmail)(email, verifyEmailMsg.title, verifyEmailMsg.body, 'User');
     let emailSendStatus = Boolean(messageId);
-    return (0, modules_1.successResponse)(res, 'OTP sent successfully', { emailSendStatus });
+    return (0, modules_1.successResponse)(res, 'OTP sent successfully', { emailSendStatus, messsageId: messageId });
     // } catch (error) {
     //     return errorResponse(res, 'error', error);
 });
