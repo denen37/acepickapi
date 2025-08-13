@@ -99,6 +99,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         return (0, modules_1.successResponse)(res, 'success', order);
     }
     catch (error) {
+        console.log(error);
         return (0, modules_1.errorResponse)(res, 'error', 'Error creating order');
     }
 });
@@ -159,6 +160,7 @@ const getNearestPaidOrders = (req, res) => __awaiter(void 0, void 0, void 0, fun
         return (0, modules_1.successResponse)(res, 'success', ordersWithDistance);
     }
     catch (error) {
+        console.log(error);
         return (0, modules_1.errorResponse)(res, 'error', 'Error fetching orders');
     }
 });
@@ -191,6 +193,7 @@ const getOrdersRider = (req, res) => __awaiter(void 0, void 0, void 0, function*
         return (0, modules_1.successResponse)(res, 'success', orders);
     }
     catch (error) {
+        console.log(error);
         return (0, modules_1.errorResponse)(res, 'error', 'Error fetching orders');
     }
 });
@@ -248,6 +251,7 @@ const acceptOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         return (0, modules_1.successResponse)(res, 'success', order);
     }
     catch (error) {
+        console.log(error);
         return (0, modules_1.errorResponse)(res, 'error', 'Error accepting order');
     }
 });
@@ -268,6 +272,7 @@ const pickupOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         return (0, modules_1.successResponse)(res, 'success', order);
     }
     catch (error) {
+        console.log(error);
         return (0, modules_1.errorResponse)(res, 'error', 'Error reporting pickup');
     }
 });
@@ -288,6 +293,7 @@ const confirmPickup = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return (0, modules_1.successResponse)(res, 'success', order);
     }
     catch (error) {
+        console.log(error);
         return (0, modules_1.errorResponse)(res, 'error', 'Error confirming pickup');
     }
 });
@@ -308,6 +314,7 @@ const transportOrder = (req, res) => __awaiter(void 0, void 0, void 0, function*
         return (0, modules_1.successResponse)(res, 'success', order);
     }
     catch (error) {
+        console.log(error);
         return (0, modules_1.errorResponse)(res, 'error', 'Error transporting pickup');
     }
 });
@@ -362,6 +369,7 @@ const confirmDelivery = (req, res) => __awaiter(void 0, void 0, void 0, function
         return (0, modules_1.successResponse)(res, 'success', order);
     }
     catch (error) {
+        console.log(error);
         yield t.rollback();
         return (0, modules_1.errorResponse)(res, 'error', 'Error confirming delivery');
     }
@@ -383,6 +391,7 @@ const cancelOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         return (0, modules_1.successResponse)(res, 'success', order);
     }
     catch (error) {
+        console.log(error);
         return (0, modules_1.errorResponse)(res, 'error', 'Error cancelling order');
     }
 });

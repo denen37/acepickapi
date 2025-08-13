@@ -111,6 +111,7 @@ export const createOrder = async (req: Request, res: Response) => {
 
         return successResponse(res, 'success', order);
     } catch (error) {
+        console.log(error);
         return errorResponse(res, 'error', 'Error creating order')
     }
 }
@@ -196,6 +197,7 @@ export const getNearestPaidOrders = async (req: Request, res: Response) => {
 
         return successResponse(res, 'success', ordersWithDistance);
     } catch (error) {
+        console.log(error);
         return errorResponse(res, 'error', 'Error fetching orders')
     }
 }
@@ -236,6 +238,7 @@ export const getOrdersRider = async (req: Request, res: Response) => {
 
         return successResponse(res, 'success', orders);
     } catch (error) {
+        console.log(error);
         return errorResponse(res, 'error', 'Error fetching orders')
     }
 }
@@ -308,6 +311,7 @@ export const acceptOrder = async (req: Request, res: Response) => {
 
         return successResponse(res, 'success', order);
     } catch (error) {
+        console.log(error);
         return errorResponse(res, 'error', 'Error accepting order')
     }
 }
@@ -334,6 +338,7 @@ export const pickupOrder = async (req: Request, res: Response) => {
 
         return successResponse(res, 'success', order);
     } catch (error) {
+        console.log(error);
         return errorResponse(res, 'error', 'Error reporting pickup')
     }
 }
@@ -360,6 +365,7 @@ export const confirmPickup = async (req: Request, res: Response) => {
 
         return successResponse(res, 'success', order);
     } catch (error) {
+        console.log(error);
         return errorResponse(res, 'error', 'Error confirming pickup');
     }
 }
@@ -388,6 +394,7 @@ export const transportOrder = async (req: Request, res: Response) => {
 
         return successResponse(res, 'success', order);
     } catch (error) {
+        console.log(error);
         return errorResponse(res, 'error', 'Error transporting pickup');
     }
 }
@@ -461,6 +468,7 @@ export const confirmDelivery = async (req: Request, res: Response) => {
 
         return successResponse(res, 'success', order);
     } catch (error) {
+        console.log(error);
         await t.rollback();
 
         return errorResponse(res, 'error', 'Error confirming delivery');
@@ -491,6 +499,7 @@ export const cancelOrder = async (req: Request, res: Response) => {
 
         return successResponse(res, 'success', order);
     } catch (error) {
+        console.log(error);
         return errorResponse(res, 'error', 'Error cancelling order');
     }
 }
