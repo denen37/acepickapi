@@ -45,14 +45,10 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!productTransaction) {
             return res.status(400).json({ errors: 'Product transaction not found' });
         }
-        // if (productTransaction.status !== ProductTransactionStatus.PENDING) {
-        //     return res.status(400).json({ errors: 'Product transaction not pending' });
-        // }
         if (productTransaction.orderMethod !== enum_1.OrderMethod.DELIVERY) {
             return res.status(400).json({ errors: 'Product transaction not meant for delivery' });
         }
         let existingLocation = null;
-        console.log('lat', receiverLat, 'long', receiverLong);
         if (locationId) {
             existingLocation = yield Models_1.Location.findOne({
                 where: {
@@ -70,7 +66,10 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             });
         }
         if (!existingLocation) {
-            return res.status(400).json({ errors: 'Location not found' });
+            return res.status(400).json({ errors: 'Dropoff location not found for product' });
+        }
+        if (!productTransaction.product.pickupLocation) {
+            return res.status(400).json({ errors: 'Pickup location not found for product' });
         }
         const vendorLat = productTransaction.product.pickupLocation.latitude;
         const vendorLong = productTransaction.product.pickupLocation.longitude;
