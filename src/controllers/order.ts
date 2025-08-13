@@ -40,17 +40,12 @@ export const createOrder = async (req: Request, res: Response) => {
             return res.status(400).json({ errors: 'Product transaction not found' });
         }
 
-        // if (productTransaction.status !== ProductTransactionStatus.PENDING) {
-        //     return res.status(400).json({ errors: 'Product transaction not pending' });
-        // }
 
         if (productTransaction.orderMethod !== OrderMethod.DELIVERY) {
             return res.status(400).json({ errors: 'Product transaction not meant for delivery' });
         }
 
         let existingLocation = null;
-
-        console.log('lat', receiverLat, 'long', receiverLong)
 
         if (locationId) {
             existingLocation = await Location.findOne({
@@ -69,7 +64,11 @@ export const createOrder = async (req: Request, res: Response) => {
         }
 
         if (!existingLocation) {
-            return res.status(400).json({ errors: 'Location not found' });
+            return res.status(400).json({ errors: 'Dropoff location not found for product' });
+        }
+
+        if (!productTransaction.product.pickupLocation) {
+            return res.status(400).json({ errors: 'Pickup location not found for product' });
         }
 
         const vendorLat = productTransaction.product.pickupLocation.latitude;
