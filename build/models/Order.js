@@ -48,12 +48,6 @@ __decorate([
 ], Order.prototype, "weight", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
-    (0, sequelize_typescript_1.Default)(enum_1.PayStatus.UNPAID),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(...Object.values(enum_1.PayStatus))),
-    __metadata("design:type", String)
-], Order.prototype, "payStatus", void 0);
-__decorate([
-    (0, sequelize_typescript_1.AllowNull)(false),
     (0, sequelize_typescript_1.ForeignKey)(() => Location_1.Location),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.INTEGER),
     __metadata("design:type", Number)
