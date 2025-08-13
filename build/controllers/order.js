@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cancelOrder = exports.confirmDelivery = exports.deliverOrder = exports.transportOrder = exports.confirmPickup = exports.pickupOrder = exports.acceptOrder = exports.getOrdersClient = exports.getOrdersRider = exports.getNearestPendingOrders = exports.createOrder = void 0;
+exports.cancelOrder = exports.confirmDelivery = exports.deliverOrder = exports.transportOrder = exports.confirmPickup = exports.pickupOrder = exports.acceptOrder = exports.getOrdersClient = exports.getOrdersRider = exports.getNearestPaidOrders = exports.createOrder = void 0;
 const body_1 = require("../validation/body");
 const Models_1 = require("../models/Models");
 const enum_1 = require("../utils/enum");
@@ -103,7 +103,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.createOrder = createOrder;
-const getNearestPendingOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getNearestPaidOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
     try {
         const rider = yield Models_1.Rider.findOne({
@@ -162,7 +162,7 @@ const getNearestPendingOrders = (req, res) => __awaiter(void 0, void 0, void 0, 
         return (0, modules_1.errorResponse)(res, 'error', 'Error fetching orders');
     }
 });
-exports.getNearestPendingOrders = getNearestPendingOrders;
+exports.getNearestPaidOrders = getNearestPaidOrders;
 const getOrdersRider = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
     const parsed = query_1.getOrdersSchema.safeParse(req.query);
@@ -223,8 +223,10 @@ const getOrdersClient = (req, res) => __awaiter(void 0, void 0, void 0, function
                 }
             ]
         });
+        return (0, modules_1.successResponse)(res, 'success', orders);
     }
     catch (error) {
+        console.log(error);
         return (0, modules_1.errorResponse)(res, 'error', 'Error fetching orders');
     }
 });

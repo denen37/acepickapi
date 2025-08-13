@@ -116,7 +116,7 @@ export const createOrder = async (req: Request, res: Response) => {
 }
 
 
-export const getNearestPendingOrders = async (req: Request, res: Response) => {
+export const getNearestPaidOrders = async (req: Request, res: Response) => {
     const { id } = req.user
 
     try {
@@ -275,7 +275,11 @@ export const getOrdersClient = async (req: Request, res: Response) => {
             ]
         })
 
+
+        return successResponse(res, 'success', orders)
     } catch (error) {
+        console.log(error);
+
         return errorResponse(res, 'error', 'Error fetching orders')
     }
 }

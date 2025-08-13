@@ -117,7 +117,7 @@ routes.post('/categories', category_1.addCategory);
 routes.put('/categories/:id', category_1.updateCategory);
 routes.delete('/categories/:id', category_1.deleteCategory);
 routes.post('/create-order', (0, allowRoles_1.allowRoles)(enum_1.UserRole.CLIENT), order_1.createOrder);
-routes.get('/pending-orders', (0, allowRoles_1.allowRoles)(enum_1.UserRole.DELIVERY), order_1.getNearestPendingOrders);
+routes.get('/paid-orders', (0, allowRoles_1.allowRoles)(enum_1.UserRole.DELIVERY), order_1.getNearestPaidOrders);
 routes.get('/rider-orders', (0, allowRoles_1.allowRoles)(enum_1.UserRole.DELIVERY), order_1.getOrdersRider);
 routes.get('/client-orders', (0, allowRoles_1.allowRoles)(enum_1.UserRole.CLIENT), order_1.getOrdersClient);
 routes.put('/orders/accept/:orderId', (0, allowRoles_1.allowRoles)(enum_1.UserRole.DELIVERY), order_1.acceptOrder);

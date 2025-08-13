@@ -22,7 +22,7 @@ import { addProduct, deleteProduct, getProducts, getMyProducts, updateProduct, s
 import { addCategory, deleteCategory, getCategories, updateCategory } from "../controllers/category";
 import { uploads } from "../services/upload";
 import { uploadFiles } from "../controllers/upload";
-import { acceptOrder, cancelOrder, confirmDelivery, confirmPickup, createOrder, deliverOrder, getNearestPendingOrders, getOrdersClient, getOrdersRider, pickupOrder, transportOrder } from "../controllers/order";
+import { acceptOrder, cancelOrder, confirmDelivery, confirmPickup, createOrder, deliverOrder, getNearestPaidOrders, getOrdersClient, getOrdersRider, pickupOrder, transportOrder } from "../controllers/order";
 
 const routes = Router();
 
@@ -139,7 +139,7 @@ routes.put('/categories/:id', updateCategory);
 routes.delete('/categories/:id', deleteCategory);
 
 routes.post('/create-order', allowRoles(UserRole.CLIENT), createOrder);
-routes.get('/pending-orders', allowRoles(UserRole.DELIVERY), getNearestPendingOrders);
+routes.get('/paid-orders', allowRoles(UserRole.DELIVERY), getNearestPaidOrders);
 routes.get('/rider-orders', allowRoles(UserRole.DELIVERY), getOrdersRider);
 routes.get('/client-orders', allowRoles(UserRole.CLIENT), getOrdersClient);
 routes.put('/orders/accept/:orderId', allowRoles(UserRole.DELIVERY), acceptOrder);
