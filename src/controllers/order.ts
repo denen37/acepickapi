@@ -50,6 +50,8 @@ export const createOrder = async (req: Request, res: Response) => {
 
         let existingLocation = null;
 
+        console.log('lat', receiverLat, 'long', receiverLong)
+
         if (locationId) {
             existingLocation = await Location.findOne({
                 where: {

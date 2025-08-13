@@ -52,6 +52,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             return res.status(400).json({ errors: 'Product transaction not meant for delivery' });
         }
         let existingLocation = null;
+        console.log('lat', receiverLat, 'long', receiverLong);
         if (locationId) {
             existingLocation = yield Models_1.Location.findOne({
                 where: {
