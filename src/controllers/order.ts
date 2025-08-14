@@ -227,6 +227,10 @@ export const getOrdersRider = async (req: Request, res: Response) => {
             },
             include: [
                 {
+                    model: Location,
+                    as: 'dropoffLocation'
+                },
+                {
                     model: ProductTransaction,
                     include: [{
                         model: Product,
@@ -265,6 +269,10 @@ export const getOrdersClient = async (req: Request, res: Response) => {
                 ...(status ? { status: status } : {})
             },
             include: [
+                {
+                    model: Location,
+                    as: 'dropoffLocation'
+                },
                 {
                     model: ProductTransaction,
                     where: {

@@ -181,6 +181,10 @@ const getOrdersRider = (req, res) => __awaiter(void 0, void 0, void 0, function*
             where: Object.assign({ riderId: id }, (status ? { status: status } : {})),
             include: [
                 {
+                    model: Models_1.Location,
+                    as: 'dropoffLocation'
+                },
+                {
                     model: Models_1.ProductTransaction,
                     include: [{
                             model: Models_1.Product,
@@ -213,6 +217,10 @@ const getOrdersClient = (req, res) => __awaiter(void 0, void 0, void 0, function
         const orders = yield Models_1.Order.findAll({
             where: Object.assign({}, (status ? { status: status } : {})),
             include: [
+                {
+                    model: Models_1.Location,
+                    as: 'dropoffLocation'
+                },
                 {
                     model: Models_1.ProductTransaction,
                     where: {
