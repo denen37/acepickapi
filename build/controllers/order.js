@@ -131,6 +131,10 @@ const getNearestPaidOrders = (req, res) => __awaiter(void 0, void 0, void 0, fun
             },
             include: [
                 {
+                    model: Models_1.Location,
+                    as: 'dropoffLocation'
+                },
+                {
                     model: Models_1.ProductTransaction,
                     include: [
                         {

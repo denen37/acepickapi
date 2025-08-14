@@ -151,6 +151,10 @@ export const getNearestPaidOrders = async (req: Request, res: Response) => {
             },
             include: [
                 {
+                    model: Location,
+                    as: 'dropoffLocation'
+                },
+                {
                     model: ProductTransaction,
                     include: [
                         {
