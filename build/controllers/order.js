@@ -96,7 +96,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             weight: totalWeight,
             locationId: existingLocation === null || existingLocation === void 0 ? void 0 : existingLocation.id,
         });
-        return (0, modules_1.successResponse)(res, 'success', order);
+        return (0, modules_1.successResponse)(res, 'success', Object.assign(Object.assign({}, order.toJSON()), { productTransaction: productTransaction.toJSON() }));
     }
     catch (error) {
         console.log(error);
