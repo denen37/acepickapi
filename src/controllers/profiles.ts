@@ -1,5 +1,5 @@
 import { Request, Response } from "express"
-import { Location, User, Profile, Cooperation, Professional, Education, Certification, Experience, Portfolio, Wallet } from "../models/Models";
+import { Location, User, Profile, Cooperation, Professional, Education, Certification, Experience, Portfolio, Wallet, Rider } from "../models/Models";
 import { errorResponse, handleResponse, successResponse } from "../utils/modules";
 // import { PublishMessage } from "../events/handler";
 import { randomUUID } from "crypto";
@@ -9,7 +9,7 @@ import { updateUserProfileSchema } from "../validation/body";
 
 
 
-export const AccountInfo = async (req: Request, res: Response) => {
+export const MyAccountInfo = async (req: Request, res: Response) => {
     const { id } = req.user;
     try {
         const profile = await Profile.findOne(
@@ -55,8 +55,79 @@ export const AccountInfo = async (req: Request, res: Response) => {
 
                     {
                         model: Portfolio,
+                    },
+                    {
+                        model: Rider
                     }
 
+                ],
+
+            }
+        )
+
+
+
+        if (!profile) return errorResponse(res, "Failed", { status: false, message: "Profile Does'nt exist" })
+
+
+        return successResponse(res, "Successful", profile)
+    } catch (error) {
+        return errorResponse(res, "Failed", error)
+    }
+};
+
+
+export const UserAccountInfo = async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    try {
+        const profile = await Profile.findOne(
+            {
+                where: { userId: userId },
+                attributes: {
+                    exclude: []
+                },
+                include: [
+                    {
+                        model: User,
+                        attributes: { exclude: ['password', 'fcmToken'] },
+                        include: [
+                            {
+                                model: Location,
+                                //attributes: ['country', 'state', 'city', 'address']
+                            },
+
+                            {
+                                model: Wallet,
+                                attributes: { exclude: ['pin'] }
+                            },
+                            {
+                                model: Rider
+                            }
+
+                        ]
+                    },
+                    {
+                        model: Professional,
+                    },
+                    {
+                        model: Cooperation,
+                    },
+
+                    {
+                        model: Education
+                    },
+
+                    {
+                        model: Certification
+                    },
+
+                    {
+                        model: Experience
+                    },
+
+                    {
+                        model: Portfolio,
+                    }
                 ],
 
             }

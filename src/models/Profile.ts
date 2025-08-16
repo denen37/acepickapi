@@ -1,7 +1,7 @@
 import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index, BelongsTo, ForeignKey } from 'sequelize-typescript';
 import { User } from './User';
 // import { Professional } from './Professional';
-import { Certification, Experience, Education, Portfolio, VoiceRecording, Professional, Cooperation } from './Models'
+import { Certification, Experience, Education, Portfolio, VoiceRecording, Professional, Cooperation, Rider } from './Models'
 // import { Review } from './Review';
 // import { ProfessionalSector } from './ProfessionalSector';
 // import { MarketPlace } from './Market';
@@ -246,7 +246,6 @@ export class Profile extends Model {
 
     @HasMany(() => Portfolio, { onDelete: 'CASCADE' })
     portfolio!: Portfolio[];
-
 
     // @HasMany(() => ProfessionalSector, { onDelete: 'CASCADE' })
     // professional_sector!: ProfessionalSector[];

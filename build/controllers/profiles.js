@@ -9,11 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateProfile = exports.AccountInfo = void 0;
+exports.updateProfile = exports.UserAccountInfo = exports.MyAccountInfo = void 0;
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const body_1 = require("../validation/body");
-const AccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const MyAccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
     try {
         const profile = yield Models_1.Profile.findOne({
@@ -53,6 +53,9 @@ const AccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 },
                 {
                     model: Models_1.Portfolio,
+                },
+                {
+                    model: Models_1.Rider
                 }
             ],
         });
@@ -64,7 +67,62 @@ const AccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         return (0, modules_1.errorResponse)(res, "Failed", error);
     }
 });
-exports.AccountInfo = AccountInfo;
+exports.MyAccountInfo = MyAccountInfo;
+const UserAccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId } = req.params;
+    try {
+        const profile = yield Models_1.Profile.findOne({
+            where: { userId: userId },
+            attributes: {
+                exclude: []
+            },
+            include: [
+                {
+                    model: Models_1.User,
+                    attributes: { exclude: ['password', 'fcmToken'] },
+                    include: [
+                        {
+                            model: Models_1.Location,
+                            //attributes: ['country', 'state', 'city', 'address']
+                        },
+                        {
+                            model: Models_1.Wallet,
+                            attributes: { exclude: ['pin'] }
+                        },
+                        {
+                            model: Models_1.Rider
+                        }
+                    ]
+                },
+                {
+                    model: Models_1.Professional,
+                },
+                {
+                    model: Models_1.Cooperation,
+                },
+                {
+                    model: Models_1.Education
+                },
+                {
+                    model: Models_1.Certification
+                },
+                {
+                    model: Models_1.Experience
+                },
+                {
+                    model: Models_1.Portfolio,
+                }
+            ],
+        });
+        if (!profile)
+            return (0, modules_1.errorResponse)(res, "Failed", { status: false, message: "Profile Does'nt exist" });
+        return (0, modules_1.successResponse)(res, "Successful", profile);
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, "Failed", error);
+    }
+});
+exports.UserAccountInfo = UserAccountInfo;
 const updateProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { id, role } = req.user;
     const result = body_1.updateUserProfileSchema.safeParse(req.body);
