@@ -293,14 +293,19 @@ const confirmPickup = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const { id } = req.user;
     const { orderId } = req.params;
     try {
-        const order = yield Models_1.Order.findByPk(orderId);
+        const order = yield Models_1.Order.findByPk(orderId, {
+            include: [Models_1.ProductTransaction]
+        });
         if (!order) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Order not found');
         }
         if (order.status !== enum_1.OrderStatus.PICKED_UP) {
             return (0, modules_1.handleResponse)(res, 400, false, 'Order not picked up');
         }
-        order.status = enum_1.OrderStatus.CONFIRM_PICKUP;
+        if (order.productTransaction.sellerId !== id) {
+            return (0, modules_1.handleResponse)(res, 403, false, 'You are not authorized to confirm this order');
+        }
+        order.status = enum_1.OrderStatus.IN_TRANSIT;
         yield order.save();
         return (0, modules_1.successResponse)(res, 'success', order);
     }
@@ -356,12 +361,17 @@ const confirmDelivery = (req, res) => __awaiter(void 0, void 0, void 0, function
     const { orderId } = req.params;
     const t = yield db_1.default.transaction();
     try {
-        const order = yield Models_1.Order.findByPk(orderId);
+        const order = yield Models_1.Order.findByPk(orderId, {
+            include: [Models_1.ProductTransaction]
+        });
         if (!order) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Order not found');
         }
         if (order.status !== enum_1.OrderStatus.DELIVERED) {
             return (0, modules_1.handleResponse)(res, 400, false, 'Order not delivered');
+        }
+        if (order.productTransaction.buyerId !== id) {
+            return (0, modules_1.handleResponse)(res, 400, false, 'You are not authorized to confirm this order');
         }
         order.status = enum_1.OrderStatus.CONFIRM_DELIVERY;
         yield order.save();

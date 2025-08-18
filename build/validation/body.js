@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deliverySchema = exports.productTransactionIdSchema = exports.restockProductSchema = exports.selectProductSchema = exports.initPaymentSchema = exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.productPaymentSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerRiderSchema = exports.updateRiderSchema = exports.riderSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.deliverySchema = exports.productTransactionIdSchema = exports.restockProductSchema = exports.selectProductSchema = exports.initPaymentSchema = exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.productPaymentSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.storeLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerRiderSchema = exports.updateRiderSchema = exports.riderSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum"); // adjust the path
 const enum_2 = require("../utils/enum");
@@ -233,6 +233,14 @@ exports.jobCostingUpdateSchema = zod_1.z.object({
 //     pin: z.string().length(4, "PIN must be exactly 4 characters"),
 //     jobId: z.number().int().positive("Job ID must be a positive integer"),
 // });
+exports.storeLocationSchema = zod_1.z.object({
+    address: zod_1.z.string(),
+    lga: zod_1.z.string().optional(),
+    state: zod_1.z.string().optional(),
+    latitude: zod_1.z.number(),
+    longitude: zod_1.z.number(),
+    zipcode: zod_1.z.number().int().optional(),
+});
 exports.updateLocationSchema = zod_1.z.object({
     address: zod_1.z.string().optional(),
     lga: zod_1.z.string().optional(),
@@ -240,7 +248,6 @@ exports.updateLocationSchema = zod_1.z.object({
     latitude: zod_1.z.number().optional(),
     longitude: zod_1.z.number().optional(),
     zipcode: zod_1.z.number().int().optional(),
-    //userId: z.string().uuid({ message: "Invalid UUID for userId" }),
 });
 exports.bankDetailsSchema = zod_1.z.object({
     accountName: zod_1.z.string().min(1, 'Account name is required'),

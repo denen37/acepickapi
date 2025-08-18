@@ -269,6 +269,15 @@ export const jobCostingUpdateSchema = z.object({
 //     jobId: z.number().int().positive("Job ID must be a positive integer"),
 // });
 
+export const storeLocationSchema = z.object({
+    address: z.string(),
+    lga: z.string().optional(),
+    state: z.string().optional(),
+    latitude: z.number(),
+    longitude: z.number(),
+    zipcode: z.number().int().optional(),
+});
+
 
 export const updateLocationSchema = z.object({
     address: z.string().optional(),
@@ -277,7 +286,6 @@ export const updateLocationSchema = z.object({
     latitude: z.number().optional(),
     longitude: z.number().optional(),
     zipcode: z.number().int().optional(),
-    //userId: z.string().uuid({ message: "Invalid UUID for userId" }),
 });
 
 export const bankDetailsSchema = z.object({

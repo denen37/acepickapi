@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Product, Category, Location, Profile, User, Wallet } from '../models/Models';
+import { Product, Category, Location, Profile, User, Wallet, Order } from '../models/Models';
 import { successResponse, errorResponse } from '../utils/modules';
 import { Op } from 'sequelize';
 import { boughtProductSchema, getProductSchema } from '../validation/query';
@@ -148,6 +148,9 @@ export const boughtProducts = async (req: Request, res: Response) => {
             include: [{
                 model: Product,
             }, {
+                model: Order,
+                as: 'order'
+            }, {
                 model: User,
                 as: 'seller',
                 attributes: { exclude: ['password', 'fcmToken'] },
@@ -194,6 +197,9 @@ export const soldProducts = async (req: Request, res: Response) => {
 
             include: [{
                 model: Product,
+            }, {
+                model: Order,
+                as: 'order'
             }, {
                 model: User,
                 as: 'buyer',

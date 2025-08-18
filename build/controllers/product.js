@@ -119,6 +119,9 @@ const boughtProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
             include: [{
                     model: Models_1.Product,
                 }, {
+                    model: Models_1.Order,
+                    as: 'order'
+                }, {
                     model: Models_1.User,
                     as: 'seller',
                     attributes: { exclude: ['password', 'fcmToken'] },
@@ -151,6 +154,9 @@ const soldProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             where: Object.assign({ sellerId: id }, (status ? { status } : {})),
             include: [{
                     model: Models_1.Product,
+                }, {
+                    model: Models_1.Order,
+                    as: 'order'
                 }, {
                     model: Models_1.User,
                     as: 'buyer',

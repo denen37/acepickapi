@@ -362,7 +362,9 @@ export const confirmPickup = async (req: Request, res: Response) => {
     const { orderId } = req.params;
 
     try {
-        const order = await Order.findByPk(orderId);
+        const order = await Order.findByPk(orderId, {
+            include: [ProductTransaction]
+        });
 
         if (!order) {
             return handleResponse(res, 404, false, 'Order not found')
@@ -372,7 +374,11 @@ export const confirmPickup = async (req: Request, res: Response) => {
             return handleResponse(res, 400, false, 'Order not picked up')
         }
 
-        order.status = OrderStatus.CONFIRM_PICKUP;
+        if (order.productTransaction.sellerId !== id) {
+            return handleResponse(res, 403, false, 'You are not authorized to confirm this order')
+        }
+
+        order.status = OrderStatus.IN_TRANSIT;
 
         await order.save();
 
@@ -447,7 +453,9 @@ export const confirmDelivery = async (req: Request, res: Response) => {
     const t = await dbsequelize.transaction();
 
     try {
-        const order = await Order.findByPk(orderId);
+        const order = await Order.findByPk(orderId, {
+            include: [ProductTransaction]
+        });
 
         if (!order) {
             return handleResponse(res, 404, false, 'Order not found')
@@ -455,6 +463,10 @@ export const confirmDelivery = async (req: Request, res: Response) => {
 
         if (order.status !== OrderStatus.DELIVERED) {
             return handleResponse(res, 400, false, 'Order not delivered')
+        }
+
+        if (order.productTransaction.buyerId !== id) {
+            return handleResponse(res, 400, false, 'You are not authorized to confirm this order')
         }
 
         order.status = OrderStatus.CONFIRM_DELIVERY;

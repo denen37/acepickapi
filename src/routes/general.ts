@@ -7,7 +7,7 @@ import { approveJob, cancelJob, completeJob, createJobOrder, disputeJob, generat
 import { UserRole } from "../utils/enum";
 import { allowRoles } from "../middlewares/allowRoles";
 import { findPersonsNearby, sendEmailTest, sendSMSTest, testNotification } from "../controllers/test";
-import { updateLocation } from "../controllers/location";
+import { addLocation, deleteLocation, getLocationById, getMyLocations, updateLocation } from "../controllers/location";
 import { getClient } from "../controllers/client";
 import { addAccount, deleteAccount, getAccounts, getBanks, resolveAccount, updateAccount } from "../controllers/account";
 import { createWallet, creditWallet, debitWallet, debitWalletForProduct, forgotPin, resetPin, setPin, viewWallet } from "../controllers/wallet";
@@ -92,6 +92,10 @@ routes.post('/send-email', sendEmailTest);
 routes.post('/nearest-person', findPersonsNearby);
 
 routes.put('/location', updateLocation);
+routes.get('/my-locations', getMyLocations);
+routes.get('/locations/:id', getLocationById);
+routes.post('/locations', addLocation);
+routes.delete('/locations/:id', deleteLocation);
 
 
 routes.get('/accounts/banks', allowRoles(UserRole.PROFESSIONAL, UserRole.CLIENT), getBanks);
@@ -146,7 +150,7 @@ routes.get('/client-orders', allowRoles(UserRole.CLIENT), getOrdersClient);
 routes.put('/orders/accept/:orderId', allowRoles(UserRole.DELIVERY), acceptOrder);
 routes.put('/orders/pickup/:orderId', allowRoles(UserRole.DELIVERY), pickupOrder);
 routes.put('/orders/confirm_pickup/:orderId', allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), confirmPickup);
-routes.put('/orders/transport/:orderId', allowRoles(UserRole.DELIVERY), transportOrder);
+// routes.put('/orders/transport/:orderId', allowRoles(UserRole.DELIVERY), transportOrder);
 routes.put('/orders/deliver/:orderId', allowRoles(UserRole.DELIVERY), deliverOrder);
 routes.put('/orders/confirm_delivery/:orderId', allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), confirmDelivery);
 routes.put('/orders/cancel/:orderId', allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), cancelOrder);

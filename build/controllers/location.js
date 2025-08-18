@@ -9,13 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateLocation = void 0;
+exports.deleteLocation = exports.addLocation = exports.getLocationById = exports.getMyLocations = exports.updateLocation = void 0;
 const Models_1 = require("../models/Models");
 const body_1 = require("../validation/body");
 const modules_1 = require("../utils/modules");
 const updateLocation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.user;
+        const { id } = req.params;
         const result = body_1.updateLocationSchema.safeParse(req.body);
         if (!result.success) {
             return res.status(400).json({
@@ -32,7 +32,7 @@ const updateLocation = (req, res) => __awaiter(void 0, void 0, void 0, function*
             state,
             zipcode
         }, {
-            where: { userId: id }
+            where: { id: id }
         });
         return (0, modules_1.successResponse)(res, 'Location updated successfully', location);
     }
@@ -42,3 +42,71 @@ const updateLocation = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.updateLocation = updateLocation;
+const getMyLocations = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.user;
+    try {
+        const location = yield Models_1.Location.findAll({
+            where: { userId: id }
+        });
+        return (0, modules_1.successResponse)(res, 'success', location);
+    }
+    catch (error) {
+        console.log(error);
+        return (0, modules_1.errorResponse)(res, 'Error getting location', error);
+    }
+});
+exports.getMyLocations = getMyLocations;
+const getLocationById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    try {
+        const location = yield Models_1.Location.findByPk(id);
+        return (0, modules_1.successResponse)(res, 'success', location);
+    }
+    catch (error) {
+        console.log(error);
+        return (0, modules_1.errorResponse)(res, 'Error getting location', error);
+    }
+});
+exports.getLocationById = getLocationById;
+const addLocation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.user;
+    try {
+        const result = body_1.storeLocationSchema.safeParse(req.body);
+        if (!result.success) {
+            return res.status(400).json({
+                error: "Invalid query parameters",
+                issues: result.error.format(),
+            });
+        }
+        const { latitude, longitude, address, lga, state, zipcode } = result.data;
+        const location = yield Models_1.Location.create({
+            latitude,
+            longitude,
+            address,
+            lga,
+            state,
+            zipcode,
+            userId: id
+        });
+        return (0, modules_1.successResponse)(res, 'Location added successfully', location);
+    }
+    catch (error) {
+        console.log(error);
+        return (0, modules_1.errorResponse)(res, 'Error adding location', error);
+    }
+});
+exports.addLocation = addLocation;
+const deleteLocation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    try {
+        const deleted = yield Models_1.Location.destroy({
+            where: { id }
+        });
+        return (0, modules_1.successResponse)(res, 'Location deleted successfully', deleted);
+    }
+    catch (error) {
+        console.log(error);
+        return (0, modules_1.errorResponse)(res, 'Error deleting location', error);
+    }
+});
+exports.deleteLocation = deleteLocation;
