@@ -253,12 +253,35 @@ export const getOrdersRider = async (req: Request, res: Response) => {
                 },
                 {
                     model: ProductTransaction,
-                    include: [{
-                        model: Product,
-                        include: [{
-                            model: Location,
-                        }]
-                    }]
+                    include: [
+                        {
+                            model: Product,
+                            include: [{
+                                model: Location,
+                            }]
+                        },
+                        {
+                            model: User,
+                            as: 'seller',
+                            attributes: ['id', 'email'],
+                            include: [{
+                                model: Profile,
+                                attributes: ['id', 'avatar', 'firstName', 'lastName']
+
+                            }]
+                        },
+
+                        {
+                            model: User,
+                            as: 'buyer',
+                            attributes: ['id', 'email'],
+                            include: [{
+                                model: Profile,
+                                attributes: ['id', 'avatar', 'firstName', 'lastName']
+
+                            }]
+                        }
+                    ]
                 },
                 {
                     model: Location,

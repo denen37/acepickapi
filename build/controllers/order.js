@@ -204,12 +204,32 @@ const getOrdersRider = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 },
                 {
                     model: Models_1.ProductTransaction,
-                    include: [{
+                    include: [
+                        {
                             model: Models_1.Product,
                             include: [{
                                     model: Models_1.Location,
                                 }]
-                        }]
+                        },
+                        {
+                            model: Models_1.User,
+                            as: 'seller',
+                            attributes: ['id', 'email'],
+                            include: [{
+                                    model: Models_1.Profile,
+                                    attributes: ['id', 'avatar', 'firstName', 'lastName']
+                                }]
+                        },
+                        {
+                            model: Models_1.User,
+                            as: 'buyer',
+                            attributes: ['id', 'email'],
+                            include: [{
+                                    model: Models_1.Profile,
+                                    attributes: ['id', 'avatar', 'firstName', 'lastName']
+                                }]
+                        }
+                    ]
                 },
                 {
                     model: Models_1.Location,
