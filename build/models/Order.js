@@ -59,6 +59,10 @@ __decorate([
     __metadata("design:type", String)
 ], Order.prototype, "riderId", void 0);
 __decorate([
+    (0, sequelize_typescript_1.BelongsTo)(() => User_1.User, { as: 'rider', foreignKey: 'riderId' }),
+    __metadata("design:type", User_1.User)
+], Order.prototype, "rider", void 0);
+__decorate([
     (0, sequelize_typescript_1.BelongsTo)(() => Location_1.Location, { as: 'dropoffLocation', foreignKey: 'locationId' }),
     __metadata("design:type", Location_1.Location)
 ], Order.prototype, "dropoffLocation", void 0);

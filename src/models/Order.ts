@@ -54,9 +54,12 @@ export class Order extends Model {
     riderId!: string
 
 
+    @BelongsTo(() => User, { as: 'rider', foreignKey: 'riderId' })
+    rider!: User
+
+
     @BelongsTo(() => Location, { as: 'dropoffLocation', foreignKey: 'locationId' })
     dropoffLocation!: Location
-
 
 
     @BelongsTo(() => ProductTransaction)

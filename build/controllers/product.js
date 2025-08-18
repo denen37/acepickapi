@@ -120,7 +120,15 @@ const boughtProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
                     model: Models_1.Product,
                 }, {
                     model: Models_1.Order,
-                    as: 'order'
+                    as: 'order',
+                    include: [{
+                            model: Models_1.User,
+                            attributes: ['id', 'email'],
+                            include: [{
+                                    model: Models_1.Profile,
+                                    attributes: ['id', 'avatar', 'firstName', 'lastName']
+                                }]
+                        }]
                 }, {
                     model: Models_1.User,
                     as: 'seller',
@@ -156,7 +164,23 @@ const soldProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                     model: Models_1.Product,
                 }, {
                     model: Models_1.Order,
-                    as: 'order'
+                    as: 'order',
+                    include: [{
+                            model: Models_1.User,
+                            attributes: ['id', 'email'],
+                            include: [{
+                                    model: Models_1.Profile,
+                                    attributes: ['id', 'avatar', 'firstName', 'lastName']
+                                }]
+                        }]
+                }, {
+                    model: Models_1.User,
+                    as: 'buyer',
+                    attributes: { exclude: ['password', 'fcmToken'] },
+                    include: [{
+                            model: Models_1.Profile,
+                            attributes: ['id', 'avatar', 'firstName', 'lastName']
+                        }]
                 }, {
                     model: Models_1.User,
                     as: 'buyer',

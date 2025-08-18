@@ -149,7 +149,15 @@ export const boughtProducts = async (req: Request, res: Response) => {
                 model: Product,
             }, {
                 model: Order,
-                as: 'order'
+                as: 'order',
+                include: [{
+                    model: User,
+                    attributes: ['id', 'email'],
+                    include: [{
+                        model: Profile,
+                        attributes: ['id', 'avatar', 'firstName', 'lastName']
+                    }]
+                }]
             }, {
                 model: User,
                 as: 'seller',
@@ -199,7 +207,23 @@ export const soldProducts = async (req: Request, res: Response) => {
                 model: Product,
             }, {
                 model: Order,
-                as: 'order'
+                as: 'order',
+                include: [{
+                    model: User,
+                    attributes: ['id', 'email'],
+                    include: [{
+                        model: Profile,
+                        attributes: ['id', 'avatar', 'firstName', 'lastName']
+                    }]
+                }]
+            }, {
+                model: User,
+                as: 'buyer',
+                attributes: { exclude: ['password', 'fcmToken'] },
+                include: [{
+                    model: Profile,
+                    attributes: ['id', 'avatar', 'firstName', 'lastName']
+                }]
             }, {
                 model: User,
                 as: 'buyer',

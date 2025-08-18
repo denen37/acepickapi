@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cancelOrder = exports.confirmDelivery = exports.deliverOrder = exports.transportOrder = exports.confirmPickup = exports.pickupOrder = exports.acceptOrder = exports.getOrdersClient = exports.getOrdersRider = exports.getNearestPaidOrders = exports.createOrder = void 0;
+exports.cancelOrder = exports.confirmDelivery = exports.deliverOrder = exports.transportOrder = exports.confirmPickup = exports.pickupOrder = exports.acceptOrder = exports.getOrdersSeller = exports.getOrdersBuyer = exports.getOrdersRider = exports.getNearestPaidOrders = exports.createOrder = void 0;
 const body_1 = require("../validation/body");
 const Models_1 = require("../models/Models");
 const enum_1 = require("../utils/enum");
@@ -147,6 +147,24 @@ const getNearestPaidOrders = (req, res) => __awaiter(void 0, void 0, void 0, fun
                                 },
                             ],
                         },
+                        {
+                            model: Models_1.User,
+                            as: 'seller',
+                            attributes: ['id', 'email'],
+                            include: [{
+                                    model: Models_1.Profile,
+                                    attributes: ['id', 'avatar', 'firstName', 'lastName']
+                                }]
+                        },
+                        {
+                            model: Models_1.User,
+                            as: 'buyer',
+                            attributes: ['id', 'email'],
+                            include: [{
+                                    model: Models_1.Profile,
+                                    attributes: ['id', 'avatar', 'firstName', 'lastName']
+                                }]
+                        }
                     ],
                 },
             ],
@@ -206,7 +224,7 @@ const getOrdersRider = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.getOrdersRider = getOrdersRider;
-const getOrdersClient = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getOrdersBuyer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
     const parsed = query_1.getOrdersSchema.safeParse(req.query);
     if (!parsed.success) {
@@ -224,12 +242,20 @@ const getOrdersClient = (req, res) => __awaiter(void 0, void 0, void 0, function
                 {
                     model: Models_1.ProductTransaction,
                     where: {
-                        buyerId: id
+                        buyerId: id,
                     },
                     include: [{
                             model: Models_1.Product,
                             include: [{
                                     model: Models_1.Location,
+                                }],
+                        }, {
+                            model: Models_1.User,
+                            as: 'seller',
+                            attributes: ['id', 'email'],
+                            include: [{
+                                    model: Models_1.Profile,
+                                    attributes: ['id', 'avatar', 'firstName', 'lastName']
                                 }]
                         }]
                 },
@@ -245,7 +271,55 @@ const getOrdersClient = (req, res) => __awaiter(void 0, void 0, void 0, function
         return (0, modules_1.errorResponse)(res, 'error', 'Error fetching orders');
     }
 });
-exports.getOrdersClient = getOrdersClient;
+exports.getOrdersBuyer = getOrdersBuyer;
+const getOrdersSeller = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.user;
+    const parsed = query_1.getOrdersSchema.safeParse(req.query);
+    if (!parsed.success) {
+        return res.status(400).json({ errors: parsed.error.flatten() });
+    }
+    const { status, page, limit } = parsed.data;
+    try {
+        const orders = yield Models_1.Order.findAll({
+            where: Object.assign({}, (status ? { status: status } : {})),
+            include: [
+                {
+                    model: Models_1.Location,
+                    as: 'dropoffLocation'
+                },
+                {
+                    model: Models_1.ProductTransaction,
+                    where: {
+                        sellerId: id,
+                    },
+                    include: [{
+                            model: Models_1.Product,
+                            include: [{
+                                    model: Models_1.Location,
+                                }],
+                        }, {
+                            model: Models_1.User,
+                            as: 'buyer',
+                            attributes: ['id', 'email'],
+                            include: [{
+                                    model: Models_1.Profile,
+                                    attributes: ['id', 'avatar', 'firstName', 'lastName']
+                                }]
+                        }]
+                },
+                {
+                    model: Models_1.Location,
+                }
+            ]
+        });
+        return (0, modules_1.successResponse)(res, 'success', orders);
+    }
+    catch (error) {
+        console.log(error);
+        return (0, modules_1.errorResponse)(res, 'error', 'Error fetching orders');
+    }
+});
+exports.getOrdersSeller = getOrdersSeller;
 const acceptOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
     const { orderId } = req.params;

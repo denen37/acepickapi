@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import { deliverySchema } from "../validation/body";
-import { Location, Order, Product, ProductTransaction, Rider, User, Wallet } from "../models/Models";
+import { Location, Order, Product, ProductTransaction, Profile, Rider, User, Wallet } from "../models/Models";
 import { OrderMethod, OrderStatus, ProductTransactionStatus } from "../utils/enum";
 import { errorResponse, getDistanceFromLatLonInKm, handleResponse, successResponse } from "../utils/modules";
 import { DeliveryPricing } from "../models/DeliveryPricing";
-import { Sequelize } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import { getOrdersSchema } from "../validation/query";
 import dbsequelize from "../config/db";
 
@@ -167,6 +167,27 @@ export const getNearestPaidOrders = async (req: Request, res: Response) => {
                                 },
                             ],
                         },
+                        {
+                            model: User,
+                            as: 'seller',
+                            attributes: ['id', 'email'],
+                            include: [{
+                                model: Profile,
+                                attributes: ['id', 'avatar', 'firstName', 'lastName']
+
+                            }]
+                        },
+
+                        {
+                            model: User,
+                            as: 'buyer',
+                            attributes: ['id', 'email'],
+                            include: [{
+                                model: Profile,
+                                attributes: ['id', 'avatar', 'firstName', 'lastName']
+
+                            }]
+                        }
                     ],
                 },
             ],
@@ -252,7 +273,7 @@ export const getOrdersRider = async (req: Request, res: Response) => {
     }
 }
 
-export const getOrdersClient = async (req: Request, res: Response) => {
+export const getOrdersBuyer = async (req: Request, res: Response) => {
     const { id } = req.user;
 
     const parsed = getOrdersSchema.safeParse(req.query);
@@ -276,12 +297,21 @@ export const getOrdersClient = async (req: Request, res: Response) => {
                 {
                     model: ProductTransaction,
                     where: {
-                        buyerId: id
+                        buyerId: id,
                     },
                     include: [{
                         model: Product,
                         include: [{
                             model: Location,
+                        }],
+                    }, {
+                        model: User,
+                        as: 'seller',
+                        attributes: ['id', 'email'],
+                        include: [{
+                            model: Profile,
+                            attributes: ['id', 'avatar', 'firstName', 'lastName']
+
                         }]
                     }]
                 },
@@ -299,6 +329,66 @@ export const getOrdersClient = async (req: Request, res: Response) => {
         return errorResponse(res, 'error', 'Error fetching orders')
     }
 }
+
+
+export const getOrdersSeller = async (req: Request, res: Response) => {
+    const { id } = req.user;
+
+    const parsed = getOrdersSchema.safeParse(req.query);
+
+    if (!parsed.success) {
+        return res.status(400).json({ errors: parsed.error.flatten() });
+    }
+
+    const { status, page, limit } = parsed.data;
+
+    try {
+        const orders = await Order.findAll({
+            where: {
+                ...(status ? { status: status } : {})
+            },
+            include: [
+                {
+                    model: Location,
+                    as: 'dropoffLocation'
+                },
+                {
+                    model: ProductTransaction,
+                    where: {
+                        sellerId: id,
+                    },
+                    include: [{
+                        model: Product,
+                        include: [{
+                            model: Location,
+                        }],
+                    }, {
+                        model: User,
+                        as: 'buyer',
+                        attributes: ['id', 'email'],
+                        include: [{
+                            model: Profile,
+                            attributes: ['id', 'avatar', 'firstName', 'lastName']
+
+                        }]
+                    }]
+                },
+                {
+                    model: Location,
+                }
+            ]
+        })
+
+
+        return successResponse(res, 'success', orders)
+    } catch (error) {
+        console.log(error);
+
+        return errorResponse(res, 'error', 'Error fetching orders')
+    }
+}
+
+
 
 export const acceptOrder = async (req: Request, res: Response) => {
     const { id } = req.user;
