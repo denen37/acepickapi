@@ -1,5 +1,5 @@
 import { Request, Response } from "express"
-import { Location, User, Profile, Cooperation, Professional, Education, Certification, Experience, Portfolio, Wallet, Rider } from "../models/Models";
+import { Location, User, Profile, Cooperation, Professional, Education, Certification, Experience, Portfolio, Wallet, Rider, Profession, Sector } from "../models/Models";
 import { errorResponse, handleResponse, successResponse } from "../utils/modules";
 // import { PublishMessage } from "../events/handler";
 import { randomUUID } from "crypto";
@@ -36,6 +36,10 @@ export const MyAccountInfo = async (req: Request, res: Response) => {
                     },
                     {
                         model: Professional,
+                        include: [{
+                            model: Profession,
+                            include: [Sector]
+                        }]
                     },
                     {
                         model: Cooperation,
@@ -108,6 +112,10 @@ export const UserAccountInfo = async (req: Request, res: Response) => {
                     },
                     {
                         model: Professional,
+                        include: [{
+                            model: Profession,
+                            include: [Sector]
+                        }]
                     },
                     {
                         model: Cooperation,

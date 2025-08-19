@@ -38,6 +38,10 @@ const MyAccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 },
                 {
                     model: Models_1.Professional,
+                    include: [{
+                            model: Models_1.Profession,
+                            include: [Models_1.Sector]
+                        }]
                 },
                 {
                     model: Models_1.Cooperation,
@@ -96,6 +100,10 @@ const UserAccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function
                 },
                 {
                     model: Models_1.Professional,
+                    include: [{
+                            model: Models_1.Profession,
+                            include: [Models_1.Sector]
+                        }]
                 },
                 {
                     model: Models_1.Cooperation,
