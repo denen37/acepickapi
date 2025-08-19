@@ -125,41 +125,57 @@ export const getContacts = async (io: Server, socket: Socket) => {
     }
 
     let contacts
-    if (user.role === UserRole.CLIENT) {
-        contacts = await User.findAll({
-            attributes: { exclude: ['password'] },
-            where: {
-                [Op.and]: [
-                    { role: UserRole.PROFESSIONAL },
-                    { [Op.not]: [{ id: user.id }] }
-                ],
-            },
+    // if (user.role === UserRole.CLIENT) {
+    //     contacts = await User.findAll({
+    //         attributes: { exclude: ['password'] },
+    //         where: {
+    //             [Op.and]: [
+    //                 { role: UserRole.PROFESSIONAL },
+    //                 { [Op.not]: [{ id: user.id }] }
+    //             ],
+    //         },
+    //         include: [{
+    //             model: Profile,
+    //             include: [{
+    //                 model: Professional,
+    //                 include: [Profession]
+    //             }]
+    //         }, {
+    //             model: Location
+    //         }]
+    //     })
+    // } else if (user.role === UserRole.PROFESSIONAL) {
+    //     contacts = await User.findAll({
+    //         attributes: { exclude: ['password'] },
+    //         where: {
+    //             [Op.and]: [
+    //                 { role: UserRole.CLIENT },
+    //                 { [Op.not]: [{ id: user.id }] }
+    //             ],
+    //         },
+    //         include: [{
+    //             model: Profile,
+    //         }, {
+    //             model: Location
+    //         }]
+    //     })
+    // }
+
+    contacts = await User.findAll({
+        attributes: { exclude: ['password'] },
+        where: {
+            [Op.not]: [{ id: user.id, role: UserRole.PROFESSIONAL }]
+        },
+        include: [{
+            model: Profile,
             include: [{
-                model: Profile,
-                include: [{
-                    model: Professional,
-                    include: [Profession]
-                }]
-            }, {
-                model: Location
+                model: Professional,
+                include: [Profession]
             }]
-        })
-    } else if (user.role === UserRole.PROFESSIONAL) {
-        contacts = await User.findAll({
-            attributes: { exclude: ['password'] },
-            where: {
-                [Op.and]: [
-                    { role: UserRole.CLIENT },
-                    { [Op.not]: [{ id: user.id }] }
-                ],
-            },
-            include: [{
-                model: Profile,
-            }, {
-                model: Location
-            }]
-        })
-    }
+        }, {
+            model: Location
+        }]
+    })
 
     socket.emit(Emit.ALL_CONTACTS, contacts);
 }

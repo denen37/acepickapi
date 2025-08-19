@@ -9,10 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateProfile = exports.UserAccountInfo = exports.MyAccountInfo = void 0;
+exports.getUsers = exports.updateProfile = exports.UserAccountInfo = exports.MyAccountInfo = void 0;
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const body_1 = require("../validation/body");
+const sequelize_1 = require("sequelize");
+const query_1 = require("../validation/query");
 const MyAccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
     try {
@@ -166,3 +168,58 @@ const updateProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.updateProfile = updateProfile;
+const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.user;
+    const result = query_1.getUsersQuerySchema.safeParse(req.query);
+    if (!result.success) {
+        return res.status(400).json({
+            status: false,
+            message: 'Validation error',
+            errors: result.error.flatten().fieldErrors,
+        });
+    }
+    console.log(result.data);
+    const { search, professionId, page, limit, role } = result.data;
+    try {
+        const contacts = yield Models_1.User.findAll({
+            attributes: { exclude: ['password'] },
+            where: Object.assign(Object.assign({}, (role && { role })), { id: { [sequelize_1.Op.ne]: id } }),
+            include: [
+                {
+                    model: Models_1.Profile,
+                    where: search
+                        ? {
+                            [sequelize_1.Op.or]: [
+                                { firstName: { [sequelize_1.Op.like]: `%${search}%` } },
+                                { lastName: { [sequelize_1.Op.like]: `%${search}%` } },
+                            ],
+                        }
+                        : undefined,
+                    include: [
+                        {
+                            model: Models_1.Professional,
+                            include: [
+                                {
+                                    model: Models_1.Profession,
+                                    where: professionId ? { id: professionId } : undefined,
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    model: Models_1.Location
+                },
+            ],
+            limit: limit,
+            offset: (page - 1) * limit,
+            order: [['createdAt', 'DESC']],
+        });
+        return (0, modules_1.successResponse)(res, 'success', contacts);
+    }
+    catch (error) {
+        console.log(error);
+        return (0, modules_1.errorResponse)(res, "Failed", error);
+    }
+});
+exports.getUsers = getUsers;

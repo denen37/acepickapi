@@ -35,6 +35,7 @@ routes.get("/clients/:id", (0, allowRoles_1.allowRoles)(enum_1.UserRole.CLIENT, 
 routes.get('/profile', profiles_1.MyAccountInfo);
 routes.get('/profile/:userId', profiles_1.UserAccountInfo);
 routes.post('/profile', profiles_1.updateProfile);
+routes.get('/contacts', profiles_1.getUsers);
 routes.get("/education", education_1.getEducation);
 routes.post("/education", education_1.addEducation);
 routes.put("/education/:id", education_1.updateEducation);

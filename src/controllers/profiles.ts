@@ -6,6 +6,10 @@ import { randomUUID } from "crypto";
 import axios from "axios";
 import config from '../config/configSetup'
 import { updateUserProfileSchema } from "../validation/body";
+import { UserRole } from "../utils/enum";
+import { Op } from "sequelize";
+import { Fn } from "sequelize/types/utils";
+import { getUsersQuerySchema } from "../validation/query";
 
 
 
@@ -195,3 +199,67 @@ export const updateProfile = async (req: Request, res: Response) => {
     }
 }
 
+export const getUsers = async (req: Request, res: Response) => {
+    const { id } = req.user;
+
+    const result = getUsersQuerySchema.safeParse(req.query);
+
+    if (!result.success) {
+        return res.status(400).json({
+            status: false,
+            message: 'Validation error',
+            errors: result.error.flatten().fieldErrors,
+        });
+    }
+
+    console.log(result.data);
+
+    const { search, professionId, page, limit, role } = result.data;
+
+
+    try {
+        const contacts = await User.findAll({
+            attributes: { exclude: ['password'] },
+            where: {
+                ...(role && { role }),
+                id: { [Op.ne]: id },
+            },
+            include: [
+                {
+                    model: Profile,
+                    where: search
+                        ? {
+                            [Op.or]: [
+                                { firstName: { [Op.like]: `%${search}%` } },
+                                { lastName: { [Op.like]: `%${search}%` } },
+                            ],
+                        }
+                        : undefined,
+                    include: [
+                        {
+                            model: Professional,
+                            include: [
+                                {
+                                    model: Profession,
+                                    where: professionId ? { id: professionId } : undefined,
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    model: Location
+                },
+            ],
+            limit: limit,
+            offset: (page - 1) * limit,
+            order: [['createdAt', 'DESC']],
+        });
+
+
+        return successResponse(res, 'success', contacts)
+    } catch (error) {
+        console.log(error)
+        return errorResponse(res, "Failed", error)
+    }
+}

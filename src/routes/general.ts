@@ -17,7 +17,7 @@ import { addEducation, deleteEducation, getEducation, updateEducation } from "..
 import { addCertificate, deleteCertificate, getCertificates, updateCertificate } from "../controllers/certification";
 import { addExperience, deleteExperience, getExperiences, updateExperience } from "../controllers/experience";
 import { addPortfolio, deletePortfolio, getPortfolios, updatePortfolio } from "../controllers/portfolio";
-import { MyAccountInfo, updateProfile, UserAccountInfo } from "../controllers/profiles";
+import { getUsers, MyAccountInfo, updateProfile, UserAccountInfo } from "../controllers/profiles";
 import { addProduct, deleteProduct, getProducts, getMyProducts, updateProduct, selectProduct, restockProduct, soldProducts, boughtProducts, getProduct } from "../controllers/product";
 import { addCategory, deleteCategory, getCategories, updateCategory } from "../controllers/category";
 import { uploads } from "../services/upload";
@@ -37,6 +37,7 @@ routes.get("/clients/:id", allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), g
 routes.get('/profile', MyAccountInfo);
 routes.get('/profile/:userId', UserAccountInfo);
 routes.post('/profile', updateProfile);
+routes.get('/contacts', getUsers);
 
 routes.get("/education", getEducation);
 routes.post("/education", addEducation);

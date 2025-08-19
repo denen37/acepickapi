@@ -106,42 +106,56 @@ const getContacts = (io, socket) => __awaiter(void 0, void 0, void 0, function* 
         return;
     }
     let contacts;
-    if (user.role === enum_1.UserRole.CLIENT) {
-        contacts = yield Models_1.User.findAll({
-            attributes: { exclude: ['password'] },
-            where: {
-                [sequelize_1.Op.and]: [
-                    { role: enum_1.UserRole.PROFESSIONAL },
-                    { [sequelize_1.Op.not]: [{ id: user.id }] }
-                ],
-            },
-            include: [{
-                    model: Models_1.Profile,
-                    include: [{
-                            model: Models_1.Professional,
-                            include: [Models_1.Profession]
-                        }]
-                }, {
-                    model: Models_1.Location
-                }]
-        });
-    }
-    else if (user.role === enum_1.UserRole.PROFESSIONAL) {
-        contacts = yield Models_1.User.findAll({
-            attributes: { exclude: ['password'] },
-            where: {
-                [sequelize_1.Op.and]: [
-                    { role: enum_1.UserRole.CLIENT },
-                    { [sequelize_1.Op.not]: [{ id: user.id }] }
-                ],
-            },
-            include: [{
-                    model: Models_1.Profile,
-                }, {
-                    model: Models_1.Location
-                }]
-        });
-    }
+    // if (user.role === UserRole.CLIENT) {
+    //     contacts = await User.findAll({
+    //         attributes: { exclude: ['password'] },
+    //         where: {
+    //             [Op.and]: [
+    //                 { role: UserRole.PROFESSIONAL },
+    //                 { [Op.not]: [{ id: user.id }] }
+    //             ],
+    //         },
+    //         include: [{
+    //             model: Profile,
+    //             include: [{
+    //                 model: Professional,
+    //                 include: [Profession]
+    //             }]
+    //         }, {
+    //             model: Location
+    //         }]
+    //     })
+    // } else if (user.role === UserRole.PROFESSIONAL) {
+    //     contacts = await User.findAll({
+    //         attributes: { exclude: ['password'] },
+    //         where: {
+    //             [Op.and]: [
+    //                 { role: UserRole.CLIENT },
+    //                 { [Op.not]: [{ id: user.id }] }
+    //             ],
+    //         },
+    //         include: [{
+    //             model: Profile,
+    //         }, {
+    //             model: Location
+    //         }]
+    //     })
+    // }
+    contacts = yield Models_1.User.findAll({
+        attributes: { exclude: ['password'] },
+        where: {
+            [sequelize_1.Op.not]: [{ id: user.id, role: enum_1.UserRole.PROFESSIONAL }]
+        },
+        include: [{
+                model: Models_1.Profile,
+                include: [{
+                        model: Models_1.Professional,
+                        include: [Models_1.Profession]
+                    }]
+            }, {
+                model: Models_1.Location
+            }]
+    });
     socket.emit(events_1.Emit.ALL_CONTACTS, contacts);
 });
 exports.getContacts = getContacts;

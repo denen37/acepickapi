@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOrdersSchema = exports.boughtProductSchema = exports.getProductSchema = exports.professionalSearchQuerySchema = exports.jobStatusQuerySchema = void 0;
+exports.getUsersQuerySchema = exports.getOrdersSchema = exports.boughtProductSchema = exports.getProductSchema = exports.professionalSearchQuerySchema = exports.jobStatusQuerySchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum");
 exports.jobStatusQuerySchema = zod_1.z.object({
@@ -37,4 +37,11 @@ exports.getOrdersSchema = zod_1.z.object({
     status: zod_1.z.nativeEnum(enum_1.OrderStatus).optional(),
     page: zod_1.z.coerce.number().min(1).default(1),
     limit: zod_1.z.coerce.number().min(1).default(10)
+});
+exports.getUsersQuerySchema = zod_1.z.object({
+    search: zod_1.z.string().optional(),
+    professionId: zod_1.z.coerce.number().optional(),
+    page: zod_1.z.coerce.number().int().positive().default(1),
+    limit: zod_1.z.coerce.number().int().positive().default(10),
+    role: zod_1.z.nativeEnum(enum_1.UserRole).optional(),
 });
