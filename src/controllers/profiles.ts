@@ -1,5 +1,5 @@
 import { Request, Response } from "express"
-import { Location, User, Profile, Cooperation, Professional, Education, Certification, Experience, Portfolio, Wallet, Rider, Profession, Sector } from "../models/Models";
+import { Location, User, Profile, Cooperation, Professional, Education, Certification, Experience, Portfolio, Wallet, Rider, Profession, Sector, OnlineUser } from "../models/Models";
 import { errorResponse, handleResponse, successResponse } from "../utils/modules";
 // import { PublishMessage } from "../events/handler";
 import { randomUUID } from "crypto";
@@ -250,6 +250,9 @@ export const getUsers = async (req: Request, res: Response) => {
                 {
                     model: Location
                 },
+                {
+                    model: OnlineUser
+                }
             ],
             limit: limit,
             offset: (page - 1) * limit,

@@ -210,6 +210,9 @@ const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 {
                     model: Models_1.Location
                 },
+                {
+                    model: Models_1.OnlineUser
+                }
             ],
             limit: limit,
             offset: (page - 1) * limit,
