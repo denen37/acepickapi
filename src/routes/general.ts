@@ -18,7 +18,7 @@ import { addCertificate, deleteCertificate, getCertificates, updateCertificate }
 import { addExperience, deleteExperience, getExperiences, updateExperience } from "../controllers/experience";
 import { addPortfolio, deletePortfolio, getPortfolios, updatePortfolio } from "../controllers/portfolio";
 import { getUsers, MyAccountInfo, updateProfile, UserAccountInfo } from "../controllers/profiles";
-import { addProduct, deleteProduct, getProducts, getMyProducts, updateProduct, selectProduct, restockProduct, soldProducts, boughtProducts, getProduct } from "../controllers/product";
+import { addProduct, deleteProduct, getProducts, getMyProducts, updateProduct, selectProduct, restockProduct, soldProducts, boughtProducts, getProduct, getProductTransactionById } from "../controllers/product";
 import { addCategory, deleteCategory, getCategories, updateCategory } from "../controllers/category";
 import { uploads } from "../services/upload";
 import { uploadFiles } from "../controllers/upload";
@@ -137,6 +137,7 @@ routes.get('/products/mine', getMyProducts);
 routes.post('/products/restock', restockProduct);
 routes.get('/products/transactions/sold', soldProducts);
 routes.get('/products/transactions/bought', boughtProducts);
+routes.get('/products/transactions/:id', getProductTransactionById);
 //routes.post('/products/transactions/accept', acceptProduct);
 
 routes.get('/categories', getCategories);

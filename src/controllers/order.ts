@@ -110,7 +110,9 @@ export const createOrder = async (req: Request, res: Response) => {
             locationId: existingLocation?.id,
         })
 
-        return successResponse(res, 'success', { ...order.toJSON(), productTransaction: productTransaction.toJSON() });
+        return successResponse(res, 'success', { ...order.toJSON(), 
+            totalCost: order.cost + productTransaction.price,  
+            productTransaction: productTransaction.toJSON() });
     } catch (error) {
         console.log(error);
         return errorResponse(res, 'error', 'Error creating order')

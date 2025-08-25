@@ -117,6 +117,7 @@ routes.get('/products/mine', product_1.getMyProducts);
 routes.post('/products/restock', product_1.restockProduct);
 routes.get('/products/transactions/sold', product_1.soldProducts);
 routes.get('/products/transactions/bought', product_1.boughtProducts);
+routes.get('/products/transactions/:id', product_1.getProductTransactionById);
 //routes.post('/products/transactions/accept', acceptProduct);
 routes.get('/categories', category_1.getCategories);
 routes.post('/categories', category_1.addCategory);

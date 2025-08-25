@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Product, Category, Location, Profile, User, Wallet, Order } from '../models/Models';
+import { Product, Category, Location, Profile, User, Wallet, Order, Transaction } from '../models/Models';
 import { successResponse, errorResponse } from '../utils/modules';
 import { Op } from 'sequelize';
 import { boughtProductSchema, getProductSchema } from '../validation/query';
@@ -439,5 +439,43 @@ export const deleteProduct = async (req: Request, res: Response) => {
         return successResponse(res, 'success', "Product deleted successfully")
     } catch (error: any) {
         return errorResponse(res, 'error', 'There was error deleting products');
+    }
+}
+
+export const getProductTransactionById = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+        const productTransaction = await ProductTransaction.findByPk(id, {
+            include: [{
+                model: Product,
+            }, {
+                model: Order,
+                as: 'order',
+            }, {
+                model: Transaction
+            }, {
+                model: User,
+                as: 'buyer',
+                attributes: { exclude: ['password', 'fcmToken'] },
+                include: [{
+                    model: Profile,
+                    attributes: ['id', 'avatar', 'firstName', 'lastName']
+                }]
+            }, {
+
+                model: User,
+                as: 'seller',
+                attributes: { exclude: ['password', 'fcmToken'] },
+                include: [{
+                    model: Profile,
+                    attributes: ['id', 'avatar', 'firstName', 'lastName']
+                }]
+            }]
+        })
+
+        return successResponse(res, 'success', productTransaction);
+    } catch (error) {
+        console.log(error)
+        return errorResponse(res, 'error', 'Failed to retrieve product transaction');
     }
 }

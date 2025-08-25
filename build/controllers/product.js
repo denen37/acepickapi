@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteProduct = exports.updateProduct = exports.addProduct = exports.selectProduct = exports.restockProduct = exports.soldProducts = exports.boughtProducts = exports.getMyProducts = exports.getProduct = exports.getProducts = void 0;
+exports.getProductTransactionById = exports.deleteProduct = exports.updateProduct = exports.addProduct = exports.selectProduct = exports.restockProduct = exports.soldProducts = exports.boughtProducts = exports.getMyProducts = exports.getProduct = exports.getProducts = void 0;
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const sequelize_1 = require("sequelize");
@@ -354,3 +354,40 @@ const deleteProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.deleteProduct = deleteProduct;
+const getProductTransactionById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    try {
+        const productTransaction = yield ProductTransaction_1.ProductTransaction.findByPk(id, {
+            include: [{
+                    model: Models_1.Product,
+                }, {
+                    model: Models_1.Order,
+                    as: 'order',
+                }, {
+                    model: Models_1.Transaction
+                }, {
+                    model: Models_1.User,
+                    as: 'buyer',
+                    attributes: { exclude: ['password', 'fcmToken'] },
+                    include: [{
+                            model: Models_1.Profile,
+                            attributes: ['id', 'avatar', 'firstName', 'lastName']
+                        }]
+                }, {
+                    model: Models_1.User,
+                    as: 'seller',
+                    attributes: { exclude: ['password', 'fcmToken'] },
+                    include: [{
+                            model: Models_1.Profile,
+                            attributes: ['id', 'avatar', 'firstName', 'lastName']
+                        }]
+                }]
+        });
+        return (0, modules_1.successResponse)(res, 'success', productTransaction);
+    }
+    catch (error) {
+        console.log(error);
+        return (0, modules_1.errorResponse)(res, 'error', 'Failed to retrieve product transaction');
+    }
+});
+exports.getProductTransactionById = getProductTransactionById;
