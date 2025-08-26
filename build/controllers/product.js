@@ -380,7 +380,7 @@ const getProductTransactionById = (req, res) => __awaiter(void 0, void 0, void 0
                                 }]
                         }, {
                             model: Models_1.Location,
-                            as: 'dropOffLocation'
+                            as: 'dropoffLocation'
                         }
                     ]
                 }, {

@@ -468,7 +468,7 @@ export const getProductTransactionById = async (req: Request, res: Response) => 
                         }]
                     }, {
                         model: Location,
-                        as: 'dropOffLocation'
+                        as: 'dropoffLocation'
                     }
                 ]
             }, {
