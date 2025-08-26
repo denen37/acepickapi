@@ -363,6 +363,17 @@ const getProductTransactionById = (req, res) => __awaiter(void 0, void 0, void 0
                 }, {
                     model: Models_1.Order,
                     as: 'order',
+                    include: [
+                        {
+                            model: Models_1.User,
+                            as: 'rider',
+                            attributes: { exclude: ['password', 'fcmToken'] },
+                            include: [{
+                                    model: Models_1.Profile,
+                                    attributes: ['id', 'avatar', 'firstName', 'lastName']
+                                }]
+                        }
+                    ]
                 }, {
                     model: Models_1.Transaction
                 }, {

@@ -451,6 +451,17 @@ export const getProductTransactionById = async (req: Request, res: Response) => 
             }, {
                 model: Order,
                 as: 'order',
+                include: [
+                    {
+                        model: User,
+                        as: 'rider',
+                        attributes: { exclude: ['password', 'fcmToken'] },
+                        include: [{
+                            model: Profile,
+                            attributes: ['id', 'avatar', 'firstName', 'lastName']
+                        }]
+                    }
+                ]
             }, {
                 model: Transaction
             }, {
