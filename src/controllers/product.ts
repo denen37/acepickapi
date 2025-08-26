@@ -448,6 +448,12 @@ export const getProductTransactionById = async (req: Request, res: Response) => 
         const productTransaction = await ProductTransaction.findByPk(id, {
             include: [{
                 model: Product,
+                include: [{
+                    model: Category,
+                }, {
+                    model: Location,
+                    as: 'pickupLocation'
+                }]
             }, {
                 model: Order,
                 as: 'order',
@@ -460,6 +466,9 @@ export const getProductTransactionById = async (req: Request, res: Response) => 
                             model: Profile,
                             attributes: ['id', 'avatar', 'firstName', 'lastName']
                         }]
+                    }, {
+                        model: Location,
+                        as: 'dropOffLocation'
                     }
                 ]
             }, {

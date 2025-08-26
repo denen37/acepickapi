@@ -360,6 +360,12 @@ const getProductTransactionById = (req, res) => __awaiter(void 0, void 0, void 0
         const productTransaction = yield ProductTransaction_1.ProductTransaction.findByPk(id, {
             include: [{
                     model: Models_1.Product,
+                    include: [{
+                            model: Models_1.Category,
+                        }, {
+                            model: Models_1.Location,
+                            as: 'pickupLocation'
+                        }]
                 }, {
                     model: Models_1.Order,
                     as: 'order',
@@ -372,6 +378,9 @@ const getProductTransactionById = (req, res) => __awaiter(void 0, void 0, void 0
                                     model: Models_1.Profile,
                                     attributes: ['id', 'avatar', 'firstName', 'lastName']
                                 }]
+                        }, {
+                            model: Models_1.Location,
+                            as: 'dropOffLocation'
                         }
                     ]
                 }, {
