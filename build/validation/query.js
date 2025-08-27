@@ -4,7 +4,7 @@ exports.getUsersQuerySchema = exports.getOrdersSchema = exports.boughtProductSch
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum");
 exports.jobStatusQuerySchema = zod_1.z.object({
-    status: zod_1.z.nativeEnum(enum_1.JobStatus).optional(),
+    status: zod_1.z.enum(['all', ...Object.values(enum_1.JobStatus)]).optional(),
 });
 exports.professionalSearchQuerySchema = zod_1.z.object({
     professionId: zod_1.z.coerce.number().int().positive("Profession ID must be a positive integer").optional(),
@@ -31,10 +31,10 @@ exports.getProductSchema = zod_1.z.object({
     limit: zod_1.z.coerce.number().min(1).default(10),
 });
 exports.boughtProductSchema = zod_1.z.object({
-    status: zod_1.z.nativeEnum(enum_1.ProductTransactionStatus).optional(),
+    status: zod_1.z.enum(['all', ...Object.values(enum_1.ProductTransactionStatus)]).optional(),
 });
 exports.getOrdersSchema = zod_1.z.object({
-    status: zod_1.z.nativeEnum(enum_1.OrderStatus).optional(),
+    status: zod_1.z.enum(['all', ...Object.values(enum_1.OrderStatus)]).optional(),
     page: zod_1.z.coerce.number().min(1).default(1),
     limit: zod_1.z.coerce.number().min(1).default(10)
 });

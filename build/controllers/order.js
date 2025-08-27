@@ -196,7 +196,7 @@ const getOrdersRider = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const { status, page, limit } = parsed.data;
     try {
         const orders = yield Models_1.Order.findAll({
-            where: Object.assign({ riderId: id }, (status ? { status: status } : {})),
+            where: Object.assign({ riderId: id }, ((status && status !== 'all') ? { status: status } : {})),
             include: [
                 {
                     model: Models_1.Location,

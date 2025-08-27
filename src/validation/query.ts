@@ -2,7 +2,7 @@ import { z } from "zod";
 import { JobStatus, OrderStatus, ProductTransactionStatus, UserRole } from "../utils/enum";
 
 export const jobStatusQuerySchema = z.object({
-    status: z.nativeEnum(JobStatus).optional(),
+    status: z.enum(['all', ...Object.values(JobStatus)]).optional(),
 });
 
 
@@ -36,11 +36,12 @@ export const getProductSchema = z.object({
 
 
 export const boughtProductSchema = z.object({
-    status: z.nativeEnum(ProductTransactionStatus).optional(),
+    status: z.enum(['all', ...Object.values(ProductTransactionStatus)]).optional(),
 });
 
+
 export const getOrdersSchema = z.object({
-    status: z.nativeEnum(OrderStatus).optional(),
+    status: z.enum(['all', ...Object.values(OrderStatus)]).optional(),
     page: z.coerce.number().min(1).default(1),
     limit: z.coerce.number().min(1).default(10)
 })

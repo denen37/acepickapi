@@ -115,7 +115,7 @@ const boughtProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         const { status } = result.data;
         const productsTrans = yield ProductTransaction_1.ProductTransaction.findAll({
-            where: Object.assign({ buyerId: id }, (status ? { status } : {})),
+            where: Object.assign({ buyerId: id }, ((status && status !== 'all') ? { status } : {})),
             include: [{
                     model: Models_1.Product,
                 }, {
@@ -159,7 +159,7 @@ const soldProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         }
         const { status } = result.data;
         const productsTrans = yield ProductTransaction_1.ProductTransaction.findAll({
-            where: Object.assign({ sellerId: id }, (status ? { status } : {})),
+            where: Object.assign({ sellerId: id }, ((status && status !== 'all') ? { status } : {})),
             include: [{
                     model: Models_1.Product,
                 }, {

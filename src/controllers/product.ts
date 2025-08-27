@@ -142,7 +142,7 @@ export const boughtProducts = async (req: Request, res: Response) => {
         const productsTrans = await ProductTransaction.findAll({
             where: {
                 buyerId: id,
-                ...(status ? { status } : {})
+                ...((status && status !== 'all') ? { status } : {})
             },
 
             include: [{
@@ -200,7 +200,7 @@ export const soldProducts = async (req: Request, res: Response) => {
         const productsTrans = await ProductTransaction.findAll({
             where: {
                 sellerId: id,
-                ...(status ? { status } : {})
+                ...((status && status !== 'all') ? { status } : {})
             },
 
             include: [{

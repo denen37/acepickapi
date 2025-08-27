@@ -110,9 +110,11 @@ export const createOrder = async (req: Request, res: Response) => {
             locationId: existingLocation?.id,
         })
 
-        return successResponse(res, 'success', { ...order.toJSON(), 
-            totalCost: order.cost + productTransaction.price,  
-            productTransaction: productTransaction.toJSON() });
+        return successResponse(res, 'success', {
+            ...order.toJSON(),
+            totalCost: order.cost + productTransaction.price,
+            productTransaction: productTransaction.toJSON()
+        });
     } catch (error) {
         console.log(error);
         return errorResponse(res, 'error', 'Error creating order')
@@ -246,7 +248,7 @@ export const getOrdersRider = async (req: Request, res: Response) => {
         const orders = await Order.findAll({
             where: {
                 riderId: id,
-                ...(status ? { status: status } : {})
+                ...((status && status !== 'all') ? { status: status } : {})
             },
             include: [
                 {

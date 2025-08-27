@@ -38,7 +38,7 @@ const getJobs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     else {
         whereCondition = { professionalId: id };
     }
-    if (result.data.status) {
+    if (result.data.status && result.data.status !== "all") {
         whereCondition = Object.assign(Object.assign({}, whereCondition), { status: result.data.status });
     }
     try {

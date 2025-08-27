@@ -34,7 +34,7 @@ export const getJobs = async (req: Request, res: Response) => {
         whereCondition = { professionalId: id }
     }
 
-    if (result.data.status) {
+    if (result.data.status && result.data.status !== "all") {
         whereCondition = { ...whereCondition, status: result.data.status }
     }
 
