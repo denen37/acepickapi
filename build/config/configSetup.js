@@ -41,7 +41,7 @@ const getConfig = () => {
         DEV_HOST: process.env.DEV_HOST,
         DEV_URL: process.env.DEV_URL,
         PROD_URL: process.env.PROD_URL,
-        NODE_ENV: process.env.NODE_ENV,
+        ENV: process.env.ENV,
         DB_NAME: process.env.DB_NAME,
         DB_USER: process.env.DB_USER,
         DB_PASSWORD: process.env.DB_PASSWORD,

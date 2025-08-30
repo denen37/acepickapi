@@ -36,7 +36,7 @@ const uploadFiles = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     //     }
     // })
     try {
-        const paths = files.map((file) => `${configSetup_1.default.NODE_ENV === enum_1.ENV.DEV ? configSetup_1.default.DEV_URL : configSetup_1.default.PROD_URL}/${file.path.slice(file.path.indexOf('uploads')).split('\\').join('/')}`);
+        const paths = files.map((file) => `${configSetup_1.default.ENV === enum_1.ENV.DEV ? configSetup_1.default.DEV_URL : configSetup_1.default.PROD_URL}/${file.path.slice(file.path.indexOf('uploads')).split('\\').join('/')}`);
         return (0, modules_1.successResponse)(res, 'success', { urls: paths });
     }
     catch (error) {
@@ -72,7 +72,7 @@ const uploadAvatar = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         // const path = await uploadFileToBlob(StorageContainer.PROFILE, fileModified)
         return (0, modules_1.successResponse)(res, 'success', {
-            url: `${configSetup_1.default.NODE_ENV === enum_1.ENV.DEV ? configSetup_1.default.DEV_URL : configSetup_1.default.PROD_URL}/${file.path.slice(file.path.indexOf('uploads')).split('\\').join('/')}`
+            url: `${configSetup_1.default.ENV === enum_1.ENV.DEV ? configSetup_1.default.DEV_URL : configSetup_1.default.PROD_URL}/${file.path.slice(file.path.indexOf('uploads')).split('\\').join('/')}`
         });
     }
     catch (error) {
