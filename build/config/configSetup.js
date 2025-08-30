@@ -38,9 +38,9 @@ dotenv.config();
 const getConfig = () => {
     return {
         PORT: Number(process.env.PORT),
-        HOST: process.env.HOST,
-        JOBS_BASE_URL: process.env.JOBS_BASE_URL,
-        PAYMENT_BASE_URL: process.env.PAYMENT_BASE_URL,
+        DEV_HOST: process.env.DEV_HOST,
+        DEV_URL: process.env.DEV_URL,
+        PROD_URL: process.env.PROD_URL,
         NODE_ENV: process.env.NODE_ENV,
         DB_NAME: process.env.DB_NAME,
         DB_USER: process.env.DB_USER,

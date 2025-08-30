@@ -88,6 +88,11 @@ export enum ProductStatus {
     BOUGHT = 'bought'
 }
 
+export enum ENV {
+    PROD = 'prod',
+    DEV = 'dev',
+}
+
 
 export enum ProductTransactionStatus {
     PENDING = 'pending',

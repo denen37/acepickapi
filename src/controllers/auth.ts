@@ -687,7 +687,7 @@ export const login = async (req: Request, res: Response) => {
                 attributes: { exclude: ['password'] },
                 include: [{
                     model: Wallet,
-                    attributes: { exclude: ['password'] },
+                    attributes: { exclude: ['pin'] },
                 },
                 {
                     model: Location,

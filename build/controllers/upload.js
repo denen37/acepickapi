@@ -8,10 +8,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadAvatar = exports.uploadFile = exports.uploadFiles = void 0;
 const modules_1 = require("../utils/modules");
 const uploadCloud_1 = require("../services/uploadCloud");
+const configSetup_1 = __importDefault(require("../config/configSetup"));
+const enum_1 = require("../utils/enum");
 // const BASE_FOLDER = 'uploads'
 var StorageContainer;
 (function (StorageContainer) {
@@ -31,7 +36,7 @@ const uploadFiles = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     //     }
     // })
     try {
-        const paths = files.map((file) => `/${file.path.slice(file.path.indexOf('uploads')).split('\\').join('/')}`);
+        const paths = files.map((file) => `${configSetup_1.default.NODE_ENV === enum_1.ENV.DEV ? configSetup_1.default.DEV_URL : configSetup_1.default.PROD_URL}/${file.path.slice(file.path.indexOf('uploads')).split('\\').join('/')}`);
         return (0, modules_1.successResponse)(res, 'success', { urls: paths });
     }
     catch (error) {
@@ -67,7 +72,7 @@ const uploadAvatar = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         // const path = await uploadFileToBlob(StorageContainer.PROFILE, fileModified)
         return (0, modules_1.successResponse)(res, 'success', {
-            url: `/${file.path.slice(file.path.indexOf('uploads')).split('\\').join('/')}`
+            url: `${configSetup_1.default.NODE_ENV === enum_1.ENV.DEV ? configSetup_1.default.DEV_URL : configSetup_1.default.PROD_URL}/${file.path.slice(file.path.indexOf('uploads')).split('\\').join('/')}`
         });
     }
     catch (error) {

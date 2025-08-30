@@ -2,6 +2,8 @@ import { Request, Response } from "express"
 import { handleResponse, successResponse } from "../utils/modules"
 import { uploadFileToBlob, uploadFilesToBlob } from "../services/uploadCloud";
 import { buffer } from "stream/consumers";
+import config from '../config/configSetup';
+import { ENV } from "../utils/enum";
 
 // const BASE_FOLDER = 'uploads'
 
@@ -26,7 +28,7 @@ export const uploadFiles = async (req: Request, res: Response) => {
     // })
 
     try {
-        const paths = files.map((file) => `/${file.path.slice(file.path.indexOf('uploads')).split('\\').join('/')}`);
+        const paths = files.map((file) => `${config.NODE_ENV === ENV.DEV ? config.DEV_URL : config.PROD_URL}/${file.path.slice(file.path.indexOf('uploads')).split('\\').join('/')}`);
 
         return successResponse(res, 'success', { urls: paths });
     } catch (error) {
@@ -72,7 +74,7 @@ export const uploadAvatar = async (req: Request, res: Response) => {
         // const path = await uploadFileToBlob(StorageContainer.PROFILE, fileModified)
 
         return successResponse(res, 'success', {
-            url: `/${file.path.slice(file.path.indexOf('uploads')).split('\\').join('/')}`
+            url: `${config.NODE_ENV === ENV.DEV ? config.DEV_URL : config.PROD_URL}/${file.path.slice(file.path.indexOf('uploads')).split('\\').join('/')}`
         })
     } catch (error) {
         return handleResponse(res, 500, false, 'Error uploading file');

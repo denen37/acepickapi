@@ -4,9 +4,9 @@ dotenv.config();
 
 type Config = {
     PORT: number | undefined;
-    JOBS_BASE_URL: string | undefined;
-    PAYMENT_BASE_URL: string | undefined;
-    HOST: string | undefined;
+    DEV_HOST: string | undefined;
+    PROD_URL: string | undefined;
+    DEV_URL: string | undefined;
     NODE_ENV: string | undefined;
     DB_NAME: string | undefined;
     DB_USER: string | undefined;
@@ -35,9 +35,9 @@ type Config = {
 const getConfig = (): Config => {
     return {
         PORT: Number(process.env.PORT),
-        HOST: process.env.HOST,
-        JOBS_BASE_URL: process.env.JOBS_BASE_URL,
-        PAYMENT_BASE_URL: process.env.PAYMENT_BASE_URL,
+        DEV_HOST: process.env.DEV_HOST,
+        DEV_URL: process.env.DEV_URL,
+        PROD_URL: process.env.PROD_URL,
         NODE_ENV: process.env.NODE_ENV,
         DB_NAME: process.env.DB_NAME,
         DB_USER: process.env.DB_USER,

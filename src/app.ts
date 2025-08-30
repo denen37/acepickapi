@@ -20,32 +20,32 @@ const server = createServer(app);
 app.use(express.json());
 app.use(cors({ origin: true }));
 
-app.use(express.static(path.join(__dirname, '../public')));
+// ✅ Serve static files BEFORE auth check
+app.use("/uploads/", express.static(path.join(__dirname, "../public/uploads")));
 
 app.use(logRoutes);
 
 app.get('/', (req: Request, res: Response) => {
-    res.status(200).json({ message: 'Hello, world! This is the user service' });
+    res.status(200).json({ message: 'Hello, world! This API is working!' });
 });
 
+// ✅ Protect only API routes, not static/public
+app.all('/api/*', isAuthorized);
 
-app.all('*', isAuthorized);
 app.use("/api", index);
 app.use("/api/auth/", auth);
-app.use('/api/', general);
+app.use("/api/", general);
 
 // consumeJobEvents();
 initSocket(server);
 
-
 db.sync().then(() => {
-
     registerJobHook();
     server.listen(
         config.PORT || 5000,
-        config.HOST || '0.0.0.0',
-        () => console.log(`Server is running on http://${config.HOST}:${config.PORT}`));
-})
-    .catch(err => console.error('Error connecting to the database', err));
+        config.DEV_HOST || '0.0.0.0',
+        () => console.log(`Server is running on http://${config.DEV_HOST}:${config.PORT}`)
+    );
+}).catch(err => console.error('Error connecting to the database', err));
 
 export default app;

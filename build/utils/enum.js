@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RiderStatus = exports.VehicleType = exports.TransactionDescription = exports.OrderStatus = exports.OrderMethod = exports.ProductTransactionStatus = exports.ProductStatus = exports.TransferStatus = exports.TransactionType = exports.TransactionStatus = exports.PaidFor = exports.JobStatus = exports.PayStatus = exports.JobMode = exports.UserState = exports.UserStatus = exports.UserRole = exports.VerificationType = exports.OTPReason = void 0;
+exports.RiderStatus = exports.VehicleType = exports.TransactionDescription = exports.OrderStatus = exports.OrderMethod = exports.ProductTransactionStatus = exports.ENV = exports.ProductStatus = exports.TransferStatus = exports.TransactionType = exports.TransactionStatus = exports.PaidFor = exports.JobStatus = exports.PayStatus = exports.JobMode = exports.UserState = exports.UserStatus = exports.UserRole = exports.VerificationType = exports.OTPReason = void 0;
 var OTPReason;
 (function (OTPReason) {
     OTPReason["VERIFICATION"] = "verification";
@@ -85,6 +85,11 @@ var ProductStatus;
     ProductStatus["SOLD"] = "sold";
     ProductStatus["BOUGHT"] = "bought";
 })(ProductStatus || (exports.ProductStatus = ProductStatus = {}));
+var ENV;
+(function (ENV) {
+    ENV["PROD"] = "prod";
+    ENV["DEV"] = "dev";
+})(ENV || (exports.ENV = ENV = {}));
 var ProductTransactionStatus;
 (function (ProductTransactionStatus) {
     ProductTransactionStatus["PENDING"] = "pending";

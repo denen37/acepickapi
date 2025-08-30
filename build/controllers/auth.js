@@ -512,7 +512,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 attributes: { exclude: ['password'] },
                 include: [{
                         model: Models_1.Wallet,
-                        attributes: { exclude: ['password'] },
+                        attributes: { exclude: ['pin'] },
                     },
                     {
                         model: Models_1.Location,
