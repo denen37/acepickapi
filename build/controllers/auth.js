@@ -228,7 +228,8 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
         const wallet = yield Models_1.Wallet.create({
             userId: user.id,
-            balance: 0,
+            previousBalance: 0,
+            currentBalance: 0,
         });
         user.password = null;
         wallet.pin = null;
@@ -297,7 +298,8 @@ const registerProfessional = (req, res) => __awaiter(void 0, void 0, void 0, fun
         });
         const wallet = yield Models_1.Wallet.create({
             userId: user.id,
-            balance: 0,
+            previousBalance: 0,
+            currentBalance: 0,
         });
         user.password = null;
         wallet.pin = null;
@@ -574,6 +576,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                     }]
             });
         }
+        userData.wallet.setDataValue('isActive', userData.wallet.pin !== null);
         return (0, modules_1.successResponse)(res, "Successful", { status: true, user: userData, token });
     }
     catch (error) {

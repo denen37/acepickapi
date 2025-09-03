@@ -77,6 +77,7 @@ export const MyAccountInfo = async (req: Request, res: Response) => {
 
         if (!profile) return errorResponse(res, "Failed", { status: false, message: "Profile Does'nt exist" })
 
+        profile.user.wallet.setDataValue('isActive', profile.user.wallet.pin !== null)
 
         return successResponse(res, "Successful", profile)
     } catch (error) {
@@ -106,7 +107,9 @@ export const UserAccountInfo = async (req: Request, res: Response) => {
 
                             {
                                 model: Wallet,
-                                attributes: { exclude: ['pin'] }
+                                attributes: {
+                                    exclude: ['pin']
+                                },
                             },
                             {
                                 model: Rider
@@ -149,6 +152,7 @@ export const UserAccountInfo = async (req: Request, res: Response) => {
 
         if (!profile) return errorResponse(res, "Failed", { status: false, message: "Profile Does'nt exist" })
 
+        profile.user.wallet.setDataValue('isActive', profile.user.wallet.pin !== null)
 
         return successResponse(res, "Successful", profile)
     } catch (error) {

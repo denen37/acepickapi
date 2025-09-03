@@ -305,7 +305,8 @@ export const register = async (req: Request, res: Response): Promise<any> => {
 
         const wallet = await Wallet.create({
             userId: user.id,
-            balance: 0,
+            previousBalance: 0,
+            currentBalance: 0,
         })
 
         user.password = null;
@@ -399,7 +400,8 @@ export const registerProfessional = async (req: Request, res: Response): Promise
 
         const wallet = await Wallet.create({
             userId: user.id,
-            balance: 0,
+            previousBalance: 0,
+            currentBalance: 0,
         })
 
         user.password = null;
@@ -747,6 +749,8 @@ export const login = async (req: Request, res: Response) => {
                 }]
             })
         }
+
+        userData.wallet.setDataValue('isActive', userData.wallet.pin !== null)
 
 
         return successResponse(res, "Successful", { status: true, user: userData, token })

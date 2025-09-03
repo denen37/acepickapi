@@ -67,6 +67,7 @@ const MyAccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
         if (!profile)
             return (0, modules_1.errorResponse)(res, "Failed", { status: false, message: "Profile Does'nt exist" });
+        profile.user.wallet.setDataValue('isActive', profile.user.wallet.pin !== null);
         return (0, modules_1.successResponse)(res, "Successful", profile);
     }
     catch (error) {
@@ -93,7 +94,9 @@ const UserAccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function
                         },
                         {
                             model: Models_1.Wallet,
-                            attributes: { exclude: ['pin'] }
+                            attributes: {
+                                exclude: ['pin']
+                            },
                         },
                         {
                             model: Models_1.Rider
@@ -126,6 +129,7 @@ const UserAccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function
         });
         if (!profile)
             return (0, modules_1.errorResponse)(res, "Failed", { status: false, message: "Profile Does'nt exist" });
+        profile.user.wallet.setDataValue('isActive', profile.user.wallet.pin !== null);
         return (0, modules_1.successResponse)(res, "Successful", profile);
     }
     catch (error) {

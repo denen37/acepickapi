@@ -23,6 +23,8 @@ export const createWallet = async (req: Request, res: Response) => {
             previousBalance: 0
         });
 
+        wallet.setDataValue('isActive', wallet.pin !== null)
+
         return successResponse(res, "success", wallet);
     } catch (error: any) {
         return errorResponse(res, 'error', error.message);
@@ -43,6 +45,8 @@ export const viewWallet = async (req: Request, res: Response) => {
         if (!wallet) {
             return handleResponse(res, 404, false, "Wallet not found");
         }
+
+        wallet.setDataValue('isActive', wallet.pin !== null)
 
         return successResponse(res, "success", wallet);
     } catch (error) {

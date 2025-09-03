@@ -32,6 +32,7 @@ const createWallet = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             currentBalance: 0,
             previousBalance: 0
         });
+        wallet.setDataValue('isActive', wallet.pin !== null);
         return (0, modules_1.successResponse)(res, "success", wallet);
     }
     catch (error) {
@@ -51,6 +52,7 @@ const viewWallet = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (!wallet) {
             return (0, modules_1.handleResponse)(res, 404, false, "Wallet not found");
         }
+        wallet.setDataValue('isActive', wallet.pin !== null);
         return (0, modules_1.successResponse)(res, "success", wallet);
     }
     catch (error) {
