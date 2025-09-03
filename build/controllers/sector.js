@@ -14,7 +14,9 @@ const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
 const getSectors = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const sectors = yield Models_1.Sector.findAll();
+        const sectors = yield Models_1.Sector.findAll({
+            order: [['name', 'ASC']],
+        });
         return (0, modules_1.successResponse)(res, 'success', sectors);
     }
     catch (error) {

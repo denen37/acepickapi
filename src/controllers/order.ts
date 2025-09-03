@@ -290,7 +290,8 @@ export const getOrdersRider = async (req: Request, res: Response) => {
                 {
                     model: Location,
                 }
-            ]
+            ],
+            order: [['createdAt', 'DESC']]
         })
 
         return successResponse(res, 'success', orders);
@@ -345,7 +346,8 @@ export const getOrdersBuyer = async (req: Request, res: Response) => {
                 {
                     model: Location,
                 }
-            ]
+            ],
+            order: [['createdAt', 'DESC']]
         })
 
 
@@ -403,7 +405,8 @@ export const getOrdersSeller = async (req: Request, res: Response) => {
                 {
                     model: Location,
                 }
-            ]
+            ],
+            order: [['createdAt', 'DESC']]
         })
 
 

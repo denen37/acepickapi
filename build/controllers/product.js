@@ -42,7 +42,8 @@ const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                     where: Object.assign(Object.assign({}, (state && { state: { [sequelize_1.Op.like]: `%${state}%` } })), (lga && { lga: { [sequelize_1.Op.like]: `%${lga}%` } }))
                     //attributes: ['id', 'name', 'description'],
                 },
-            ]
+            ],
+            order: [['name', 'ASC']]
         });
         return (0, modules_1.successResponse)(res, 'success', products.map(product => {
             const plainProduct = product.toJSON(); // or product.get({ plain: true });
@@ -94,7 +95,8 @@ const getMyProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     model: Models_1.Location,
                     //attributes: ['id', 'name', 'description'],
                 },
-            ]
+            ],
+            order: [['createdAt', 'DESC']]
         });
         return (0, modules_1.successResponse)(res, 'success', products.map(product => {
             const plainProduct = product.toJSON(); // or product.get({ plain: true });

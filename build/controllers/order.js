@@ -234,7 +234,8 @@ const getOrdersRider = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 {
                     model: Models_1.Location,
                 }
-            ]
+            ],
+            order: [['createdAt', 'DESC']]
         });
         return (0, modules_1.successResponse)(res, 'success', orders);
     }
@@ -282,7 +283,8 @@ const getOrdersBuyer = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 {
                     model: Models_1.Location,
                 }
-            ]
+            ],
+            order: [['createdAt', 'DESC']]
         });
         return (0, modules_1.successResponse)(res, 'success', orders);
     }
@@ -330,7 +332,8 @@ const getOrdersSeller = (req, res) => __awaiter(void 0, void 0, void 0, function
                 {
                     model: Models_1.Location,
                 }
-            ]
+            ],
+            order: [['createdAt', 'DESC']]
         });
         return (0, modules_1.successResponse)(res, 'success', orders);
     }

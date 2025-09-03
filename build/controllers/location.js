@@ -46,7 +46,8 @@ const getMyLocations = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const { id } = req.user;
     try {
         const location = yield Models_1.Location.findAll({
-            where: { userId: id }
+            where: { userId: id },
+            order: [['createdAt', 'DESC']]
         });
         return (0, modules_1.successResponse)(res, 'success', location);
     }

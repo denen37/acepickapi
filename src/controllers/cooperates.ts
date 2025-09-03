@@ -206,7 +206,7 @@ export const getCooperates = async (req: Request, res: Response) => {
   
       ${minRating ? `HAVING AVG([profile->user->professionalReviews].[rating]) >= ${minRating}` : ''}
       
-      ORDER BY [Professional].[id] ASC
+      ORDER BY [Professional].[createdAt] DESC
       OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY;
     `,
         {

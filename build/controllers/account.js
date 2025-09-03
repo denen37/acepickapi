@@ -70,7 +70,10 @@ exports.addAccount = addAccount;
 const getAccounts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.user;
-        const accounts = yield Models_1.Account.findAll({ where: { userId: id } });
+        const accounts = yield Models_1.Account.findAll({
+            where: { userId: id },
+            order: [['createdAt', 'DESC']]
+        });
         return (0, modules_1.successResponse)(res, 'success', accounts);
     }
     catch (error) {

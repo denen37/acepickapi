@@ -47,7 +47,8 @@ export const getProducts = async (req: Request, res: Response) => {
                     }
                     //attributes: ['id', 'name', 'description'],
                 },
-            ]
+            ],
+            order: [['name', 'ASC']]
         })
 
         return successResponse(res, 'success', products.map(product => {
@@ -111,7 +112,8 @@ export const getMyProducts = async (req: Request, res: Response) => {
                     model: Location,
                     //attributes: ['id', 'name', 'description'],
                 },
-            ]
+            ],
+            order: [['createdAt', 'DESC']]
         })
 
         return successResponse(res, 'success', products.map(product => {

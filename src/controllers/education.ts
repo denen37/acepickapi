@@ -20,7 +20,8 @@ export const getEducation = async (req: Request, res: Response) => {
         const education = await Education.findAll({
             where: {
                 profileId: profile.id
-            }
+            },
+            order: [['createdAt', 'DESC']]
         });
 
         if (!education) {

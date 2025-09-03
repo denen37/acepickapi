@@ -4,7 +4,9 @@ import { successResponse, errorResponse } from "../utils/modules";
 
 export const getCategories = async (req: Request, res: Response) => {
     try {
-        const categories = await Category.findAll()
+        const categories = await Category.findAll({
+            order: [['name', 'ASC']]
+        })
 
         return successResponse(res, 'success', categories);
     } catch (error) {

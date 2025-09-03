@@ -74,7 +74,10 @@ export const getAccounts = async (req: Request, res: Response) => {
     try {
         const { id } = req.user;
 
-        const accounts = await Account.findAll({ where: { userId: id } });
+        const accounts = await Account.findAll({
+            where: { userId: id },
+            order: [['createdAt', 'DESC']]
+        });
 
         return successResponse(res, 'success', accounts);
     } catch (error: any) {

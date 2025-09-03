@@ -26,7 +26,8 @@ const getEducation = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const education = yield Models_1.Education.findAll({
             where: {
                 profileId: profile.id
-            }
+            },
+            order: [['createdAt', 'DESC']]
         });
         if (!education) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Education not found');

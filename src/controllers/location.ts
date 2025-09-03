@@ -41,7 +41,8 @@ export const getMyLocations = async (req: Request, res: Response) => {
 
     try {
         const location = await Location.findAll({
-            where: { userId: id }
+            where: { userId: id },
+            order: [['createdAt', 'DESC']]
         })
 
         return successResponse(res, 'success', location);

@@ -209,7 +209,7 @@ const getCooperates = (req, res) => __awaiter(void 0, void 0, void 0, function* 
   
       ${minRating ? `HAVING AVG([profile->user->professionalReviews].[rating]) >= ${minRating}` : ''}
       
-      ORDER BY [Professional].[id] ASC
+      ORDER BY [Professional].[createdAt] DESC
       OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY;
     `, {
         type: sequelize_1.QueryTypes.SELECT
