@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.jobCancelledEmail = exports.productPaymentEmail = exports.jobPaymentEmail = exports.disputedJobEmail = exports.approveJobEmail = exports.completeJobEmail = exports.invoiceUpdatedEmail = exports.invoiceGeneratedEmail = exports.jobDisputeEmail = exports.jobResponseEmail = exports.jobUpdatedEmail = exports.jobCreatedEmail = exports.forgotPasswordEmail = exports.sendOTPEmail = exports.sendOTPPhone = exports.registerEmail = void 0;
+exports.reactivateUserEmail = exports.suspendUserEmail = exports.jobCancelledEmail = exports.productPaymentEmail = exports.jobPaymentEmail = exports.disputedJobEmail = exports.approveJobEmail = exports.completeJobEmail = exports.invoiceUpdatedEmail = exports.invoiceGeneratedEmail = exports.jobDisputeEmail = exports.jobResponseEmail = exports.jobUpdatedEmail = exports.jobCreatedEmail = exports.forgotPasswordEmail = exports.sendOTPEmail = exports.sendOTPPhone = exports.registerEmail = void 0;
 const registerEmail = (user) => {
     var _a, _b;
     return {
@@ -242,3 +242,20 @@ const jobCancelledEmail = (job) => {
     };
 };
 exports.jobCancelledEmail = jobCancelledEmail;
+const suspendUserEmail = (user) => {
+    return {
+        title: `Account Suspended`,
+        body: `Your account has been temporarily suspended by the admin due to violation of the terms and conditions
+        of the platform. Please contact the admin for more information.
+        `
+    };
+};
+exports.suspendUserEmail = suspendUserEmail;
+const reactivateUserEmail = (user) => {
+    return {
+        title: `Account Activated`,
+        body: `Your account has been re-activated by the admin. You can now log in and start using the platform.
+        `
+    };
+};
+exports.reactivateUserEmail = reactivateUserEmail;

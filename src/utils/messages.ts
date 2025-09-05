@@ -252,3 +252,21 @@ export const jobCancelledEmail = (job: Job) => {
     }
 }
 
+
+export const suspendUserEmail = (user: User) => {
+    return {
+        title: `Account Suspended`,
+        body: `Your account has been temporarily suspended by the admin due to violation of the terms and conditions
+        of the platform. Please contact the admin for more information.
+        `
+    }
+}
+
+export const reactivateUserEmail = (user: User) => {
+    return {
+        title: `Account Activated`,
+        body: `Your account has been re-activated by the admin. You can now log in and start using the platform.
+        `
+    }
+}
+

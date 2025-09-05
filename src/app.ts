@@ -10,6 +10,7 @@ import { isAuthorized } from './middlewares/authorize';
 import index from './routes/index';
 import auth from './routes/auth';
 import general from './routes/general';
+import admin from './routes/admin'
 import "reflect-metadata";
 import { initSocket } from './chat';
 import { registerJobHook } from './hooks/jobHook';
@@ -34,6 +35,7 @@ app.all('/api/*', isAuthorized);
 
 app.use("/api", index);
 app.use("/api/auth/", auth);
+app.use("/api/admin/", admin);
 app.use("/api/", general);
 
 // consumeJobEvents();

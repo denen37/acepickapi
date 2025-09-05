@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const user_1 = require("../controllers/admin/user");
+const profiles_1 = require("../controllers/profiles");
+const routes = (0, express_1.Router)();
+routes.get('/:role/all', user_1.getAllUsers);
+routes.get('/user/:userId', profiles_1.UserAccountInfo);
+routes.post('/user/togggle-suspend/:userId', user_1.toggleSuspension);
+routes.post('/email/message', user_1.emailUser);
+exports.default = routes;

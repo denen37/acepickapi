@@ -14,6 +14,7 @@ const authorize_1 = require("./middlewares/authorize");
 const index_1 = __importDefault(require("./routes/index"));
 const auth_1 = __importDefault(require("./routes/auth"));
 const general_1 = __importDefault(require("./routes/general"));
+const admin_1 = __importDefault(require("./routes/admin"));
 require("reflect-metadata");
 const chat_1 = require("./chat");
 const jobHook_1 = require("./hooks/jobHook");
@@ -31,6 +32,7 @@ app.get('/', (req, res) => {
 app.all('/api/*', authorize_1.isAuthorized);
 app.use("/api", index_1.default);
 app.use("/api/auth/", auth_1.default);
+app.use("/api/admin/", admin_1.default);
 app.use("/api/", general_1.default);
 // consumeJobEvents();
 (0, chat_1.initSocket)(server);
