@@ -6,6 +6,7 @@ import sequelize, { QueryTypes } from 'sequelize';
 import dbSequelize from '../config/db';
 import { professionalSearchQuerySchema } from '../validation/query';
 import { profile } from 'console';
+import { UserStatus } from '../utils/enum';
 
 
 
@@ -95,7 +96,7 @@ export const getProfessionals = async (req: Request, res: Response) => {
 
     FROM professionals AS Professional
     LEFT JOIN profiles AS profile ON Professional.profileId = profile.id
-    LEFT JOIN users AS user ON profile.userId = user.id
+    LEFT JOIN users AS user ON profile.userId = user.id AND user.status = ${UserStatus.ACTIVE}
     LEFT JOIN review AS professionalReviews ON user.id = professionalReviews.professionalUserId
     INNER JOIN location AS location ON user.id = location.userId
       ${span || state || lga ? `
@@ -205,6 +206,9 @@ export const getProfessionalById = async (req: Request, res: Response) => {
               model: User,
               as: 'user',
               attributes: ['id', 'email', 'phone', 'status', 'role', 'createdAt', 'updatedAt'],
+              // where: {
+              //   status: UserStatus.ACTIVE
+              // },
               include: [
                 {
                   model: Location,

@@ -21,6 +21,7 @@ exports.professionalSearchQuerySchema = zod_1.z.object({
     // sortOrder: z.enum(['asc', 'desc']).optional(),
 });
 exports.getProductSchema = zod_1.z.object({
+    approved: zod_1.z.enum(["true", "false"]).transform((val) => val === "true").optional(),
     categoryId: zod_1.z.coerce.number().optional(),
     locationId: zod_1.z.coerce.number().optional(),
     category: zod_1.z.string().optional(),
@@ -29,6 +30,8 @@ exports.getProductSchema = zod_1.z.object({
     search: zod_1.z.string().optional(),
     page: zod_1.z.coerce.number().min(1).default(1),
     limit: zod_1.z.coerce.number().min(1).default(10),
+    orderBy: zod_1.z.enum(['createdAt', 'price', 'name']).optional(),
+    orderDir: zod_1.z.enum(['asc', 'desc']).optional(),
 });
 exports.boughtProductSchema = zod_1.z.object({
     status: zod_1.z.enum(['all', ...Object.values(enum_1.ProductTransactionStatus)]).optional(),

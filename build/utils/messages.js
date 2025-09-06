@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.reactivateUserEmail = exports.suspendUserEmail = exports.jobCancelledEmail = exports.productPaymentEmail = exports.jobPaymentEmail = exports.disputedJobEmail = exports.approveJobEmail = exports.completeJobEmail = exports.invoiceUpdatedEmail = exports.invoiceGeneratedEmail = exports.jobDisputeEmail = exports.jobResponseEmail = exports.jobUpdatedEmail = exports.jobCreatedEmail = exports.forgotPasswordEmail = exports.sendOTPEmail = exports.sendOTPPhone = exports.registerEmail = void 0;
+exports.approveProductEmail = exports.reactivateUserEmail = exports.suspendUserEmail = exports.jobCancelledEmail = exports.productPaymentEmail = exports.jobPaymentEmail = exports.disputedJobEmail = exports.approveJobEmail = exports.completeJobEmail = exports.invoiceUpdatedEmail = exports.invoiceGeneratedEmail = exports.jobDisputeEmail = exports.jobResponseEmail = exports.jobUpdatedEmail = exports.jobCreatedEmail = exports.forgotPasswordEmail = exports.sendOTPEmail = exports.sendOTPPhone = exports.registerEmail = void 0;
 const registerEmail = (user) => {
     var _a, _b;
     return {
@@ -259,3 +259,15 @@ const reactivateUserEmail = (user) => {
     };
 };
 exports.reactivateUserEmail = reactivateUserEmail;
+const approveProductEmail = (product) => {
+    return {
+        title: `Product Approved`,
+        body: `Your product ${product.name} has been approved by the admin. It is now available for purchase.
+        <h3>Summary</h3>
+        <p><b>Product title: </b>${product.name}</p>
+        <p><b>Product description: </b>${product.description}</p>
+        <p><b>Product price: </b>${product.price}<b><p>
+        `
+    };
+};
+exports.approveProductEmail = approveProductEmail;

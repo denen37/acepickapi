@@ -18,12 +18,13 @@ export const getProducts = async (req: Request, res: Response) => {
         });
     }
 
-    const { categoryId, category, search, state, lga, locationId, page, limit } = result.data;
+    const { categoryId, category, search, state, lga, locationId, page, limit, orderBy, orderDir } = result.data;
 
 
     try {
         const products = await Product.findAll({
             where: {
+                approved: true,
                 ...(categoryId && { categoryId }),
                 ...(search && { name: { [Op.like]: `%${search}%` } }),
                 ...(locationId && { locationId }),
@@ -48,7 +49,7 @@ export const getProducts = async (req: Request, res: Response) => {
                     //attributes: ['id', 'name', 'description'],
                 },
             ],
-            order: [['name', 'ASC']]
+            order: [[orderBy || 'createdAt', orderDir || 'DESC']]
         })
 
         return successResponse(res, 'success', products.map(product => {

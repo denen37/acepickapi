@@ -53,6 +53,12 @@ __decorate([
     __metadata("design:type", Number)
 ], Product.prototype, "price", void 0);
 __decorate([
+    (0, sequelize_typescript_1.AllowNull)(false),
+    (0, sequelize_typescript_1.Default)(false),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BOOLEAN),
+    __metadata("design:type", Boolean)
+], Product.prototype, "approved", void 0);
+__decorate([
     (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.FLOAT),
     __metadata("design:type", Number)
@@ -85,5 +91,5 @@ __decorate([
     )
 ], Product.prototype, "user", void 0);
 exports.Product = Product = __decorate([
-    (0, sequelize_typescript_1.Table)({ timestamps: false, tableName: 'products' })
+    (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'products' })
 ], Product);

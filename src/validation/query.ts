@@ -23,6 +23,7 @@ export const professionalSearchQuerySchema = z.object({
 
 
 export const getProductSchema = z.object({
+    approved: z.enum(["true", "false"]).transform((val) => val === "true").optional(),
     categoryId: z.coerce.number().optional(),
     locationId: z.coerce.number().optional(),
     category: z.string().optional(),
@@ -31,6 +32,8 @@ export const getProductSchema = z.object({
     search: z.string().optional(),
     page: z.coerce.number().min(1).default(1),
     limit: z.coerce.number().min(1).default(10),
+    orderBy: z.enum(['createdAt', 'price', 'name']).optional(),
+    orderDir: z.enum(['asc', 'desc']).optional(),
 });
 
 

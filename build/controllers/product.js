@@ -25,10 +25,10 @@ const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             errors: result.error.flatten().fieldErrors,
         });
     }
-    const { categoryId, category, search, state, lga, locationId, page, limit } = result.data;
+    const { categoryId, category, search, state, lga, locationId, page, limit, orderBy, orderDir } = result.data;
     try {
         const products = yield Models_1.Product.findAll({
-            where: Object.assign(Object.assign(Object.assign({}, (categoryId && { categoryId })), (search && { name: { [sequelize_1.Op.like]: `%${search}%` } })), (locationId && { locationId })),
+            where: Object.assign(Object.assign(Object.assign({ approved: true }, (categoryId && { categoryId })), (search && { name: { [sequelize_1.Op.like]: `%${search}%` } })), (locationId && { locationId })),
             limit: limit,
             offset: (page - 1) * limit,
             include: [
@@ -43,7 +43,7 @@ const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                     //attributes: ['id', 'name', 'description'],
                 },
             ],
-            order: [['name', 'ASC']]
+            order: [[orderBy || 'createdAt', orderDir || 'DESC']]
         });
         return (0, modules_1.successResponse)(res, 'success', products.map(product => {
             const plainProduct = product.toJSON(); // or product.get({ plain: true });

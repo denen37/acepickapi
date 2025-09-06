@@ -52,6 +52,7 @@ const modules_1 = require("../utils/modules");
 const sequelize_1 = __importStar(require("sequelize"));
 const db_1 = __importDefault(require("../config/db"));
 const query_1 = require("../validation/query");
+const enum_1 = require("../utils/enum");
 const getProfessionals = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = query_1.professionalSearchQuerySchema.safeParse(req.query);
@@ -127,7 +128,7 @@ const getProfessionals = (req, res) => __awaiter(void 0, void 0, void 0, functio
 
     FROM professionals AS Professional
     LEFT JOIN profiles AS profile ON Professional.profileId = profile.id
-    LEFT JOIN users AS user ON profile.userId = user.id
+    LEFT JOIN users AS user ON profile.userId = user.id AND user.status = ${enum_1.UserStatus.ACTIVE}
     LEFT JOIN review AS professionalReviews ON user.id = professionalReviews.professionalUserId
     INNER JOIN location AS location ON user.id = location.userId
       ${span || state || lga ? `
@@ -231,6 +232,9 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
                             model: Models_1.User,
                             as: 'user',
                             attributes: ['id', 'email', 'phone', 'status', 'role', 'createdAt', 'updatedAt'],
+                            // where: {
+                            //   status: UserStatus.ACTIVE
+                            // },
                             include: [
                                 {
                                     model: Models_1.Location,

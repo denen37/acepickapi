@@ -4,7 +4,7 @@ import { Allow } from 'stream-chat';
 
 
 
-@Table({ timestamps: false, tableName: 'products' })
+@Table({ timestamps: true, tableName: 'products' })
 export class Product extends Model {
     @AllowNull(false)
     @Column(DataType.STRING)
@@ -47,6 +47,11 @@ export class Product extends Model {
     @AllowNull(false)
     @Column(DataType.DECIMAL(10, 2))
     price!: number;
+
+    @AllowNull(false)
+    @Default(false)
+    @Column(DataType.BOOLEAN)
+    approved!: boolean;
 
 
     @AllowNull(true)

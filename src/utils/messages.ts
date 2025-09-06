@@ -1,5 +1,5 @@
 import { title } from "process"
-import { Dispute, Job, ProductTransaction, User } from "../models/Models"
+import { Dispute, Job, Product, ProductTransaction, User } from "../models/Models"
 
 interface Message {
     title: string,
@@ -270,3 +270,14 @@ export const reactivateUserEmail = (user: User) => {
     }
 }
 
+export const approveProductEmail = (product: Product) => {
+    return {
+        title: `Product Approved`,
+        body: `Your product ${product.name} has been approved by the admin. It is now available for purchase.
+        <h3>Summary</h3>
+        <p><b>Product title: </b>${product.name}</p>
+        <p><b>Product description: </b>${product.description}</p>
+        <p><b>Product price: </b>${product.price}<b><p>
+        `
+    }
+}
