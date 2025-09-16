@@ -273,11 +273,21 @@ export const reactivateUserEmail = (user: User) => {
 export const approveProductEmail = (product: Product) => {
     return {
         title: `Product Approved`,
-        body: `Your product ${product.name} has been approved by the admin. It is now available for purchase.
+        body: `Your product <b>${product.name}</b> has been approved by the admin. It is now available for purchase.
         <h3>Summary</h3>
         <p><b>Product title: </b>${product.name}</p>
         <p><b>Product description: </b>${product.description}</p>
         <p><b>Product price: </b>${product.price}<b><p>
         `
     }
+}
+
+export const rejectProductEmail = (product: Product) => {
+    return {
+        title: `Product Rejected`,
+        body: `Your product <b>${product.name}</b> has been rejected by the admin. Please review your product and resubmit for approval.
+        <h3>Summary</h3>
+        <p><b>Product title: </b>${product.name}</p>
+        <p><b>Product description: </b>${product.description}</p>
+             `}
 }

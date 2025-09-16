@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deliverySchema = exports.productTransactionIdSchema = exports.restockProductSchema = exports.selectProductSchema = exports.initPaymentSchema = exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.productPaymentSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.storeLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerRiderSchema = exports.updateRiderSchema = exports.riderSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.addReviewSchema = exports.addRatingSchema = exports.deliverySchema = exports.productTransactionIdSchema = exports.restockProductSchema = exports.selectProductSchema = exports.initPaymentSchema = exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.productPaymentSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.storeLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerRiderSchema = exports.updateRiderSchema = exports.riderSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum"); // adjust the path
 const enum_2 = require("../utils/enum");
@@ -738,4 +738,20 @@ exports.deliverySchema = zod_1.z.object({
 }, {
     message: 'If locationId is provided, receiverLat, receiverLong, and address must be null or undefined. Otherwise, receiverLat and receiverLong are required.',
     path: ['locationId'],
+});
+exports.addRatingSchema = zod_1.z.object({
+    rating: zod_1.z.number().min(1).max(5),
+    jobId: zod_1.z.number().int().min(1).optional(),
+    orderId: zod_1.z.number().int().min(1).optional(),
+}).refine((data) => (data.jobId ? !data.orderId : !!data.orderId), {
+    message: "Either jobId or orderId must be provided, but not both.",
+    path: ["jobId"],
+});
+exports.addReviewSchema = zod_1.z.object({
+    review: zod_1.z.string(),
+    jobId: zod_1.z.number().int().min(1).optional(),
+    orderId: zod_1.z.number().int().min(1).optional()
+}).refine((data) => (data.jobId ? !data.orderId : !!data.orderId), {
+    message: "Either jobId or orderId must be provided, but not both",
+    path: ["jobId"],
 });

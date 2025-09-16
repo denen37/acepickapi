@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.approveProductEmail = exports.reactivateUserEmail = exports.suspendUserEmail = exports.jobCancelledEmail = exports.productPaymentEmail = exports.jobPaymentEmail = exports.disputedJobEmail = exports.approveJobEmail = exports.completeJobEmail = exports.invoiceUpdatedEmail = exports.invoiceGeneratedEmail = exports.jobDisputeEmail = exports.jobResponseEmail = exports.jobUpdatedEmail = exports.jobCreatedEmail = exports.forgotPasswordEmail = exports.sendOTPEmail = exports.sendOTPPhone = exports.registerEmail = void 0;
+exports.rejectProductEmail = exports.approveProductEmail = exports.reactivateUserEmail = exports.suspendUserEmail = exports.jobCancelledEmail = exports.productPaymentEmail = exports.jobPaymentEmail = exports.disputedJobEmail = exports.approveJobEmail = exports.completeJobEmail = exports.invoiceUpdatedEmail = exports.invoiceGeneratedEmail = exports.jobDisputeEmail = exports.jobResponseEmail = exports.jobUpdatedEmail = exports.jobCreatedEmail = exports.forgotPasswordEmail = exports.sendOTPEmail = exports.sendOTPPhone = exports.registerEmail = void 0;
 const registerEmail = (user) => {
     var _a, _b;
     return {
@@ -262,7 +262,7 @@ exports.reactivateUserEmail = reactivateUserEmail;
 const approveProductEmail = (product) => {
     return {
         title: `Product Approved`,
-        body: `Your product ${product.name} has been approved by the admin. It is now available for purchase.
+        body: `Your product <b>${product.name}</b> has been approved by the admin. It is now available for purchase.
         <h3>Summary</h3>
         <p><b>Product title: </b>${product.name}</p>
         <p><b>Product description: </b>${product.description}</p>
@@ -271,3 +271,14 @@ const approveProductEmail = (product) => {
     };
 };
 exports.approveProductEmail = approveProductEmail;
+const rejectProductEmail = (product) => {
+    return {
+        title: `Product Rejected`,
+        body: `Your product <b>${product.name}</b> has been rejected by the admin. Please review your product and resubmit for approval.
+        <h3>Summary</h3>
+        <p><b>Product title: </b>${product.name}</p>
+        <p><b>Product description: </b>${product.description}</p>
+             `
+    };
+};
+exports.rejectProductEmail = rejectProductEmail;

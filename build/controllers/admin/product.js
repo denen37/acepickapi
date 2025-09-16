@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.approveProducts = exports.getProducts = void 0;
+exports.rejectProducts = exports.approveProducts = exports.getProducts = void 0;
 const query_1 = require("../../validation/query");
 const modules_1 = require("../../utils/modules");
 const sequelize_1 = require("sequelize");
@@ -63,6 +63,7 @@ const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.getProducts = getProducts;
 const approveProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         const product = yield Models_1.Product.findByPk(req.params.productId, {
             include: [
@@ -72,7 +73,6 @@ const approveProducts = (req, res) => __awaiter(void 0, void 0, void 0, function
                 }
             ]
         });
-        console.log(product === null || product === void 0 ? void 0 : product.toJSON());
         if (!product) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Product not found');
         }
@@ -81,10 +81,11 @@ const approveProducts = (req, res) => __awaiter(void 0, void 0, void 0, function
         }
         product.approved = true;
         yield product.save();
-        const email = (0, messages_1.approveProductEmail)(product);
-        const { success, error } = yield (0, gmail_1.sendEmail)(product.user.email, email.title, email.body, product.user.profile.firstName);
-        if (product === null || product === void 0 ? void 0 : product.dataValues.user.fcmToken) {
-            yield (0, notification_1.sendPushNotification)(product.dataValues.professional.fcmToken, 'Product approved', `Your product - ${product.name} has been approved by admin`, {});
+        const prod = product.toJSON();
+        const email = (0, messages_1.approveProductEmail)(prod);
+        const { success, error } = yield (0, gmail_1.sendEmail)(prod.user.email, email.title, email.body, prod.user.profile.firstName);
+        if ((_a = prod.user) === null || _a === void 0 ? void 0 : _a.fcmToken) {
+            yield (0, notification_1.sendPushNotification)(prod.user.fcmToken, 'Product approved', `Your product - ${prod.name} has been approved by admin`, {});
         }
         return (0, modules_1.successResponse)(res, 'success', { message: 'Product approved successfully', emailSentStatus: success });
     }
@@ -94,3 +95,36 @@ const approveProducts = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.approveProducts = approveProducts;
+const rejectProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const product = yield Models_1.Product.findByPk(req.params.productId, {
+            include: [
+                {
+                    model: Models_1.User,
+                    include: [Models_1.Profile]
+                }
+            ]
+        });
+        if (!product) {
+            return (0, modules_1.handleResponse)(res, 404, false, 'Product not found');
+        }
+        if (product.approved === false) {
+            return (0, modules_1.handleResponse)(res, 400, false, 'Product already rejected');
+        }
+        product.approved = false;
+        yield product.save();
+        const prod = product.toJSON();
+        const email = (0, messages_1.rejectProductEmail)(prod);
+        const { success, error } = yield (0, gmail_1.sendEmail)(prod.user.email, email.title, email.body, prod.user.profile.firstName);
+        if ((_a = prod.user) === null || _a === void 0 ? void 0 : _a.fcmToken) {
+            yield (0, notification_1.sendPushNotification)(prod.user.fcmToken, 'Product rejected', `Your product - ${prod.name} has been rejected by admin`, {});
+        }
+        return (0, modules_1.successResponse)(res, 'success', { message: 'Product rejected successfully', emailSentStatus: success });
+    }
+    catch (error) {
+        console.log(error);
+        return (0, modules_1.errorResponse)(res, 'error', 'Failed to reject product');
+    }
+});
+exports.rejectProducts = rejectProducts;

@@ -15,6 +15,7 @@ import { Sector } from './Sector'
 import { Director } from './Director'
 import { Job } from './Job'
 import { Review } from './Review'
+import { Rating } from './Rating'
 import { Dispute } from './Dispute'
 import { Material } from './Material'
 import { Transaction } from './Transaction'
@@ -29,6 +30,8 @@ import { ProductTransaction } from './ProductTransaction'
 import { Order } from './Order'
 import { Rider } from './Rider'
 import { DeliveryPricing } from './DeliveryPricing'
+import { Role } from './Role'
+import { UserRole } from './UserRole'
 
 export {
     User,
@@ -48,6 +51,7 @@ export {
     Director,
     Job,
     Review,
+    Rating,
     Dispute,
     Material,
     Transaction,
@@ -61,5 +65,7 @@ export {
     ProductTransaction,
     Order,
     Rider,
-    DeliveryPricing
+    DeliveryPricing,
+    Role,
+    UserRole
 }

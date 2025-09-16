@@ -15,6 +15,8 @@ var VerificationType;
 })(VerificationType || (exports.VerificationType = VerificationType = {}));
 var UserRole;
 (function (UserRole) {
+    UserRole["SUPERADMIN"] = "superadmin";
+    UserRole["ADMIN"] = "admin";
     UserRole["PROFESSIONAL"] = "professional";
     UserRole["CLIENT"] = "client";
     UserRole["CORPERATE"] = "corperate";

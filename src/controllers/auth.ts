@@ -18,6 +18,7 @@ import { verifyBvn, verifyBvnWithPaystack } from "../services/bvn";
 import { compareTwoStrings } from 'string-similarity';
 import dbsequelize from '../config/db'
 
+
 // yarn add stream-chat
 import { StreamChat } from 'stream-chat';
 import { } from "../models/Wallet";
@@ -715,6 +716,58 @@ export const login = async (req: Request, res: Response) => {
                     model: Profile,
                     include: [{
                         model: Professional,
+                        attributes: {
+                            include: [
+                                [
+                                    dbsequelize.literal(`(
+                                  SELECT IFNULL(ROUND(AVG(value), 1), 0)
+                                  FROM rating
+                                  WHERE rating.professionalUserId = User.id
+                                )`),
+                                    'avgRating'
+                                ]
+                            ]
+                        },
+                        include: [{
+                            model: Profession,
+                            include: [Sector]
+                        }]
+                    }]
+                }, {
+                    model: Review,
+                    as: 'professionalReviews'
+                }]
+            })
+        } else if (user.role == UserRole.DELIVERY) {
+            userData = await User.findOne({
+                where: { id: user.id },
+                attributes: { exclude: ['password'] },
+                include: [{
+                    model: Wallet,
+                    attributes: { exclude: ['password'] },
+                }, {
+                    model: Rider
+                },
+                {
+                    model: Location,
+                    as: 'location',
+                },
+                {
+                    model: Profile,
+                    include: [{
+                        model: Professional,
+                        attributes: {
+                            include: [
+                                [
+                                    dbsequelize.literal(`(
+                                  SELECT IFNULL(ROUND(AVG(value), 1), 0)
+                                  FROM rating
+                                  WHERE rating.professionalUserId = User.id
+                                )`),
+                                    'avgRating'
+                                ]
+                            ]
+                        },
                         include: [{
                             model: Profession,
                             include: [Sector]
@@ -750,12 +803,13 @@ export const login = async (req: Request, res: Response) => {
             })
         }
 
-        userData.wallet.setDataValue('isActive', userData.wallet.pin !== null)
+        userData.wallet?.setDataValue('isActive', userData.wallet.pin !== null)
 
 
         return successResponse(res, "Successful", { status: true, user: userData, token })
 
     } catch (error: any) {
+        console.log(error);
         return errorResponse(res, 'error', error.message);
     }
 }

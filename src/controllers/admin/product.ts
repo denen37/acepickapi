@@ -5,7 +5,7 @@ import { errorResponse, handleResponse, successResponse } from "../../utils/modu
 import { Op } from "sequelize";
 import { Category, Product, Location, User, Profile } from "../../models/Models";
 import { sendPushNotification } from "../../services/notification";
-import { approveProductEmail } from "../../utils/messages";
+import { approveProductEmail, rejectProductEmail } from "../../utils/messages";
 import { sendEmail } from "../../services/gmail";
 
 export const getProducts = async (req: Request, res: Response) => {
@@ -88,7 +88,6 @@ export const approveProducts = async (req: Request, res: Response) => {
             }
         );
 
-        console.log(product?.toJSON())
 
         if (!product) {
             return handleResponse(res, 404, false, 'Product not found')
@@ -102,21 +101,22 @@ export const approveProducts = async (req: Request, res: Response) => {
 
         await product.save();
 
-        const email = approveProductEmail(product);
+        const prod = product.toJSON();
+
+        const email = approveProductEmail(prod);
 
         const { success, error } = await sendEmail(
-            product.user.email,
+            prod.user.email,
             email.title,
             email.body,
-            product.user.profile.firstName
+            prod.user.profile.firstName
         )
 
-
-        if (product?.dataValues.user.fcmToken) {
+        if (prod.user?.fcmToken) {
             await sendPushNotification(
-                product.dataValues.professional.fcmToken,
+                prod.user.fcmToken,
                 'Product approved',
-                `Your product - ${product.name} has been approved by admin`,
+                `Your product - ${prod.name} has been approved by admin`,
                 {}
             );
         }
@@ -125,5 +125,60 @@ export const approveProducts = async (req: Request, res: Response) => {
     } catch (error) {
         console.log(error);
         return errorResponse(res, 'error', 'Failed to approve product')
+    }
+}
+
+
+export const rejectProducts = async (req: Request, res: Response) => {
+    try {
+        const product = await Product.findByPk(
+            req.params.productId,
+            {
+                include: [
+                    {
+                        model: User,
+                        include: [Profile]
+                    }
+                ]
+            }
+        );
+
+
+        if (!product) {
+            return handleResponse(res, 404, false, 'Product not found')
+        }
+
+        if (product.approved === false) {
+            return handleResponse(res, 400, false, 'Product already rejected')
+        }
+
+        product.approved = false;
+
+        await product.save();
+
+        const prod = product.toJSON();
+
+        const email = rejectProductEmail(prod);
+
+        const { success, error } = await sendEmail(
+            prod.user.email,
+            email.title,
+            email.body,
+            prod.user.profile.firstName
+        )
+
+        if (prod.user?.fcmToken) {
+            await sendPushNotification(
+                prod.user.fcmToken,
+                'Product rejected',
+                `Your product - ${prod.name} has been rejected by admin`,
+                {}
+            );
+        }
+
+        return successResponse(res, 'success', { message: 'Product rejected successfully', emailSentStatus: success });
+    } catch (error) {
+        console.log(error);
+        return errorResponse(res, 'error', 'Failed to reject product')
     }
 }

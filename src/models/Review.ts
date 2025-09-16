@@ -1,25 +1,20 @@
-import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index, ForeignKey, BelongsTo } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index, ForeignKey, BelongsTo, PrimaryKey, AutoIncrement } from 'sequelize-typescript';
 import { Sector } from './Sector';
-import { User, Job } from './Models'
+import { User, Job, Order } from './Models'
 import { Professional } from './Professional';
 
 
 
 @Table({ timestamps: true, tableName: 'review' })
 export class Review extends Model {
+	@PrimaryKey
+	@AutoIncrement
+	@Column(DataType.BIGINT)
+	id!: number;
+
 	@AllowNull(false)
 	@Column(DataType.STRING)
-	review!: string;
-
-	@AllowNull(false)
-	@Column(DataType.INTEGER)
-	rating!: number;
-
-
-	// @ForeignKey(() => User)
-	// @AllowNull(false)
-	// @Column(DataType.UUID)
-	// userId!: string;
+	text!: string;
 
 
 	@ForeignKey(() => User)
@@ -36,22 +31,16 @@ export class Review extends Model {
 
 
 
-	// @AllowNull(true)
-	// @ForeignKey(() => Professional)
-	// @Column(DataType.INTEGER)
-	// proffesionalId!: number;
-
-
-
 	@ForeignKey(() => Job)
-	@AllowNull(false)
+	@AllowNull(true)
 	@Column(DataType.INTEGER)
 	jobId!: number;
 
 
-
-	// @BelongsTo(() => User, { onDelete: 'CASCADE', foreignKey: "userId", as: "user" })
-	// user!: User;
+	@ForeignKey(() => Order)
+	@AllowNull(true)
+	@Column(DataType.INTEGER)
+	orderId!: number;
 
 
 	@BelongsTo(() => User, { onDelete: 'CASCADE', foreignKey: "professionalUserId", as: "professionalUser" })
@@ -61,11 +50,9 @@ export class Review extends Model {
 	@BelongsTo(() => User, { onDelete: 'CASCADE', foreignKey: "clientUserId", as: "clientUser" })
 	clientUser!: User;
 
-
-	// @BelongsTo(() => Professional, { onDelete: 'CASCADE' })
-	// proffesional!: Professional;
-
-
 	@BelongsTo(() => Job, { onDelete: 'CASCADE' })
 	job!: Job;
+
+	@BelongsTo(() => Order, { onDelete: 'CASCADE' })
+	order!: Order;
 }

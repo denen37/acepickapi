@@ -48,8 +48,7 @@ export class Product extends Model {
     @Column(DataType.DECIMAL(10, 2))
     price!: number;
 
-    @AllowNull(false)
-    @Default(false)
+    @AllowNull(true)
     @Column(DataType.BOOLEAN)
     approved!: boolean;
 

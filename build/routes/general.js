@@ -25,6 +25,8 @@ const category_1 = require("../controllers/category");
 const upload_1 = require("../services/upload");
 const upload_2 = require("../controllers/upload");
 const order_1 = require("../controllers/order");
+const rating_1 = require("../controllers/rating");
+const review_1 = require("../controllers/review");
 const routes = (0, express_1.Router)();
 routes.get("/sectors", sector_1.getSectors);
 routes.get("/sectors/details", sector_1.getSectorsMetrics);
@@ -135,4 +137,9 @@ routes.put('/orders/confirm_pickup/:orderId', (0, allowRoles_1.allowRoles)(enum_
 routes.put('/orders/deliver/:orderId', (0, allowRoles_1.allowRoles)(enum_1.UserRole.DELIVERY), order_1.deliverOrder);
 routes.put('/orders/confirm_delivery/:orderId', (0, allowRoles_1.allowRoles)(enum_1.UserRole.CLIENT, enum_1.UserRole.PROFESSIONAL), order_1.confirmDelivery);
 routes.put('/orders/cancel/:orderId', (0, allowRoles_1.allowRoles)(enum_1.UserRole.CLIENT, enum_1.UserRole.PROFESSIONAL), order_1.cancelOrder);
+routes.post('/ratings', rating_1.giveRating);
+routes.get('/is-rated', rating_1.isRated);
+routes.post('/reviews', review_1.giveReview);
+routes.put('/reviews/:reviewId', review_1.editReview);
+routes.delete('/reviews/:reviewId', review_1.deleteReview);
 exports.default = routes;

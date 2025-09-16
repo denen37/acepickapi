@@ -56,3 +56,14 @@ export const getUsersQuerySchema = z.object({
     limit: z.coerce.number().int().positive().default(10),
     role: z.nativeEnum(UserRole).optional(),
 });
+
+export const isRatedSchema = z.object({
+    jobId: z.coerce.number().int().min(1).optional(),
+    orderId: z.coerce.number().int().min(1).optional(),
+}).refine(
+    (data) => (data.jobId ? !data.orderId : !!data.orderId),
+    {
+        message: "Either jobId or orderId must be provided, but not both",
+        path: ["jobId"],
+    }
+)

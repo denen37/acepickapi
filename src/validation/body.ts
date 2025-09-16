@@ -918,3 +918,27 @@ export const deliverySchema = z.object({
     message: 'If locationId is provided, receiverLat, receiverLong, and address must be null or undefined. Otherwise, receiverLat and receiverLong are required.',
     path: ['locationId'],
 });
+
+export const addRatingSchema = z.object({
+    rating: z.number().min(1).max(5),
+    jobId: z.number().int().min(1).optional(),
+    orderId: z.number().int().min(1).optional(),
+}).refine(
+    (data) => (data.jobId ? !data.orderId : !!data.orderId),
+    {
+        message: "Either jobId or orderId must be provided, but not both.",
+        path: ["jobId"],
+    }
+);
+
+export const addReviewSchema = z.object({
+    review: z.string(),
+    jobId: z.number().int().min(1).optional(),
+    orderId: z.number().int().min(1).optional()
+}).refine(
+    (data) => (data.jobId ? !data.orderId : !!data.orderId),
+    {
+        message: "Either jobId or orderId must be provided, but not both",
+        path: ["jobId"],
+    }
+)

@@ -495,6 +495,7 @@ const passwordChange = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.passwordChange = passwordChange;
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     let { email, password, fcmToken } = req.body;
     try {
         const user = yield Models_1.User.findOne({ where: { email } });
@@ -541,6 +542,59 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                         model: Models_1.Profile,
                         include: [{
                                 model: Models_1.Professional,
+                                attributes: {
+                                    include: [
+                                        [
+                                            db_1.default.literal(`(
+                                  SELECT IFNULL(ROUND(AVG(value), 1), 0)
+                                  FROM rating
+                                  WHERE rating.professionalUserId = User.id
+                                )`),
+                                            'avgRating'
+                                        ]
+                                    ]
+                                },
+                                include: [{
+                                        model: Models_1.Profession,
+                                        include: [Models_1.Sector]
+                                    }]
+                            }]
+                    }, {
+                        model: Models_1.Review,
+                        as: 'professionalReviews'
+                    }]
+            });
+        }
+        else if (user.role == enum_1.UserRole.DELIVERY) {
+            userData = yield Models_1.User.findOne({
+                where: { id: user.id },
+                attributes: { exclude: ['password'] },
+                include: [{
+                        model: Models_1.Wallet,
+                        attributes: { exclude: ['password'] },
+                    }, {
+                        model: Models_1.Rider
+                    },
+                    {
+                        model: Models_1.Location,
+                        as: 'location',
+                    },
+                    {
+                        model: Models_1.Profile,
+                        include: [{
+                                model: Models_1.Professional,
+                                attributes: {
+                                    include: [
+                                        [
+                                            db_1.default.literal(`(
+                                  SELECT IFNULL(ROUND(AVG(value), 1), 0)
+                                  FROM rating
+                                  WHERE rating.professionalUserId = User.id
+                                )`),
+                                            'avgRating'
+                                        ]
+                                    ]
+                                },
                                 include: [{
                                         model: Models_1.Profession,
                                         include: [Models_1.Sector]
@@ -576,10 +630,11 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                     }]
             });
         }
-        userData.wallet.setDataValue('isActive', userData.wallet.pin !== null);
+        (_a = userData.wallet) === null || _a === void 0 ? void 0 : _a.setDataValue('isActive', userData.wallet.pin !== null);
         return (0, modules_1.successResponse)(res, "Successful", { status: true, user: userData, token });
     }
     catch (error) {
+        console.log(error);
         return (0, modules_1.errorResponse)(res, 'error', error.message);
     }
 });

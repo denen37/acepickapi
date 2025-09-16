@@ -12,6 +12,8 @@ export enum VerificationType {
 }
 
 export enum UserRole {
+    SUPERADMIN = 'superadmin',
+    ADMIN = 'admin',
     PROFESSIONAL = 'professional',
     CLIENT = 'client',
     CORPERATE = 'corperate',

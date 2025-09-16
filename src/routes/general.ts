@@ -23,6 +23,8 @@ import { addCategory, deleteCategory, getCategories, updateCategory } from "../c
 import { uploads } from "../services/upload";
 import { uploadFiles } from "../controllers/upload";
 import { acceptOrder, cancelOrder, confirmDelivery, confirmPickup, createOrder, deliverOrder, getNearestPaidOrders, getOrdersBuyer, getOrdersRider, getOrdersSeller, pickupOrder, transportOrder } from "../controllers/order";
+import { giveRating, isRated } from "../controllers/rating";
+import { deleteReview, editReview, giveReview } from "../controllers/review";
 
 const routes = Router();
 
@@ -157,6 +159,12 @@ routes.put('/orders/confirm_pickup/:orderId', allowRoles(UserRole.CLIENT, UserRo
 routes.put('/orders/deliver/:orderId', allowRoles(UserRole.DELIVERY), deliverOrder);
 routes.put('/orders/confirm_delivery/:orderId', allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), confirmDelivery);
 routes.put('/orders/cancel/:orderId', allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), cancelOrder);
+
+routes.post('/ratings', giveRating)
+routes.get('/is-rated', isRated)
+routes.post('/reviews', giveReview)
+routes.put('/reviews/:reviewId', editReview)
+routes.delete('/reviews/:reviewId', deleteReview)
 
 
 export default routes;
