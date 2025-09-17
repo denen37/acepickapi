@@ -2,6 +2,7 @@ import { Router } from "express";
 import { emailUser, getAllUsers, toggleSuspension } from "../controllers/admin/user";
 import { UserAccountInfo } from "../controllers/profiles";
 import { approveProducts, getProducts } from "../controllers/admin/product";
+import { getActivities, overviewStat } from "../controllers/admin/dashboard";
 
 const routes = Router();
 
@@ -12,5 +13,7 @@ routes.post('/email/message', emailUser);
 
 routes.get('/products', getProducts);
 routes.post('/products/approve/:productId', approveProducts)
+routes.get('/dashboard/overview', overviewStat)
+routes.get('/dashboard/activities', getActivities);
 
 export default routes;

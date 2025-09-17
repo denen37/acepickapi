@@ -30,8 +30,7 @@ import { ProductTransaction } from './ProductTransaction'
 import { Order } from './Order'
 import { Rider } from './Rider'
 import { DeliveryPricing } from './DeliveryPricing'
-import { Role } from './Role'
-import { UserRole } from './UserRole'
+import { Activity } from './Activity'
 
 export {
     User,
@@ -66,6 +65,5 @@ export {
     Order,
     Rider,
     DeliveryPricing,
-    Role,
-    UserRole
+    Activity
 }

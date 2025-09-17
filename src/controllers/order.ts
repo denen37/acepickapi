@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { deliverySchema } from "../validation/body";
-import { Location, Order, Product, ProductTransaction, Profile, Rider, User, Wallet } from "../models/Models";
+import { Activity, Location, Order, Product, ProductTransaction, Profile, Rider, User, Wallet } from "../models/Models";
 import { OrderMethod, OrderStatus, ProductTransactionStatus } from "../utils/enum";
 import { errorResponse, getDistanceFromLatLonInKm, handleResponse, successResponse } from "../utils/modules";
 import { DeliveryPricing } from "../models/DeliveryPricing";
@@ -32,6 +32,11 @@ export const createOrder = async (req: Request, res: Response) => {
                 {
                     model: Product,
                     include: [Location]
+                },
+                {
+                    model: User,
+                    as: 'buyer',
+                    include: [Profile]
                 }
             ]
         });
@@ -109,6 +114,14 @@ export const createOrder = async (req: Request, res: Response) => {
             weight: totalWeight,
             locationId: existingLocation?.id,
         })
+
+        const newActivity = await Activity.create({
+            userId: order.rider.id,
+            action: `${productTransaction.buyer.profile.firstName} ${productTransaction.buyer.profile.lastName} has created Order #${order.id}`,
+            type: 'Order created',
+            status: 'success'
+        })
+
 
         return successResponse(res, 'success', {
             ...order.toJSON(),
@@ -426,7 +439,12 @@ export const acceptOrder = async (req: Request, res: Response) => {
     const { orderId } = req.params;
 
     try {
-        const order = await Order.findByPk(orderId);
+        const order = await Order.findByPk(orderId, {
+            include: [{
+                model: User,
+                include: [Profile]
+            }]
+        });
 
         if (!order) {
             return handleResponse(res, 404, false, 'Order not found')
@@ -442,6 +460,13 @@ export const acceptOrder = async (req: Request, res: Response) => {
 
         await order.save();
 
+        const newActivity = await Activity.create({
+            userId: order.rider.id,
+            action: `${order.rider.profile.firstName} ${order.rider.profile.lastName} has accepted Order #${order.id}`,
+            type: 'Order accepted',
+            status: 'success'
+        })
+
         return successResponse(res, 'success', order);
     } catch (error) {
         console.log(error);
@@ -455,7 +480,12 @@ export const pickupOrder = async (req: Request, res: Response) => {
     const { orderId } = req.params;
 
     try {
-        const order = await Order.findByPk(orderId);
+        const order = await Order.findByPk(orderId, {
+            include: [{
+                model: User,
+                include: [Profile]
+            }]
+        });
 
         if (!order) {
             return handleResponse(res, 404, false, 'Order not found')
@@ -468,6 +498,13 @@ export const pickupOrder = async (req: Request, res: Response) => {
         order.status = OrderStatus.PICKED_UP;
 
         await order.save();
+
+        const newActivity = await Activity.create({
+            userId: order.rider.id,
+            action: `${order.rider.profile.firstName} ${order.rider.profile.lastName} has picked up Order #${order.id}`,
+            type: 'Order pickup',
+            status: 'success'
+        })
 
         return successResponse(res, 'success', order);
     } catch (error) {
@@ -483,7 +520,14 @@ export const confirmPickup = async (req: Request, res: Response) => {
 
     try {
         const order = await Order.findByPk(orderId, {
-            include: [ProductTransaction]
+            include: [{
+                model: ProductTransaction,
+                include: [{
+                    model: User,
+                    as: 'buyer',
+                    include: [Profile]
+                }]
+            }]
         });
 
         if (!order) {
@@ -501,6 +545,14 @@ export const confirmPickup = async (req: Request, res: Response) => {
         order.status = OrderStatus.IN_TRANSIT;
 
         await order.save();
+
+        const newActivity = await Activity.create({
+            userId: order.productTransaction.buyer,
+            action: `${order.productTransaction.buyer.profile.firstName} ${order.productTransaction.buyer.profile.lastName} has confirmed delivery of Order #${order.id}`,
+            type: 'Order pickup confirmation',
+            status: 'success'
+        })
+
 
         return successResponse(res, 'success', order);
     } catch (error) {
@@ -544,7 +596,12 @@ export const deliverOrder = async (req: Request, res: Response) => {
     const { orderId } = req.params;
 
     try {
-        const order = await Order.findByPk(orderId);
+        const order = await Order.findByPk(orderId, {
+            include: [{
+                model: User,
+                include: [Profile]
+            }]
+        });
 
         if (!order) {
             return handleResponse(res, 404, false, 'Order not found')
@@ -558,6 +615,13 @@ export const deliverOrder = async (req: Request, res: Response) => {
 
         await order.save();
 
+        const newActivity = await Activity.create({
+            userId: order.rider.id,
+            action: `${order.rider.profile.firstName} ${order.rider.profile.lastName} has delivered Order #${order.id}`,
+            type: 'Order delivery',
+            status: 'success'
+        })
+
         return successResponse(res, 'success', order);
     } catch (error) {
         return errorResponse(res, 'error', 'Error delivering order');
@@ -570,11 +634,18 @@ export const confirmDelivery = async (req: Request, res: Response) => {
 
     const { orderId } = req.params;
 
-    const t = await dbsequelize.transaction();
+    // const t = await dbsequelize.transaction();
 
     try {
         const order = await Order.findByPk(orderId, {
-            include: [ProductTransaction]
+            include: [{
+                model: ProductTransaction,
+                include: [{
+                    model: User,
+                    as: 'buyer',
+                    include: [Profile]
+                }]
+            }]
         });
 
         if (!order) {
@@ -609,12 +680,19 @@ export const confirmDelivery = async (req: Request, res: Response) => {
 
         await rider.wallet.save();
 
-        await t.commit();
+        // await t.commit();
+
+        const newActivity = await Activity.create({
+            userId: order.productTransaction.buyer,
+            action: `${order.productTransaction.buyer.profile.firstName} ${order.productTransaction.buyer.profile.lastName} has confirmed delivery of Order #${order.id}`,
+            type: 'Order confirmation',
+            status: 'success'
+        })
 
         return successResponse(res, 'success', order);
     } catch (error) {
         console.log(error);
-        await t.rollback();
+        // await t.rollback();
 
         return errorResponse(res, 'error', 'Error confirming delivery');
     }

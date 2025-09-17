@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 import axios from "axios";
 import { basename } from "path";
 import { VerificationType, UserState, UserStatus, UserRole, OTPReason, VehicleType, RiderStatus } from "../utils/enum";
-import { User, Director, Professional, Profession, Sector, Review, Wallet, Profile, Cooperation, Location, Verify, Rider } from "../models/Models"
+import { User, Director, Professional, Profession, Sector, Review, Wallet, Profile, Cooperation, Location, Verify, Rider, Activity } from "../models/Models"
 import { forgotPasswordEmail, registerEmail, sendOTPEmail } from "../utils/messages";
 import { otpRequestSchema, registerCoporateSchema, registerRiderSchema, registrationProfSchema, registrationSchema, updateRiderSchema, verifyOTPSchema } from "../validation/body";
 import { compare, hash } from "bcryptjs";
@@ -322,16 +322,21 @@ export const register = async (req: Request, res: Response): Promise<any> => {
 
         let regEmail = registerEmail(user.dataValues);
 
-        let messageId = await sendEmail(
+        let { success, message } = await sendEmail(
             email,
             regEmail.title,
             regEmail.body,
             profile.firstName || 'User'
         )
 
-        let emailSendStatus = Boolean(messageId);
+        let emailSendStatus = success;
 
-
+        const newActivity = await Activity.create({
+            userId: user.id,
+            action: `${profile.firstName} ${profile.lastName} registered as a client`,
+            type: 'New User',
+            status: 'success'
+        })
 
         return successResponse(res, "success", { user, token, emailSendStatus });
     } catch (error: any) {
@@ -418,16 +423,21 @@ export const registerProfessional = async (req: Request, res: Response): Promise
 
         let regEmail = registerEmail(user.dataValues);
 
-        let messageId = await sendEmail(
+        let { success, message } = await sendEmail(
             email,
             regEmail.title,
             regEmail.body,
             profile.firstName || 'User'
         )
 
-        let emailSendStatus = Boolean(messageId);
+        let emailSendStatus = success;
 
-
+        const newActivity = await Activity.create({
+            userId: user.id,
+            action: `${profile.firstName} ${profile.lastName} registered as a professional`,
+            type: 'New User',
+            status: 'success'
+        })
 
         return successResponse(res, "success", { user, token, emailSendStatus });
     } catch (error: any) {
@@ -526,16 +536,21 @@ export const registerCorperate = async (req: Request, res: Response): Promise<an
 
         let regEmail = registerEmail(user.dataValues);
 
-        let messageId = await sendEmail(
+        let { success, message } = await sendEmail(
             email,
             regEmail.title,
             regEmail.body,
             profile?.firstName || 'User'
         )
 
-        let emailSendStatus = Boolean(messageId);
+        let emailSendStatus = success;
 
-
+        const newActivity = await Activity.create({
+            userId: user.id,
+            action: `${newCooperation.nameOfOrg} registered as a corperate`,
+            type: 'New User',
+            status: 'success'
+        })
 
         return successResponse(res, "success", { user, token, emailSendStatus });
     } catch (error) {
@@ -600,14 +615,21 @@ export const registerRider = async (req: Request, res: Response) => {
 
         let regEmail = registerEmail(user.dataValues);
 
-        let messageId = await sendEmail(
+        let { success, message } = await sendEmail(
             email,
             regEmail.title,
             regEmail.body,
             profile?.firstName || 'User'
         )
 
-        let emailSendStatus = Boolean(messageId);
+        let emailSendStatus = success;
+
+        const newActivity = await Activity.create({
+            userId: user.id,
+            action: `${profile.firstName} ${profile.lastName} registered as a rider`,
+            type: 'New User',
+            status: 'success'
+        })
 
         return successResponse(res, "success", { user, token, emailSendStatus });
     } catch (error) {

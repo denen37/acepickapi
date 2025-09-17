@@ -238,8 +238,14 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         // console.log('user', user);
         let token = (0, jsonwebtoken_2.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
         let regEmail = (0, messages_1.registerEmail)(user.dataValues);
-        let messageId = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, profile.firstName || 'User');
-        let emailSendStatus = Boolean(messageId);
+        let { success, message } = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, profile.firstName || 'User');
+        let emailSendStatus = success;
+        const newActivity = yield Models_1.Activity.create({
+            userId: user.id,
+            action: `${profile.firstName} ${profile.lastName} registered as a client`,
+            type: 'New User',
+            status: 'success'
+        });
         return (0, modules_1.successResponse)(res, "success", { user, token, emailSendStatus });
     }
     catch (error) {
@@ -309,8 +315,14 @@ const registerProfessional = (req, res) => __awaiter(void 0, void 0, void 0, fun
         // console.log('user', user);
         let token = (0, jsonwebtoken_2.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
         let regEmail = (0, messages_1.registerEmail)(user.dataValues);
-        let messageId = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, profile.firstName || 'User');
-        let emailSendStatus = Boolean(messageId);
+        let { success, message } = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, profile.firstName || 'User');
+        let emailSendStatus = success;
+        const newActivity = yield Models_1.Activity.create({
+            userId: user.id,
+            action: `${profile.firstName} ${profile.lastName} registered as a professional`,
+            type: 'New User',
+            status: 'success'
+        });
         return (0, modules_1.successResponse)(res, "success", { user, token, emailSendStatus });
     }
     catch (error) {
@@ -393,8 +405,14 @@ const registerCorperate = (req, res) => __awaiter(void 0, void 0, void 0, functi
         user.setDataValue('wallet', wallet);
         let token = (0, jsonwebtoken_2.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
         let regEmail = (0, messages_1.registerEmail)(user.dataValues);
-        let messageId = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, (profile === null || profile === void 0 ? void 0 : profile.firstName) || 'User');
-        let emailSendStatus = Boolean(messageId);
+        let { success, message } = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, (profile === null || profile === void 0 ? void 0 : profile.firstName) || 'User');
+        let emailSendStatus = success;
+        const newActivity = yield Models_1.Activity.create({
+            userId: user.id,
+            action: `${newCooperation.nameOfOrg} registered as a corperate`,
+            type: 'New User',
+            status: 'success'
+        });
         return (0, modules_1.successResponse)(res, "success", { user, token, emailSendStatus });
     }
     catch (error) {
@@ -446,8 +464,14 @@ const registerRider = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         yield t.commit();
         let token = (0, jsonwebtoken_2.sign)({ id: user.id, email: user.email, role: user.role }, configSetup_1.default.TOKEN_SECRET);
         let regEmail = (0, messages_1.registerEmail)(user.dataValues);
-        let messageId = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, (profile === null || profile === void 0 ? void 0 : profile.firstName) || 'User');
-        let emailSendStatus = Boolean(messageId);
+        let { success, message } = yield (0, gmail_1.sendEmail)(email, regEmail.title, regEmail.body, (profile === null || profile === void 0 ? void 0 : profile.firstName) || 'User');
+        let emailSendStatus = success;
+        const newActivity = yield Models_1.Activity.create({
+            userId: user.id,
+            action: `${profile.firstName} ${profile.lastName} registered as a rider`,
+            type: 'New User',
+            status: 'success'
+        });
         return (0, modules_1.successResponse)(res, "success", { user, token, emailSendStatus });
     }
     catch (error) {

@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import { successResponse, errorResponse, handleResponse } from "../utils/modules"
 import { randomUUID } from "crypto";
-import { Job, User, Material, Dispute, Profile, Professional, Wallet, OnlineUser } from "../models/Models"
+import { Job, User, Material, Dispute, Profile, Professional, Wallet, OnlineUser, Activity } from "../models/Models"
 import { JobMode, JobStatus, PayStatus, UserRole } from "../utils/enum"
 import { sendEmail } from "../services/gmail";
 import { jobResponseEmail, jobCreatedEmail, jobDisputeEmail, invoiceGeneratedEmail, invoiceUpdatedEmail, completeJobEmail, approveJobEmail, disputedJobEmail, jobUpdatedEmail, jobCancelledEmail } from "../utils/messages";
@@ -231,7 +231,7 @@ export const createJobOrder = async (req: Request, res: Response) => {
 
 
     //send an email to the prof
-    const msgStat = await sendEmail(
+    const emailResponse = await sendEmail(
         job.dataValues.professional.email,
         jobCreatedEmail(job.dataValues).title,
         jobCreatedEmail(job.dataValues).body,
@@ -259,7 +259,16 @@ export const createJobOrder = async (req: Request, res: Response) => {
         io.to(onlineUser?.socketId).emit(Emit.JOB_CREATED, { text: 'This a new Job', data: job });
     }
 
-    return successResponse(res, "Successful", { jobResponse, emailSendId: msgStat.messageId });
+
+    const newActivity = await Activity.create({
+        userId: job.client.id,
+        action: `${client?.profile.firstName} ${client?.profile.lastName} has created a new Job #${job.id}`,
+        type: 'Job Created',
+        status: 'success'
+    })
+
+
+    return successResponse(res, "Successful", { jobResponse, emailSendId: emailResponse.success });
 }
 
 export const updateJob = async (req: Request, res: Response) => {
@@ -446,7 +455,7 @@ export const respondToJob = async (req: Request, res: Response) => {
         // console.log('prof name', job.dataValues.prof.profile.fullName);
 
         //send an email to the prof
-        const msgStat = await sendEmail(
+        const emailResponse = await sendEmail(
             job.dataValues.client.email,
             jobResponseEmail(job.dataValues).title,
             jobResponseEmail(job.dataValues).body,
@@ -475,7 +484,7 @@ export const respondToJob = async (req: Request, res: Response) => {
         }
 
 
-        return successResponse(res, 'success', { message: 'Job respsonse updated', emailSendstatus: Boolean(msgStat.messageId) })
+        return successResponse(res, 'success', { message: 'Job respsonse updated', emailSendstatus: Boolean(emailResponse.messageId) })
     } catch (error) {
         return errorResponse(res, 'error', error)
     }
@@ -546,7 +555,7 @@ export const generateInvoice = async (req: Request, res: Response) => {
             //send an email to the client
             const emailTosend = invoiceGeneratedEmail(job.dataValues);
 
-            const msgStat = await sendEmail(
+            const emailResponse = await sendEmail(
                 job.dataValues.client.email,
                 emailTosend.title,
                 emailTosend.body,
@@ -686,7 +695,7 @@ export const updateInvoice = async (req: Request, res: Response) => {
     //send an email to the client
     const emailTosend = invoiceUpdatedEmail(jobObj);
 
-    const msgStat = await sendEmail(
+    const emailResponse = await sendEmail(
         job.client.email,
         emailTosend.title,
         emailTosend.body,
@@ -866,7 +875,7 @@ export const completeJob = async (req: Request, res: Response) => {
         //send an email to the client
         const emailTosend = completeJobEmail(job.dataValues);
 
-        const msgStat = await sendEmail(
+        const emailResponse = await sendEmail(
             job.dataValues.client.email,
             emailTosend.title,
             emailTosend.body,
@@ -897,8 +906,14 @@ export const completeJob = async (req: Request, res: Response) => {
             io.to(onlineUser?.socketId).emit(Emit.JOB_COMPLETED, { text: `Your job has completed`, data: { job } });
         }
 
+        const newActivity = await Activity.create({
+            userId: job.professional.id,
+            action: `${job.professional.profile.firstName} ${job.professional.profile.lastName} has completed Job #${job.id}`,
+            type: 'Job Completion',
+            status: 'success'
+        })
 
-        return successResponse(res, 'success', { message: 'Job completed sucessfully', emailSendStatus: Boolean(msgStat) })
+        return successResponse(res, 'success', { message: 'Job completed sucessfully', emailSendStatus: Boolean(emailResponse) })
     } catch (error: any) {
         return errorResponse(res, 'error', error.message)
     }
@@ -960,7 +975,7 @@ export const approveJob = async (req: Request, res: Response) => {
         //send an email to the professional
         const emailTosend = approveJobEmail(job.dataValues);
 
-        const msgStat = await sendEmail(
+        const emailResponse = await sendEmail(
             job.dataValues.professional.email,
             emailTosend.title,
             emailTosend.body,
@@ -990,8 +1005,15 @@ export const approveJob = async (req: Request, res: Response) => {
             io.to(onlineUser?.socketId).emit(Emit.JOB_APPROVED, { text: `Your job has approved`, data: { job } });
         }
 
+        const newActivity = await Activity.create({
+            userId: job.client.id,
+            action: `${job.client.profile.firstName} ${job.client.profile.lastName} has approved Job #${job.id}`,
+            type: 'Job Approval',
+            status: 'success'
+        })
 
-        return successResponse(res, 'success', { message: 'Job approved sucessfully', emailSendStatus: Boolean(msgStat) })
+
+        return successResponse(res, 'success', { message: 'Job approved sucessfully', emailSendStatus: emailResponse.success })
     } catch (error: any) {
         return errorResponse(res, 'error', error.message)
     }
@@ -1058,7 +1080,7 @@ export const disputeJob = async (req: Request, res: Response) => {
         //send an email to the professional
         const emailTosend = disputedJobEmail(job.dataValues, dispute);
 
-        const msgStat = await sendEmail(
+        const emailResponse = await sendEmail(
             job.dataValues.professional.email,
             emailTosend.title,
             emailTosend.body,
@@ -1088,8 +1110,14 @@ export const disputeJob = async (req: Request, res: Response) => {
             io.to(onlineUser?.socketId).emit(Emit.JOB_DISPUTED, { text: `Your job has been disputed`, data: { job } });
         }
 
+        const newActivity = await Activity.create({
+            userId: job.client.id,
+            action: `${job.client.profile.firstName} ${job.client.profile.lastName} has created a dispute on job #${job.id}`,
+            type: 'Dispute',
+            status: 'success'
+        })
 
-        return successResponse(res, 'success', { dispute, emailSendStatus: Boolean(msgStat.messageId) })
+        return successResponse(res, 'success', { dispute, emailSendStatus: emailResponse.success })
     } catch (error: any) {
         return errorResponse(res, 'error', error.message)
     }

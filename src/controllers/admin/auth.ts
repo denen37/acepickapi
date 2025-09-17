@@ -1,32 +1,29 @@
 import { Request, Response } from 'express'
-import { Profile, Role, User, UserRole } from '../../models/Models';
+import { Profile, User } from '../../models/Models';
 import { errorResponse, handleResponse, successResponse } from '../../utils/modules';
+import { UserRole } from '../../utils/enum';
 import { Op } from 'sequelize';
 
 export const upgradeUserToAdmin = async (req: Request, res: Response) => {
     const { userId } = req.params;
 
     try {
-        const adminRole = await Role.findOne({ where: { name: "admin" } });
+        // const user = await User.findByPk(userId);
 
-        if (!adminRole)
-            return handleResponse(res, 404, false, "Admin role not found")
+        // if (!adminRole)
+        //     return handleResponse(res, 404, false, "Admin role not found")
 
         const user = await User.findByPk(userId);
 
         if (!user)
             return handleResponse(res, 404, false, "User not found")
 
-        const [newUserRole, created] = await UserRole.findOrCreate({
-            where: {
-                userId: user.id,
-                roleId: adminRole.id
-            }
-        })
-
-        if (!created) {
+        if (user.role === UserRole.ADMIN)
             return handleResponse(res, 400, false, "User is already an admin")
-        }
+
+        user.role = UserRole.ADMIN;
+
+        await user.save();
 
         return successResponse(res, 'success', 'User upgraded to admin');
     } catch (error) {
@@ -40,26 +37,17 @@ export const removeAdmin = async (req: Request, res: Response) => {
     const { userId } = req.params;
 
     try {
-        const adminRole = await Role.findOne({ where: { name: "admin" } });
-
-        if (!adminRole)
-            return handleResponse(res, 404, false, "Admin role not found")
-
         const user = await User.findByPk(userId);
 
         if (!user)
             return handleResponse(res, 404, false, "User not found")
 
-        const deleted = await UserRole.destroy({
-            where: {
-                userId: user.id,
-                roleId: adminRole.id
-            }
-        })
+        if (user.role !== UserRole.ADMIN)
+            return handleResponse(res, 400, false, "User is not an admin")
 
-        if (deleted === 0) {
-            return handleResponse(res, 404, false, "User is not an admin")
-        }
+        user.role = UserRole.CLIENT;
+
+        await user.save();
 
         return successResponse(res, 'success', 'User removed from admin status')
     } catch (error) {
@@ -71,24 +59,9 @@ export const removeAdmin = async (req: Request, res: Response) => {
 
 export const getAdmins = async (req: Request, res: Response) => {
     try {
-        const adminRole = await Role.findAll({
-            where: {
-                [Op.or]: [
-                    { name: "admin" },
-                    { name: "superadmin" }
-                ]
-            }
-        });
-
-        const admins = await UserRole.findAll({
-            where: {
-                role: adminRole.map(role => role.id)
-            },
-            include: [{
-                model: User,
-                attributes: { exclude: ['password', 'fcmToken', 'createdAt', 'updatedAt'] },
-                include: [Profile]
-            }]
+        const admins = await User.findAll({
+            where: { role: UserRole.ADMIN },
+            include: [Profile]
         })
 
         return successResponse(res, 'success', admins)

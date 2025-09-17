@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isRatedSchema = exports.getUsersQuerySchema = exports.getOrdersSchema = exports.boughtProductSchema = exports.getProductSchema = exports.professionalSearchQuerySchema = exports.jobStatusQuerySchema = void 0;
+exports.activitySchema = exports.isRatedSchema = exports.getUsersQuerySchema = exports.getOrdersSchema = exports.boughtProductSchema = exports.getProductSchema = exports.professionalSearchQuerySchema = exports.jobStatusQuerySchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum");
 exports.jobStatusQuerySchema = zod_1.z.object({
@@ -54,4 +54,11 @@ exports.isRatedSchema = zod_1.z.object({
 }).refine((data) => (data.jobId ? !data.orderId : !!data.orderId), {
     message: "Either jobId or orderId must be provided, but not both",
     path: ["jobId"],
+});
+exports.activitySchema = zod_1.z.object({
+    page: zod_1.z.coerce.number().int().positive().default(1),
+    limit: zod_1.z.coerce.number().int().positive().max(100).default(10),
+    search: zod_1.z.string().optional(),
+    type: zod_1.z.string().optional(),
+    status: zod_1.z.enum(['all', 'success', 'failed', 'pending']).optional(),
 });

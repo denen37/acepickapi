@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserRole = exports.Role = exports.DeliveryPricing = exports.Rider = exports.Order = exports.ProductTransaction = exports.Product = exports.Category = exports.Message = exports.ChatRoom = exports.Transfer = exports.Account = exports.OnlineUser = exports.Transaction = exports.Material = exports.Dispute = exports.Rating = exports.Review = exports.Job = exports.Director = exports.Sector = exports.Profession = exports.Wallet = exports.VoiceRecording = exports.Cooperation = exports.Verify = exports.Professional = exports.Portfolio = exports.Location = exports.Experience = exports.Education = exports.Certification = exports.Profile = exports.User = void 0;
+exports.Activity = exports.DeliveryPricing = exports.Rider = exports.Order = exports.ProductTransaction = exports.Product = exports.Category = exports.Message = exports.ChatRoom = exports.Transfer = exports.Account = exports.OnlineUser = exports.Transaction = exports.Material = exports.Dispute = exports.Rating = exports.Review = exports.Job = exports.Director = exports.Sector = exports.Profession = exports.Wallet = exports.VoiceRecording = exports.Cooperation = exports.Verify = exports.Professional = exports.Portfolio = exports.Location = exports.Experience = exports.Education = exports.Certification = exports.Profile = exports.User = void 0;
 const User_1 = require("./User");
 Object.defineProperty(exports, "User", { enumerable: true, get: function () { return User_1.User; } });
 const Certification_1 = require("./Certification");
@@ -65,7 +65,5 @@ const Rider_1 = require("./Rider");
 Object.defineProperty(exports, "Rider", { enumerable: true, get: function () { return Rider_1.Rider; } });
 const DeliveryPricing_1 = require("./DeliveryPricing");
 Object.defineProperty(exports, "DeliveryPricing", { enumerable: true, get: function () { return DeliveryPricing_1.DeliveryPricing; } });
-const Role_1 = require("./Role");
-Object.defineProperty(exports, "Role", { enumerable: true, get: function () { return Role_1.Role; } });
-const UserRole_1 = require("./UserRole");
-Object.defineProperty(exports, "UserRole", { enumerable: true, get: function () { return UserRole_1.UserRole; } });
+const Activity_1 = require("./Activity");
+Object.defineProperty(exports, "Activity", { enumerable: true, get: function () { return Activity_1.Activity; } });

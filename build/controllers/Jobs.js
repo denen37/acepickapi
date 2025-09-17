@@ -204,7 +204,7 @@ const createJobOrder = (req, res) => __awaiter(void 0, void 0, void 0, function*
         where: { id: client === null || client === void 0 ? void 0 : client.profile.id }
     });
     //send an email to the prof
-    const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.professional.email, (0, messages_1.jobCreatedEmail)(job.dataValues).title, (0, messages_1.jobCreatedEmail)(job.dataValues).body, job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName);
+    const emailResponse = yield (0, gmail_1.sendEmail)(job.dataValues.professional.email, (0, messages_1.jobCreatedEmail)(job.dataValues).title, (0, messages_1.jobCreatedEmail)(job.dataValues).body, job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName);
     //send notification to the prof
     console.log('notification token', job.dataValues.professional.fcmToken);
     if (job.dataValues.professional.fcmToken) {
@@ -217,7 +217,13 @@ const createJobOrder = (req, res) => __awaiter(void 0, void 0, void 0, function*
     if (onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.isOnline) {
         io.to(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.socketId).emit(events_1.Emit.JOB_CREATED, { text: 'This a new Job', data: job });
     }
-    return (0, modules_1.successResponse)(res, "Successful", { jobResponse, emailSendId: msgStat.messageId });
+    const newActivity = yield Models_1.Activity.create({
+        userId: job.client.id,
+        action: `${client === null || client === void 0 ? void 0 : client.profile.firstName} ${client === null || client === void 0 ? void 0 : client.profile.lastName} has created a new Job #${job.id}`,
+        type: 'Job Created',
+        status: 'success'
+    });
+    return (0, modules_1.successResponse)(res, "Successful", { jobResponse, emailSendId: emailResponse.success });
 });
 exports.createJobOrder = createJobOrder;
 const updateJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -349,7 +355,7 @@ const respondToJob = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         // console.log('prof email', job.dataValues.prof.email);
         // console.log('prof name', job.dataValues.prof.profile.fullName);
         //send an email to the prof
-        const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.client.email, (0, messages_1.jobResponseEmail)(job.dataValues).title, (0, messages_1.jobResponseEmail)(job.dataValues).body, job.dataValues.client.profile.firstName + ' ' + job.dataValues.client.profile.lastName
+        const emailResponse = yield (0, gmail_1.sendEmail)(job.dataValues.client.email, (0, messages_1.jobResponseEmail)(job.dataValues).title, (0, messages_1.jobResponseEmail)(job.dataValues).body, job.dataValues.client.profile.firstName + ' ' + job.dataValues.client.profile.lastName
         //'User'
         );
         //send notification to the prof
@@ -363,7 +369,7 @@ const respondToJob = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         if (onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.isOnline) {
             io.to(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.socketId).emit(events_1.Emit.JOB_RESPONSE, { text: `$Your Job has been ${accepted ? 'accepted' : 'rejected'}`, data: job });
         }
-        return (0, modules_1.successResponse)(res, 'success', { message: 'Job respsonse updated', emailSendstatus: Boolean(msgStat.messageId) });
+        return (0, modules_1.successResponse)(res, 'success', { message: 'Job respsonse updated', emailSendstatus: Boolean(emailResponse.messageId) });
     }
     catch (error) {
         return (0, modules_1.errorResponse)(res, 'error', error);
@@ -414,7 +420,7 @@ const generateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function
             yield job.save();
             //send an email to the client
             const emailTosend = (0, messages_1.invoiceGeneratedEmail)(job.dataValues);
-            const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.client.email, emailTosend.title, emailTosend.body, job.dataValues.client.profile.firstName + ' ' + job.dataValues.client.profile.lastName
+            const emailResponse = yield (0, gmail_1.sendEmail)(job.dataValues.client.email, emailTosend.title, emailTosend.body, job.dataValues.client.profile.firstName + ' ' + job.dataValues.client.profile.lastName
             //'User'
             );
             //Send notification to the client
@@ -503,7 +509,7 @@ const updateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const jobObj = job.toJSON();
     //send an email to the client
     const emailTosend = (0, messages_1.invoiceUpdatedEmail)(jobObj);
-    const msgStat = yield (0, gmail_1.sendEmail)(job.client.email, emailTosend.title, emailTosend.body, (_e = ((_d = (_b = (_a = jobObj.client.profile) === null || _a === void 0 ? void 0 : _a.firstName) !== null && _b !== void 0 ? _b : '' + ' ' + ((_c = jobObj.client.profile) === null || _c === void 0 ? void 0 : _c.lastName)) !== null && _d !== void 0 ? _d : '').toString().trim()) !== null && _e !== void 0 ? _e : 'User'
+    const emailResponse = yield (0, gmail_1.sendEmail)(job.client.email, emailTosend.title, emailTosend.body, (_e = ((_d = (_b = (_a = jobObj.client.profile) === null || _a === void 0 ? void 0 : _a.firstName) !== null && _b !== void 0 ? _b : '' + ' ' + ((_c = jobObj.client.profile) === null || _c === void 0 ? void 0 : _c.lastName)) !== null && _d !== void 0 ? _d : '').toString().trim()) !== null && _e !== void 0 ? _e : 'User'
     //'User'
     );
     //Send notification to the client
@@ -629,7 +635,7 @@ const completeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         yield ((_c = job.client.profile) === null || _c === void 0 ? void 0 : _c.save());
         //send an email to the client
         const emailTosend = (0, messages_1.completeJobEmail)(job.dataValues);
-        const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.client.email, emailTosend.title, emailTosend.body, job.dataValues.client.profile.firstName + ' ' + job.dataValues.client.profile.lastName
+        const emailResponse = yield (0, gmail_1.sendEmail)(job.dataValues.client.email, emailTosend.title, emailTosend.body, job.dataValues.client.profile.firstName + ' ' + job.dataValues.client.profile.lastName
         //'User'
         );
         //Send notification to the client
@@ -643,7 +649,13 @@ const completeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.isOnline) {
             io.to(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.socketId).emit(events_1.Emit.JOB_COMPLETED, { text: `Your job has completed`, data: { job } });
         }
-        return (0, modules_1.successResponse)(res, 'success', { message: 'Job completed sucessfully', emailSendStatus: Boolean(msgStat) });
+        const newActivity = yield Models_1.Activity.create({
+            userId: job.professional.id,
+            action: `${job.professional.profile.firstName} ${job.professional.profile.lastName} has completed Job #${job.id}`,
+            type: 'Job Completion',
+            status: 'success'
+        });
+        return (0, modules_1.successResponse)(res, 'success', { message: 'Job completed sucessfully', emailSendStatus: Boolean(emailResponse) });
     }
     catch (error) {
         return (0, modules_1.errorResponse)(res, 'error', error.message);
@@ -690,7 +702,7 @@ const approveJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         }
         //send an email to the professional
         const emailTosend = (0, messages_1.approveJobEmail)(job.dataValues);
-        const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.professional.email, emailTosend.title, emailTosend.body, job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName
+        const emailResponse = yield (0, gmail_1.sendEmail)(job.dataValues.professional.email, emailTosend.title, emailTosend.body, job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName
         //'User'
         );
         //Send notification to the professional
@@ -704,7 +716,13 @@ const approveJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.isOnline) {
             io.to(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.socketId).emit(events_1.Emit.JOB_APPROVED, { text: `Your job has approved`, data: { job } });
         }
-        return (0, modules_1.successResponse)(res, 'success', { message: 'Job approved sucessfully', emailSendStatus: Boolean(msgStat) });
+        const newActivity = yield Models_1.Activity.create({
+            userId: job.client.id,
+            action: `${job.client.profile.firstName} ${job.client.profile.lastName} has approved Job #${job.id}`,
+            type: 'Job Approval',
+            status: 'success'
+        });
+        return (0, modules_1.successResponse)(res, 'success', { message: 'Job approved sucessfully', emailSendStatus: emailResponse.success });
     }
     catch (error) {
         return (0, modules_1.errorResponse)(res, 'error', error.message);
@@ -757,7 +775,7 @@ const disputeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         });
         //send an email to the professional
         const emailTosend = (0, messages_1.disputedJobEmail)(job.dataValues, dispute);
-        const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.professional.email, emailTosend.title, emailTosend.body, job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName
+        const emailResponse = yield (0, gmail_1.sendEmail)(job.dataValues.professional.email, emailTosend.title, emailTosend.body, job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName
         //'User'
         );
         //Send notification to the professional
@@ -771,7 +789,13 @@ const disputeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.isOnline) {
             io.to(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.socketId).emit(events_1.Emit.JOB_DISPUTED, { text: `Your job has been disputed`, data: { job } });
         }
-        return (0, modules_1.successResponse)(res, 'success', { dispute, emailSendStatus: Boolean(msgStat.messageId) });
+        const newActivity = yield Models_1.Activity.create({
+            userId: job.client.id,
+            action: `${job.client.profile.firstName} ${job.client.profile.lastName} has created a dispute on job #${job.id}`,
+            type: 'Dispute',
+            status: 'success'
+        });
+        return (0, modules_1.successResponse)(res, 'success', { dispute, emailSendStatus: emailResponse.success });
     }
     catch (error) {
         return (0, modules_1.errorResponse)(res, 'error', error.message);

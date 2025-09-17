@@ -8,9 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.cancelOrder = exports.confirmDelivery = exports.deliverOrder = exports.transportOrder = exports.confirmPickup = exports.pickupOrder = exports.acceptOrder = exports.getOrdersSeller = exports.getOrdersBuyer = exports.getOrdersRider = exports.getNearestPaidOrders = exports.createOrder = void 0;
 const body_1 = require("../validation/body");
@@ -19,7 +16,6 @@ const enum_1 = require("../utils/enum");
 const modules_1 = require("../utils/modules");
 const DeliveryPricing_1 = require("../models/DeliveryPricing");
 const query_1 = require("../validation/query");
-const db_1 = __importDefault(require("../config/db"));
 const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
     try {
@@ -39,6 +35,11 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 {
                     model: Models_1.Product,
                     include: [Models_1.Location]
+                },
+                {
+                    model: Models_1.User,
+                    as: 'buyer',
+                    include: [Models_1.Profile]
                 }
             ]
         });
@@ -95,6 +96,12 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             distance: distance,
             weight: totalWeight,
             locationId: existingLocation === null || existingLocation === void 0 ? void 0 : existingLocation.id,
+        });
+        const newActivity = yield Models_1.Activity.create({
+            userId: order.rider.id,
+            action: `${productTransaction.buyer.profile.firstName} ${productTransaction.buyer.profile.lastName} has created Order #${order.id}`,
+            type: 'Order created',
+            status: 'success'
         });
         return (0, modules_1.successResponse)(res, 'success', Object.assign(Object.assign({}, order.toJSON()), { totalCost: order.cost + productTransaction.price, productTransaction: productTransaction.toJSON() }));
     }
@@ -347,7 +354,12 @@ const acceptOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const { id } = req.user;
     const { orderId } = req.params;
     try {
-        const order = yield Models_1.Order.findByPk(orderId);
+        const order = yield Models_1.Order.findByPk(orderId, {
+            include: [{
+                    model: Models_1.User,
+                    include: [Models_1.Profile]
+                }]
+        });
         if (!order) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Order not found');
         }
@@ -357,6 +369,12 @@ const acceptOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         order.status = enum_1.OrderStatus.ACCEPTED;
         order.riderId = id;
         yield order.save();
+        const newActivity = yield Models_1.Activity.create({
+            userId: order.rider.id,
+            action: `${order.rider.profile.firstName} ${order.rider.profile.lastName} has accepted Order #${order.id}`,
+            type: 'Order accepted',
+            status: 'success'
+        });
         return (0, modules_1.successResponse)(res, 'success', order);
     }
     catch (error) {
@@ -369,7 +387,12 @@ const pickupOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const { id } = req.user;
     const { orderId } = req.params;
     try {
-        const order = yield Models_1.Order.findByPk(orderId);
+        const order = yield Models_1.Order.findByPk(orderId, {
+            include: [{
+                    model: Models_1.User,
+                    include: [Models_1.Profile]
+                }]
+        });
         if (!order) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Order not found');
         }
@@ -378,6 +401,12 @@ const pickupOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         }
         order.status = enum_1.OrderStatus.PICKED_UP;
         yield order.save();
+        const newActivity = yield Models_1.Activity.create({
+            userId: order.rider.id,
+            action: `${order.rider.profile.firstName} ${order.rider.profile.lastName} has picked up Order #${order.id}`,
+            type: 'Order pickup',
+            status: 'success'
+        });
         return (0, modules_1.successResponse)(res, 'success', order);
     }
     catch (error) {
@@ -391,7 +420,14 @@ const confirmPickup = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const { orderId } = req.params;
     try {
         const order = yield Models_1.Order.findByPk(orderId, {
-            include: [Models_1.ProductTransaction]
+            include: [{
+                    model: Models_1.ProductTransaction,
+                    include: [{
+                            model: Models_1.User,
+                            as: 'buyer',
+                            include: [Models_1.Profile]
+                        }]
+                }]
         });
         if (!order) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Order not found');
@@ -404,6 +440,12 @@ const confirmPickup = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
         order.status = enum_1.OrderStatus.IN_TRANSIT;
         yield order.save();
+        const newActivity = yield Models_1.Activity.create({
+            userId: order.productTransaction.buyer,
+            action: `${order.productTransaction.buyer.profile.firstName} ${order.productTransaction.buyer.profile.lastName} has confirmed delivery of Order #${order.id}`,
+            type: 'Order pickup confirmation',
+            status: 'success'
+        });
         return (0, modules_1.successResponse)(res, 'success', order);
     }
     catch (error) {
@@ -437,7 +479,12 @@ const deliverOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const { id } = req.user;
     const { orderId } = req.params;
     try {
-        const order = yield Models_1.Order.findByPk(orderId);
+        const order = yield Models_1.Order.findByPk(orderId, {
+            include: [{
+                    model: Models_1.User,
+                    include: [Models_1.Profile]
+                }]
+        });
         if (!order) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Order not found');
         }
@@ -446,6 +493,12 @@ const deliverOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         }
         order.status = enum_1.OrderStatus.DELIVERED;
         yield order.save();
+        const newActivity = yield Models_1.Activity.create({
+            userId: order.rider.id,
+            action: `${order.rider.profile.firstName} ${order.rider.profile.lastName} has delivered Order #${order.id}`,
+            type: 'Order delivery',
+            status: 'success'
+        });
         return (0, modules_1.successResponse)(res, 'success', order);
     }
     catch (error) {
@@ -456,10 +509,17 @@ exports.deliverOrder = deliverOrder;
 const confirmDelivery = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
     const { orderId } = req.params;
-    const t = yield db_1.default.transaction();
+    // const t = await dbsequelize.transaction();
     try {
         const order = yield Models_1.Order.findByPk(orderId, {
-            include: [Models_1.ProductTransaction]
+            include: [{
+                    model: Models_1.ProductTransaction,
+                    include: [{
+                            model: Models_1.User,
+                            as: 'buyer',
+                            include: [Models_1.Profile]
+                        }]
+                }]
         });
         if (!order) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Order not found');
@@ -484,12 +544,18 @@ const confirmDelivery = (req, res) => __awaiter(void 0, void 0, void 0, function
         rider.wallet.previousBalance = rider.wallet.currentBalance;
         rider.wallet.currentBalance = Number(rider.wallet.currentBalance) + Number(order.cost);
         yield rider.wallet.save();
-        yield t.commit();
+        // await t.commit();
+        const newActivity = yield Models_1.Activity.create({
+            userId: order.productTransaction.buyer,
+            action: `${order.productTransaction.buyer.profile.firstName} ${order.productTransaction.buyer.profile.lastName} has confirmed delivery of Order #${order.id}`,
+            type: 'Order confirmation',
+            status: 'success'
+        });
         return (0, modules_1.successResponse)(res, 'success', order);
     }
     catch (error) {
         console.log(error);
-        yield t.rollback();
+        // await t.rollback();
         return (0, modules_1.errorResponse)(res, 'error', 'Error confirming delivery');
     }
 });

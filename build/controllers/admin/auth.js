@@ -12,25 +12,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAdmins = exports.removeAdmin = exports.upgradeUserToAdmin = void 0;
 const Models_1 = require("../../models/Models");
 const modules_1 = require("../../utils/modules");
-const sequelize_1 = require("sequelize");
+const enum_1 = require("../../utils/enum");
 const upgradeUserToAdmin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId } = req.params;
     try {
-        const adminRole = yield Models_1.Role.findOne({ where: { name: "admin" } });
-        if (!adminRole)
-            return (0, modules_1.handleResponse)(res, 404, false, "Admin role not found");
+        // const user = await User.findByPk(userId);
+        // if (!adminRole)
+        //     return handleResponse(res, 404, false, "Admin role not found")
         const user = yield Models_1.User.findByPk(userId);
         if (!user)
             return (0, modules_1.handleResponse)(res, 404, false, "User not found");
-        const [newUserRole, created] = yield Models_1.UserRole.findOrCreate({
-            where: {
-                userId: user.id,
-                roleId: adminRole.id
-            }
-        });
-        if (!created) {
+        if (user.role === enum_1.UserRole.ADMIN)
             return (0, modules_1.handleResponse)(res, 400, false, "User is already an admin");
-        }
+        user.role = enum_1.UserRole.ADMIN;
+        yield user.save();
         return (0, modules_1.successResponse)(res, 'success', 'User upgraded to admin');
     }
     catch (error) {
@@ -42,21 +37,13 @@ exports.upgradeUserToAdmin = upgradeUserToAdmin;
 const removeAdmin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId } = req.params;
     try {
-        const adminRole = yield Models_1.Role.findOne({ where: { name: "admin" } });
-        if (!adminRole)
-            return (0, modules_1.handleResponse)(res, 404, false, "Admin role not found");
         const user = yield Models_1.User.findByPk(userId);
         if (!user)
             return (0, modules_1.handleResponse)(res, 404, false, "User not found");
-        const deleted = yield Models_1.UserRole.destroy({
-            where: {
-                userId: user.id,
-                roleId: adminRole.id
-            }
-        });
-        if (deleted === 0) {
-            return (0, modules_1.handleResponse)(res, 404, false, "User is not an admin");
-        }
+        if (user.role !== enum_1.UserRole.ADMIN)
+            return (0, modules_1.handleResponse)(res, 400, false, "User is not an admin");
+        user.role = enum_1.UserRole.CLIENT;
+        yield user.save();
         return (0, modules_1.successResponse)(res, 'success', 'User removed from admin status');
     }
     catch (error) {
@@ -67,23 +54,9 @@ const removeAdmin = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.removeAdmin = removeAdmin;
 const getAdmins = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const adminRole = yield Models_1.Role.findAll({
-            where: {
-                [sequelize_1.Op.or]: [
-                    { name: "admin" },
-                    { name: "superadmin" }
-                ]
-            }
-        });
-        const admins = yield Models_1.UserRole.findAll({
-            where: {
-                role: adminRole.map(role => role.id)
-            },
-            include: [{
-                    model: Models_1.User,
-                    attributes: { exclude: ['password', 'fcmToken', 'createdAt', 'updatedAt'] },
-                    include: [Models_1.Profile]
-                }]
+        const admins = yield Models_1.User.findAll({
+            where: { role: enum_1.UserRole.ADMIN },
+            include: [Models_1.Profile]
         });
         return (0, modules_1.successResponse)(res, 'success', admins);
     }
