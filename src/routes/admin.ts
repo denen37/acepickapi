@@ -2,7 +2,7 @@ import { Router } from "express";
 import { emailUser, getAllUsers, toggleSuspension } from "../controllers/admin/user";
 import { UserAccountInfo } from "../controllers/profiles";
 import { approveProducts, getProducts } from "../controllers/admin/product";
-import { getActivities, overviewStat } from "../controllers/admin/dashboard";
+import { getActivities, getTopPerformers, overviewStat } from "../controllers/admin/dashboard";
 
 const routes = Router();
 
@@ -15,5 +15,6 @@ routes.get('/products', getProducts);
 routes.post('/products/approve/:productId', approveProducts)
 routes.get('/dashboard/overview', overviewStat)
 routes.get('/dashboard/activities', getActivities);
+routes.get('/dashboard/top-performers', getTopPerformers)
 
 export default routes;

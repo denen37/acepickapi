@@ -14,4 +14,5 @@ routes.get('/products', product_1.getProducts);
 routes.post('/products/approve/:productId', product_1.approveProducts);
 routes.get('/dashboard/overview', dashboard_1.overviewStat);
 routes.get('/dashboard/activities', dashboard_1.getActivities);
+routes.get('/dashboard/top-performers', dashboard_1.getTopPerformers);
 exports.default = routes;
