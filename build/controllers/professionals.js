@@ -1,37 +1,4 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -49,7 +16,7 @@ exports.toggleAvailable = exports.getDeliveryMen = exports.getProfessionalByUser
 const { Op } = require('sequelize');
 const Models_1 = require("../models/Models");
 const modules_1 = require("../utils/modules");
-const sequelize_1 = __importStar(require("sequelize"));
+const sequelize_1 = require("sequelize");
 const db_1 = __importDefault(require("../config/db"));
 const query_1 = require("../validation/query");
 const enum_1 = require("../utils/enum");
@@ -88,7 +55,7 @@ const getProfessionals = (req, res) => __awaiter(void 0, void 0, void 0, functio
       Professional.id,
       Professional.chargeFrom,
       Professional.available,
-      AVG(professionalReviews.rating) AS avgRating,
+      AVG(professionalRatings.value) AS avgRating,
 
       profile.id AS 'profile.id',
       profile.firstName AS 'profile.firstName',
@@ -128,8 +95,9 @@ const getProfessionals = (req, res) => __awaiter(void 0, void 0, void 0, functio
 
     FROM professionals AS Professional
     LEFT JOIN profiles AS profile ON Professional.profileId = profile.id
-    LEFT JOIN users AS user ON profile.userId = user.id AND user.status = ${enum_1.UserStatus.ACTIVE}
+    LEFT JOIN users AS user ON profile.userId = user.id AND user.status = '${enum_1.UserStatus.ACTIVE}'
     LEFT JOIN review AS professionalReviews ON user.id = professionalReviews.professionalUserId
+    LEFT JOIN rating AS professionalRatings ON user.id = professionalRatings.professionalUserId
     INNER JOIN location AS location ON user.id = location.userId
       ${span || state || lga ? `
         AND (
@@ -189,6 +157,7 @@ const getProfessionals = (req, res) => __awaiter(void 0, void 0, void 0, functio
         return (0, modules_1.successResponse)(res, 'success', nestedProfessionals);
     }
     catch (error) {
+        console.log(error);
         return (0, modules_1.errorResponse)(res, 'error', error.message || 'Something went wrong');
     }
 });
@@ -198,14 +167,26 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
         const { professionalId } = req.params;
         const professional = yield Models_1.Professional.findOne({
             where: { id: professionalId },
-            attributes: [
-                'id', 'file', 'intro', 'chargeFrom', 'language', 'available', 'workType',
-                'totalEarning', 'completedAmount', 'pendingAmount', 'rejectedAmount',
-                'availableWithdrawalAmount', 'regNum', 'yearsOfExp', 'online',
-                'profileId', 'professionId', 'createdAt', 'updatedAt',
-                [sequelize_1.default.fn('AVG', sequelize_1.default.col('profile.user.professionalReviews.rating')), 'avgRating'],
-                [sequelize_1.default.fn('COUNT', sequelize_1.default.col('profile.user.professionalReviews.rating')), 'numRating'],
-            ],
+            attributes: {
+                include: [
+                    [
+                        db_1.default.literal(`(
+              SELECT AVG(value)
+              FROM rating
+              WHERE rating.professionalUserId = Profile.userId
+            )`),
+                        'avgRating'
+                    ],
+                    [
+                        db_1.default.literal(`(
+              SELECT COUNT(*)
+              FROM rating
+              WHERE rating.professionalUserId = Profile.userId
+            )`),
+                        'numRatings'
+                    ]
+                ]
+            },
             include: [
                 {
                     model: Models_1.Profession,
@@ -259,7 +240,7 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
                                             ]
                                         }
                                     ]
-                                }
+                                },
                             ]
                         },
                         {
@@ -350,8 +331,7 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
                 'profile.user.location.longitude',
                 'profile.user.location.zipcode',
                 'profile.user.professionalReviews.id',
-                'profile.user.professionalReviews.rating',
-                'profile.user.professionalReviews.review',
+                'profile.user.professionalReviews.text',
                 'profile.user.professionalReviews.professionalUserId',
                 'profile.user.professionalReviews.clientUserId',
                 'profile.user.professionalReviews.createdAt',
@@ -410,6 +390,7 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
         return (0, modules_1.successResponse)(res, 'success', professional);
     }
     catch (error) {
+        console.log(error);
         return (0, modules_1.errorResponse)(res, 'error', error.message || 'Something went wrong');
     }
 });

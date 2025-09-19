@@ -14,14 +14,88 @@ import admin from './routes/admin'
 import "reflect-metadata";
 import { initSocket } from './chat';
 import { registerJobHook } from './hooks/jobHook';
+import client from "prom-client";
+import responseTime from "response-time";
 
 const app = express();
 const server = createServer(app);
 
+// -------------------- PROMETHEUS SETUP --------------------
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
+
+// Custom metrics
+const apiResponseHistogram = new client.Histogram({
+    name: "api_response_time_ms",
+    help: "API response time in ms",
+    labelNames: ["method", "route", "status_code"],
+    buckets: [50, 100, 300, 500, 1000, 2000], // ms
+});
+
+const dbConnectionsGauge = new client.Gauge({
+    name: "mysql_active_connections",
+    help: "Number of active MySQL connections",
+});
+
+const dbUptimeGauge = new client.Gauge({
+    name: "mysql_uptime_seconds",
+    help: "MySQL server uptime in seconds",
+});
+
+// Register metrics
+register.registerMetric(apiResponseHistogram);
+register.registerMetric(dbConnectionsGauge);
+register.registerMetric(dbUptimeGauge);
+
+// Middleware to track response times
+app.use(
+    responseTime((req: Request, res: Response, time: any) => {
+        apiResponseHistogram
+            .labels(req.method, req.route?.path || req.url, res.statusCode.toString())
+            .observe(time);
+    })
+);
+
+app.get("/metrics", async (req: Request, res: Response) => {
+    try {
+        // Update DB connection metric
+        const [rows]: any = await db.query("SHOW STATUS LIKE 'Threads_connected'");
+        if (rows && rows.length > 0) {
+            dbConnectionsGauge.set(parseInt(rows[0].Value, 10));
+        }
+        const [rows2]: any = await db.query("SHOW GLOBAL STATUS LIKE 'Uptime'");
+        const uptime = parseInt(rows2[0].Value, 10) || 0;
+        dbUptimeGauge.set(uptime);
+
+        res.set("Content-Type", register.contentType);
+        res.end(await register.metrics());
+    } catch (err) {
+        console.error("Error gathering metrics:", err);
+        res.status(500).send("Error gathering metrics");
+    }
+});
+
+app.get("/metrics/json", async (req: Request, res: Response) => {
+    try {
+        // Update DB connection metric
+        const [rows]: any = await db.query("SHOW STATUS LIKE 'Threads_connected'");
+        if (rows && rows.length > 0) {
+            dbConnectionsGauge.set(parseInt(rows[0].Value, 10));
+        }
+
+        res.set("Content-Type", register.contentType);
+        res.json(await register.getMetricsAsJSON());
+    } catch (err) {
+        console.error("Error gathering metrics:", err);
+        res.status(500).send("Error gathering metrics");
+    }
+});
+
+// ----------------------------------------------------------
+
 app.use(express.json());
 app.use(cors({ origin: true }));
 
-// ✅ Serve static files BEFORE auth check
 app.use("/uploads/", express.static(path.join(__dirname, "../public/uploads")));
 
 app.use(logRoutes);
@@ -30,7 +104,6 @@ app.get('/', (req: Request, res: Response) => {
     res.status(200).json({ message: 'Hello, world! This API is working!' });
 });
 
-// ✅ Protect only API routes, not static/public
 app.all('/api/*', isAuthorized);
 
 app.use("/api", index);
@@ -38,7 +111,6 @@ app.use("/api/auth/", auth);
 app.use("/api/admin/", admin);
 app.use("/api/", general);
 
-// consumeJobEvents();
 initSocket(server);
 
 db.sync().then(() => {

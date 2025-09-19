@@ -255,3 +255,22 @@ export const getTopPerformers = async (req: Request, res: Response) => {
         return errorResponse(res, 'error', 'Something went wrong')
     }
 }
+
+// export const getMetrics = async (req: Request, res: Response) => {
+//     app.get("/metrics", async (req: Request, res: Response) => {
+        
+//     });
+    
+//     try {
+//         const [rows]: any = await db.query("SHOW STATUS LIKE 'Threads_connected'");
+//         if (rows && rows.length > 0) {
+//             dbConnectionsGauge.set(parseInt(rows[0].Value, 10));
+//         }
+
+//         res.set("Content-Type", register.contentType);
+//         res.end(await register.metrics());
+//     } catch (err) {
+//         console.error("Error gathering metrics:", err);
+//         res.status(500).send("Error gathering metrics");
+//     }
+// }

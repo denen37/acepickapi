@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 const { Op } = require('sequelize');
-import { Certification, Education, Experience, Location, Portfolio, Profession, Professional, Profile, Review, Sector, User } from '../models/Models';
+import { Certification, Education, Experience, Location, Portfolio, Profession, Professional, Profile, Rating, Review, Sector, User } from '../models/Models';
 import { successResponse, errorResponse, nestFlatKeys, handleResponse } from '../utils/modules';
 import sequelize, { QueryTypes } from 'sequelize';
-import dbSequelize from '../config/db';
+import dbsequelize from '../config/db';
 import { professionalSearchQuerySchema } from '../validation/query';
 import { profile } from 'console';
 import { UserStatus } from '../utils/enum';
@@ -50,13 +50,13 @@ export const getProfessionals = async (req: Request, res: Response) => {
   )
 `;
 
-    const professionals = await dbSequelize.query(
+    const professionals = await dbsequelize.query(
       `
     SELECT 
       Professional.id,
       Professional.chargeFrom,
       Professional.available,
-      AVG(professionalReviews.rating) AS avgRating,
+      AVG(professionalRatings.value) AS avgRating,
 
       profile.id AS 'profile.id',
       profile.firstName AS 'profile.firstName',
@@ -96,8 +96,9 @@ export const getProfessionals = async (req: Request, res: Response) => {
 
     FROM professionals AS Professional
     LEFT JOIN profiles AS profile ON Professional.profileId = profile.id
-    LEFT JOIN users AS user ON profile.userId = user.id AND user.status = ${UserStatus.ACTIVE}
+    LEFT JOIN users AS user ON profile.userId = user.id AND user.status = '${UserStatus.ACTIVE}'
     LEFT JOIN review AS professionalReviews ON user.id = professionalReviews.professionalUserId
+    LEFT JOIN rating AS professionalRatings ON user.id = professionalRatings.professionalUserId
     INNER JOIN location AS location ON user.id = location.userId
       ${span || state || lga ? `
         AND (
@@ -161,6 +162,7 @@ export const getProfessionals = async (req: Request, res: Response) => {
 
     return successResponse(res, 'success', nestedProfessionals);
   } catch (error: any) {
+    console.log(error);
     return errorResponse(res, 'error', error.message || 'Something went wrong');
   }
 }
@@ -172,14 +174,26 @@ export const getProfessionalById = async (req: Request, res: Response) => {
 
     const professional = await Professional.findOne({
       where: { id: professionalId },
-      attributes: [
-        'id', 'file', 'intro', 'chargeFrom', 'language', 'available', 'workType',
-        'totalEarning', 'completedAmount', 'pendingAmount', 'rejectedAmount',
-        'availableWithdrawalAmount', 'regNum', 'yearsOfExp', 'online',
-        'profileId', 'professionId', 'createdAt', 'updatedAt',
-        [sequelize.fn('AVG', sequelize.col('profile.user.professionalReviews.rating')), 'avgRating'],
-        [sequelize.fn('COUNT', sequelize.col('profile.user.professionalReviews.rating')), 'numRating'],
-      ],
+      attributes: {
+        include: [
+          [
+            dbsequelize.literal(`(
+              SELECT AVG(value)
+              FROM rating
+              WHERE rating.professionalUserId = Profile.userId
+            )`),
+            'avgRating'
+          ],
+          [
+            dbsequelize.literal(`(
+              SELECT COUNT(*)
+              FROM rating
+              WHERE rating.professionalUserId = Profile.userId
+            )`),
+            'numRatings'
+          ]
+        ]
+      },
       include: [
         {
           model: Profession,
@@ -233,7 +247,8 @@ export const getProfessionalById = async (req: Request, res: Response) => {
                       ]
                     }
                   ]
-                }
+                },
+
               ]
             },
             {
@@ -328,8 +343,7 @@ export const getProfessionalById = async (req: Request, res: Response) => {
         'profile.user.location.longitude',
         'profile.user.location.zipcode',
         'profile.user.professionalReviews.id',
-        'profile.user.professionalReviews.rating',
-        'profile.user.professionalReviews.review',
+        'profile.user.professionalReviews.text',
         'profile.user.professionalReviews.professionalUserId',
         'profile.user.professionalReviews.clientUserId',
         'profile.user.professionalReviews.createdAt',
@@ -396,6 +410,7 @@ export const getProfessionalById = async (req: Request, res: Response) => {
 
     return successResponse(res, 'success', professional);
   } catch (error: any) {
+    console.log(error)
     return errorResponse(res, 'error', error.message || 'Something went wrong');
   }
 }

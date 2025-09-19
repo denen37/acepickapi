@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyMyBvn = exports.postlocationData = exports.changePassword = exports.corperateReg = exports.deleteUsers = exports.updatePushToken = exports.login = exports.passwordChange = exports.updateRider = exports.registerRider = exports.registerCorperate = exports.registerProfessional = exports.register = exports.verifyOtp = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
+exports.verifyBvnHook = exports.verifyBvnMatch = exports.postlocationData = exports.changePassword = exports.corperateReg = exports.deleteUsers = exports.updatePushToken = exports.login = exports.passwordChange = exports.updateRider = exports.registerRider = exports.registerCorperate = exports.registerProfessional = exports.register = exports.verifyOtp = exports.sendOtp = exports.updateProfile = exports.authorize = void 0;
 const modules_1 = require("../utils/modules");
 const configSetup_1 = __importDefault(require("../config/configSetup"));
 const axios_1 = __importDefault(require("axios"));
@@ -1407,7 +1407,7 @@ const postlocationData = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.postlocationData = postlocationData;
-const verifyMyBvn = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const verifyBvnMatch = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { bvn } = req.body;
     // try {
     const response = yield axios_1.default.get(`https://api.paystack.co/bank/resolve_bvn/${bvn}`, {
@@ -1421,7 +1421,12 @@ const verifyMyBvn = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     //     return errorResponse(res, "BVN verification failed", error);
     // }
 });
-exports.verifyMyBvn = verifyMyBvn;
+exports.verifyBvnMatch = verifyBvnMatch;
+const verifyBvnHook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(req.body);
+    res.status(200).json({ status: "success" });
+});
+exports.verifyBvnHook = verifyBvnHook;
 // export const verifyBvnDetail = async (req: Request, res: Response) => {
 //     try {
 //         const redis = new Redis();

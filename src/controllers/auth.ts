@@ -1797,7 +1797,7 @@ export const postlocationData = async (req: Request, res: Response) => {
 
 
 
-export const verifyMyBvn = async (req: Request, res: Response) => {
+export const verifyBvnMatch = async (req: Request, res: Response) => {
     let { bvn } = req.body;
 
     // try {
@@ -1813,6 +1813,12 @@ export const verifyMyBvn = async (req: Request, res: Response) => {
     // } catch (error) {
     //     return errorResponse(res, "BVN verification failed", error);
     // }
+}
+
+
+export const verifyBvnHook = async (req: Request, res: Response) => {
+    console.log(req.body);
+    res.status(200).json({ status: "success" });
 }
 
 

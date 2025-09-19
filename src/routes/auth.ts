@@ -15,7 +15,8 @@ import {
     updateProfile,
     updatePushToken,
     updateRider,
-    verifyMyBvn,
+    verifyBvnHook,
+    verifyBvnMatch,
     verifyOtp
 } from '../controllers/auth';
 import { uploads } from '../services/upload';
@@ -44,7 +45,8 @@ routes.post('/send-otp', sendOtp);
 routes.post('/verify-otp', verifyOtp);
 routes.post('/update-push-token', updatePushToken)
 // routes.post("/verify-bvn", verifyBvnDetail)
-routes.post("/verify-bvn2", verifyMyBvn);
+routes.post('/verify-bvn-hook', verifyBvnHook);
+routes.post("/verify-bvn2", verifyBvnMatch);
 routes.get("/delete-users", deleteUsers)
 routes.post('/verify-token', authorize)
 
