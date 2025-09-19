@@ -73,7 +73,6 @@ const getConfig = (): Config => {
             '/api/auth/register-rider',
             '/api/sectors',
             '/api/professions',
-            '/api/webhook',
             '/api/auth/change-password-forgot',
             '/api/delete-users',
             '/api/auth/send-otp',
@@ -91,7 +90,8 @@ const getConfig = (): Config => {
             '/api/admin/check-email',
             "/api/admin/register",
             "/api/admin/login",
-            "/api/paystack/webhook"
+            "/api/paystack/webhook",
+            "/api/auth/verify/webhook"
         ],
     };
 };
