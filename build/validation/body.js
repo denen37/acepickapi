@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addReviewSchema = exports.addRatingSchema = exports.deliverySchema = exports.productTransactionIdSchema = exports.restockProductSchema = exports.selectProductSchema = exports.initPaymentSchema = exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.productPaymentSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.storeLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerRiderSchema = exports.updateRiderSchema = exports.riderSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.updateCommissionSchema = exports.commissionSchema = exports.addReviewSchema = exports.addRatingSchema = exports.deliverySchema = exports.productTransactionIdSchema = exports.restockProductSchema = exports.selectProductSchema = exports.initPaymentSchema = exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.productPaymentSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.storeLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerRiderSchema = exports.updateRiderSchema = exports.riderSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum"); // adjust the path
 const enum_2 = require("../utils/enum");
@@ -272,7 +272,7 @@ exports.paymentSchema = zod_1.z.object({
 exports.productPaymentSchema = zod_1.z.object({
     amount: zod_1.z.number().positive('Amount must be a positive number'),
     pin: zod_1.z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
-    reason: zod_1.z.string().min(1, 'Reason is required'),
+    reason: zod_1.z.string().min(1, 'Reason is required').optional(),
     productTransactionId: zod_1.z.number().int().positive("Job ID must be a positive integer"),
 });
 exports.withdrawSchema = zod_1.z.object({
@@ -754,4 +754,70 @@ exports.addReviewSchema = zod_1.z.object({
 }).refine((data) => (data.jobId ? !data.orderId : !!data.orderId), {
     message: "Either jobId or orderId must be provided, but not both",
     path: ["jobId"],
+});
+exports.commissionSchema = zod_1.z.object({
+    name: zod_1.z.string().min(1, "Name is required"),
+    rate: zod_1.z
+        .number()
+        .min(0, "Rate must be >= 0")
+        .max(1, "Rate must be <= 1")
+        .nullable()
+        .optional(),
+    type: zod_1.z.nativeEnum(enum_1.CommissionType).default(enum_1.CommissionType.PERCENTAGE),
+    fixedAmount: zod_1.z
+        .number()
+        .min(0, "Fixed amount must be >= 0")
+        .nullable()
+        .optional(),
+    minAmount: zod_1.z
+        .number()
+        .min(0, "Minimum amount must be >= 0")
+        .nullable()
+        .optional(),
+    appliesTo: zod_1.z.nativeEnum(enum_1.CommissionScope),
+    active: zod_1.z.boolean().optional().default(true),
+    effectiveFrom: zod_1.z.coerce.date().nullable().optional(),
+    effectiveTo: zod_1.z.coerce.date().nullable().optional(),
+}).refine((data) => data.type === enum_1.CommissionType.PERCENTAGE ? data.rate != null : true, {
+    message: "Rate is required when type is PERCENTAGE",
+    path: ["rate"],
+})
+    .refine((data) => data.type === enum_1.CommissionType.FIXED ? data.fixedAmount != null : true, {
+    message: "Fixed amount is required when type is FIXED",
+    path: ["fixedAmount"],
+});
+exports.updateCommissionSchema = zod_1.z
+    .object({
+    name: zod_1.z.string().min(1, "Name is required").optional(),
+    rate: zod_1.z
+        .number()
+        .min(0, "Rate must be >= 0")
+        .max(1, "Rate must be <= 1")
+        .nullable()
+        .optional(),
+    type: zod_1.z
+        .nativeEnum(enum_1.CommissionType)
+        .default(enum_1.CommissionType.PERCENTAGE)
+        .optional(),
+    fixedAmount: zod_1.z
+        .number()
+        .min(0, "Fixed amount must be >= 0")
+        .nullable()
+        .optional(),
+    appliesTo: zod_1.z.nativeEnum(enum_1.CommissionScope).optional(),
+    active: zod_1.z.boolean().optional().default(true),
+    effectiveFrom: zod_1.z.coerce.date().nullable().optional(),
+    effectiveTo: zod_1.z.coerce.date().nullable().optional(),
+})
+    .refine((data) => data.type === enum_1.CommissionType.PERCENTAGE ? data.rate != null : true, {
+    message: "Rate is required when type is PERCENTAGE",
+    path: ["rate"],
+})
+    .refine((data) => data.type === enum_1.CommissionType.FIXED ? data.fixedAmount != null : true, {
+    message: "Fixed amount is required when type is FIXED",
+    path: ["fixedAmount"],
+})
+    .refine((data) => Object.keys(data).length > 0, {
+    message: "At least one field must be provided",
+    path: [],
 });

@@ -31,6 +31,8 @@ import { Order } from './Order'
 import { Rider } from './Rider'
 import { DeliveryPricing } from './DeliveryPricing'
 import { Activity } from './Activity'
+import { LedgerEntry } from './LegderEntry'
+import { Commission } from './Commison'
 
 export {
     User,
@@ -65,5 +67,7 @@ export {
     Order,
     Rider,
     DeliveryPricing,
-    Activity
+    Activity,
+    LedgerEntry,
+    Commission
 }

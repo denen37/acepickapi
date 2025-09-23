@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { JobMode, OTPReason, RiderStatus, UserRole, VehicleType } from "../utils/enum"; // adjust the path
+import { CommissionType, CommissionScope, JobMode, OTPReason, RiderStatus, UserRole, VehicleType } from "../utils/enum"; // adjust the path
 import { VerificationType } from "../utils/enum";
 
 
@@ -316,7 +316,7 @@ export const paymentSchema = z.object({
 export const productPaymentSchema = z.object({
     amount: z.number().positive('Amount must be a positive number'),
     pin: z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
-    reason: z.string().min(1, 'Reason is required'),
+    reason: z.string().min(1, 'Reason is required').optional(),
     productTransactionId: z.number().int().positive("Job ID must be a positive integer"),
 });
 
@@ -942,3 +942,109 @@ export const addReviewSchema = z.object({
         path: ["jobId"],
     }
 )
+
+
+export const commissionSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+
+    rate: z
+        .number()
+        .min(0, "Rate must be >= 0")
+        .max(1, "Rate must be <= 1")
+        .nullable()
+        .optional(),
+
+    type: z.nativeEnum(CommissionType).default(CommissionType.PERCENTAGE),
+
+    fixedAmount: z
+        .number()
+        .min(0, "Fixed amount must be >= 0")
+        .nullable()
+        .optional(),
+
+    minAmount: z
+        .number()
+        .min(0, "Minimum amount must be >= 0")
+        .nullable()
+        .optional(),
+
+    appliesTo: z.nativeEnum(CommissionScope),
+
+    active: z.boolean().optional().default(true),
+
+    effectiveFrom: z.coerce.date().nullable().optional(),
+
+    effectiveTo: z.coerce.date().nullable().optional(),
+}).refine(
+    (data) =>
+        data.type === CommissionType.PERCENTAGE ? data.rate != null : true,
+    {
+        message: "Rate is required when type is PERCENTAGE",
+        path: ["rate"],
+    }
+)
+    .refine(
+        (data) =>
+            data.type === CommissionType.FIXED ? data.fixedAmount != null : true,
+        {
+            message: "Fixed amount is required when type is FIXED",
+            path: ["fixedAmount"],
+        }
+    );
+
+
+export const updateCommissionSchema = z
+    .object({
+        name: z.string().min(1, "Name is required").optional(),
+
+        rate: z
+            .number()
+            .min(0, "Rate must be >= 0")
+            .max(1, "Rate must be <= 1")
+            .nullable()
+            .optional(),
+
+        type: z
+            .nativeEnum(CommissionType)
+            .default(CommissionType.PERCENTAGE)
+            .optional(),
+
+        fixedAmount: z
+            .number()
+            .min(0, "Fixed amount must be >= 0")
+            .nullable()
+            .optional(),
+
+        appliesTo: z.nativeEnum(CommissionScope).optional(),
+
+        active: z.boolean().optional().default(true),
+
+        effectiveFrom: z.coerce.date().nullable().optional(),
+
+        effectiveTo: z.coerce.date().nullable().optional(),
+    })
+    .refine(
+        (data) =>
+            data.type === CommissionType.PERCENTAGE ? data.rate != null : true,
+        {
+            message: "Rate is required when type is PERCENTAGE",
+            path: ["rate"],
+        }
+    )
+    .refine(
+        (data) =>
+            data.type === CommissionType.FIXED ? data.fixedAmount != null : true,
+        {
+            message: "Fixed amount is required when type is FIXED",
+            path: ["fixedAmount"],
+        }
+    )
+    .refine(
+        (data) => Object.keys(data).length > 0,
+        {
+            message: "At least one field must be provided",
+            path: [],
+        }
+    );
+
+

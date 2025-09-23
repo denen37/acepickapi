@@ -140,3 +140,23 @@ export enum RiderStatus {
     SUSPENDED = 'suspended',
     INACTIVE = 'inactive',
 }
+
+export enum Accounts {
+    USER_WALLET = "user_wallet",
+    PLATFORM_ESCROW = "platform_escrow",
+    PLATFORM_REVENUE = "platform_revenue",
+    PAYMENT_GATEWAY = "payment_gateway",
+    PROFESSIONAL_WALLET = "professional_wallet"
+}
+
+export enum CommissionType {
+    PERCENTAGE = 'percentage',
+    FIXED = 'fixed'
+}
+
+export enum CommissionScope {
+    JOB = 'job',
+    PRODUCT = 'product',
+    DELIVERY = 'delivery',
+    ALL = 'all'
+}

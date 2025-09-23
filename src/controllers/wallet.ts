@@ -1,10 +1,10 @@
 import { Request, Response } from "express"
 import bcrypt from "bcryptjs"
 import { errorResponse, handleResponse, successResponse, randomId } from "../utils/modules";
-import { JobStatus, PayStatus, TransactionType } from "../utils/enum";
+import { JobStatus, OrderMethod, OrderStatus, PayStatus, ProductTransactionStatus, TransactionType } from "../utils/enum";
 import { v4 as uuidv4 } from 'uuid';
 import { paymentSchema, pinForgotSchema, pinResetSchema, productPaymentSchema } from "../validation/body";
-import { Job, Wallet, Transaction, User, Profile, ProductTransaction, Product } from "../models/Models";
+import { Job, Wallet, Transaction, User, Profile, ProductTransaction, Product, Order } from "../models/Models";
 import { randomUUID } from "crypto";
 import { jobPaymentEmail, productPaymentEmail } from "../utils/messages";
 import { sendEmail } from "../services/gmail";
@@ -183,7 +183,7 @@ export const debitWallet = async (req: Request, res: Response) => {
     }
 }
 
-export const debitWalletForProduct = async (req: Request, res: Response) => {
+export const debitWalletForProductOrder = async (req: Request, res: Response) => {
     const { id, role } = req.user;
 
     // Usage example
@@ -210,6 +210,9 @@ export const debitWalletForProduct = async (req: Request, res: Response) => {
             },
             {
                 model: Product
+            },
+            {
+                model: Order,
             }
         ]
     });
@@ -243,6 +246,27 @@ export const debitWalletForProduct = async (req: Request, res: Response) => {
             return handleResponse(res, 400, false, 'Insufficient balance')
         }
 
+        let desc;
+        let isProductOrder = false;
+
+        if (productTransaction.order && productTransaction.orderMethod !== OrderMethod.SELF_PICKUP) {
+            const productAndOrderCost = Number(productTransaction.order.cost) + Number(productTransaction.price)
+
+            if (amount < productAndOrderCost) {
+                return handleResponse(res, 404, false, 'Insufficient amount for order and product')
+            }
+
+            desc = 'product_order wallet payment'
+
+            isProductOrder = true
+        } else {
+            if (amount < productTransaction.price) {
+                return handleResponse(res, 404, false, 'Insufficient amount for product')
+            }
+
+            desc = 'product wallet payment'
+        }
+
         let currBalance = prevBalance - amount;
 
         await wallet.update({
@@ -251,6 +275,20 @@ export const debitWalletForProduct = async (req: Request, res: Response) => {
         });
 
         await wallet.save();
+
+        if (isProductOrder) {
+            productTransaction.status = ProductTransactionStatus.ORDERED;
+
+            productTransaction.order.status = OrderStatus.PAID;
+
+            await productTransaction.save();
+
+            await productTransaction.order.save();
+        } else {
+            productTransaction.status = ProductTransactionStatus.ORDERED;
+
+            await productTransaction.save();
+        }
 
         const transaction = await Transaction.create({
             userId: id,
@@ -261,7 +299,7 @@ export const debitWalletForProduct = async (req: Request, res: Response) => {
             channel: 'wallet',
             timestamp: Date.now(),
             productTransactionId,
-            description: reason || 'Wallet payment',
+            description: desc,
             type: TransactionType.DEBIT,
         })
 
@@ -290,6 +328,114 @@ export const debitWalletForProduct = async (req: Request, res: Response) => {
         return errorResponse(res, 'error', error.message)
     }
 }
+
+// export const debitWalletForProductOrder = async (req: Request, res: Response) => {
+//     const { id, role } = req.user;
+
+//     // Usage example
+//     const result = productPaymentSchema.safeParse(req.body);
+
+//     if (!result.success) {
+//         return res.status(400).json({ errors: result.error.format() });
+//     }
+
+//     const { amount, pin, reason, productTransactionId } = result.data;
+
+
+//     const productTransaction = await ProductTransaction.findByPk(productTransactionId, {
+//         include: [
+//             {
+//                 model: User,
+//                 as: 'buyer',
+//                 include: [Profile]
+//             },
+//             {
+//                 model: User,
+//                 as: 'seller',
+//                 include: [Profile]
+//             },
+//             {
+//                 model: Product
+//             }
+//         ]
+//     });
+
+//     if (!productTransaction) {
+//         return handleResponse(res, 404, false, 'Product transaction not found');
+//     }
+
+//     try {
+//         const wallet = await Wallet.findOne({ where: { userId: id } });
+
+//         if (!wallet) {
+//             return handleResponse(res, 404, false, 'Wallet not found')
+//         }
+
+//         if (!wallet.pin) {
+//             return handleResponse(res, 400, false, 'Pin not set')
+//         }
+
+//         const match = await bcrypt.compare(pin, wallet.pin);
+
+//         if (!match) {
+//             return handleResponse(res, 400, false, 'Incorrect pin')
+//         }
+
+//         let prevBalance = Number(wallet.currentBalance);
+
+//         //console.log('prevBalance', prevBalance, typeof prevBalance, 'amount', amount, typeof amount);
+
+//         if (prevBalance < amount) {
+//             return handleResponse(res, 400, false, 'Insufficient balance')
+//         }
+
+//         let currBalance = prevBalance - amount;
+
+//         await wallet.update({
+//             currentBalance: currBalance,
+//             previousBalance: prevBalance
+//         });
+
+//         await wallet.save();
+
+//         const transaction = await Transaction.create({
+//             userId: id,
+//             jobId: null,
+//             amount: amount,
+//             reference: randomId(12),
+//             status: 'success',
+//             channel: 'wallet',
+//             timestamp: Date.now(),
+//             productTransactionId,
+//             description: reason || 'Wallet payment',
+//             type: TransactionType.DEBIT,
+//         })
+
+//         const email = productPaymentEmail(productTransaction);
+
+//         const msgStat = await sendEmail(
+//             productTransaction.seller.email,
+//             email.title,
+//             email.body,
+//             productTransaction.seller.profile.firstName + ' ' + productTransaction.seller.profile.lastName,
+//         )
+
+//         //Send notification to the client
+//         sendPushNotification(
+//             productTransaction.seller.fcmToken,
+//             `Product Payment`,
+//             `${productTransaction?.quantity} of your product: ${productTransaction?.product.name} has been paid by ${productTransaction?.buyer.profile.firstName} ${productTransaction?.buyer.profile.lastName}`,
+//             {}
+//         );
+
+
+
+//         return successResponse(res, 'success', transaction)
+
+//     } catch (error: any) {
+//         return errorResponse(res, 'error', error.message)
+//     }
+// }
 
 export const setPin = async (req: Request, res: Response) => {
     const { id, role } = req.user;

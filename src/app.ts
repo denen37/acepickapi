@@ -42,6 +42,33 @@ const dbUptimeGauge = new client.Gauge({
     help: "MySQL server uptime in seconds",
 });
 
+const dbConnectionsTotal = new client.Gauge({
+    name: "mysql_connections_total",
+    help: "Total number of connection attempts (successful or not) to MySQL",
+});
+
+const dbThreadsRunning = new client.Gauge({
+    name: "mysql_threads_running",
+    help: "Number of threads that are not sleeping (active queries)",
+});
+
+const dbSlowQueries = new client.Gauge({
+    name: "mysql_slow_queries_total",
+    help: "Total number of slow queries since server start",
+});
+
+const dbQueriesTotal = new client.Gauge({
+    name: "mysql_queries_total",
+    help: "Total number of statements executed by the server",
+});
+
+// Register them
+register.registerMetric(dbConnectionsTotal);
+register.registerMetric(dbThreadsRunning);
+register.registerMetric(dbSlowQueries);
+register.registerMetric(dbQueriesTotal);
+
+
 // Register metrics
 register.registerMetric(apiResponseHistogram);
 register.registerMetric(dbConnectionsGauge);
@@ -56,16 +83,37 @@ app.use(
     })
 );
 
+const getDBMetrics = async () => {
+    let [rows]: any = await db.query("SHOW STATUS LIKE 'Threads_connected'");
+    if (rows && rows.length > 0) {
+        dbConnectionsGauge.set(parseInt(rows[0].Value, 10));
+    }
+
+    [rows] = await db.query("SHOW STATUS LIKE 'Connections'");
+    dbConnectionsTotal.set(parseInt(rows[0].Value, 10));
+
+
+    [rows] = await db.query("SHOW GLOBAL STATUS LIKE 'Uptime'");
+    const uptime = parseInt(rows[0].Value, 10) || 0;
+    dbUptimeGauge.set(uptime);
+
+
+    // 🔸 Threads running
+    [rows] = await db.query("SHOW STATUS LIKE 'Threads_running'");
+    dbThreadsRunning.set(parseInt(rows[0].Value, 10));
+
+    // 🔸 Slow queries
+    [rows] = await db.query("SHOW STATUS LIKE 'Slow_queries'");
+    dbSlowQueries.set(parseInt(rows[0].Value, 10));
+
+    // 🔸 Total queries
+    [rows] = await db.query("SHOW STATUS LIKE 'Queries'");
+    dbQueriesTotal.set(parseInt(rows[0].Value, 10));
+}
+
 app.get("/metrics", async (req: Request, res: Response) => {
     try {
-        // Update DB connection metric
-        const [rows]: any = await db.query("SHOW STATUS LIKE 'Threads_connected'");
-        if (rows && rows.length > 0) {
-            dbConnectionsGauge.set(parseInt(rows[0].Value, 10));
-        }
-        const [rows2]: any = await db.query("SHOW GLOBAL STATUS LIKE 'Uptime'");
-        const uptime = parseInt(rows2[0].Value, 10) || 0;
-        dbUptimeGauge.set(uptime);
+        await getDBMetrics();
 
         res.set("Content-Type", register.contentType);
         res.end(await register.metrics());
@@ -77,11 +125,7 @@ app.get("/metrics", async (req: Request, res: Response) => {
 
 app.get("/metrics/json", async (req: Request, res: Response) => {
     try {
-        // Update DB connection metric
-        const [rows]: any = await db.query("SHOW STATUS LIKE 'Threads_connected'");
-        if (rows && rows.length > 0) {
-            dbConnectionsGauge.set(parseInt(rows[0].Value, 10));
-        }
+        await getDBMetrics();
 
         res.set("Content-Type", register.contentType);
         res.json(await register.getMetricsAsJSON());

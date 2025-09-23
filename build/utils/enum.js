@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RiderStatus = exports.VehicleType = exports.TransactionDescription = exports.OrderStatus = exports.OrderMethod = exports.ProductTransactionStatus = exports.ENV = exports.ProductStatus = exports.TransferStatus = exports.TransactionType = exports.TransactionStatus = exports.PaidFor = exports.JobStatus = exports.PayStatus = exports.JobMode = exports.UserState = exports.UserStatus = exports.UserRole = exports.VerificationType = exports.OTPReason = void 0;
+exports.CommissionScope = exports.CommissionType = exports.Accounts = exports.RiderStatus = exports.VehicleType = exports.TransactionDescription = exports.OrderStatus = exports.OrderMethod = exports.ProductTransactionStatus = exports.ENV = exports.ProductStatus = exports.TransferStatus = exports.TransactionType = exports.TransactionStatus = exports.PaidFor = exports.JobStatus = exports.PayStatus = exports.JobMode = exports.UserState = exports.UserStatus = exports.UserRole = exports.VerificationType = exports.OTPReason = void 0;
 var OTPReason;
 (function (OTPReason) {
     OTPReason["VERIFICATION"] = "verification";
@@ -137,3 +137,23 @@ var RiderStatus;
     RiderStatus["SUSPENDED"] = "suspended";
     RiderStatus["INACTIVE"] = "inactive";
 })(RiderStatus || (exports.RiderStatus = RiderStatus = {}));
+var Accounts;
+(function (Accounts) {
+    Accounts["USER_WALLET"] = "user_wallet";
+    Accounts["PLATFORM_ESCROW"] = "platform_escrow";
+    Accounts["PLATFORM_REVENUE"] = "platform_revenue";
+    Accounts["PAYMENT_GATEWAY"] = "payment_gateway";
+    Accounts["PROFESSIONAL_WALLET"] = "professional_wallet";
+})(Accounts || (exports.Accounts = Accounts = {}));
+var CommissionType;
+(function (CommissionType) {
+    CommissionType["PERCENTAGE"] = "percentage";
+    CommissionType["FIXED"] = "fixed";
+})(CommissionType || (exports.CommissionType = CommissionType = {}));
+var CommissionScope;
+(function (CommissionScope) {
+    CommissionScope["JOB"] = "job";
+    CommissionScope["PRODUCT"] = "product";
+    CommissionScope["DELIVERY"] = "delivery";
+    CommissionScope["ALL"] = "all";
+})(CommissionScope || (exports.CommissionScope = CommissionScope = {}));

@@ -46,7 +46,7 @@ routes.post('/verify-otp', verifyOtp);
 routes.post('/update-push-token', updatePushToken)
 // routes.post("/verify-bvn", verifyBvnDetail)
 routes.post('/verify/webhook', verifyBvnHook);
-routes.post("/verify-bvn2", verifyBvnMatch);
+routes.post("/verify-bvn", verifyBvnMatch);
 routes.get("/delete-users", deleteUsers)
 routes.post('/verify-token', authorize)
 

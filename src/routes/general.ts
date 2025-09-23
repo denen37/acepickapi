@@ -10,7 +10,7 @@ import { findPersonsNearby, sendEmailTest, sendSMSTest, testNotification } from 
 import { addLocation, deleteLocation, getLocationById, getMyLocations, updateLocation } from "../controllers/location";
 import { getClient } from "../controllers/client";
 import { addAccount, deleteAccount, getAccounts, getBanks, resolveAccount, updateAccount } from "../controllers/account";
-import { createWallet, creditWallet, debitWallet, debitWalletForProduct, forgotPin, resetPin, setPin, viewWallet } from "../controllers/wallet";
+import { createWallet, creditWallet, debitWallet, debitWalletForProductOrder, forgotPin, resetPin, setPin, viewWallet } from "../controllers/wallet";
 import { getAllTransactions, getTransactionById } from "../controllers/transactions";
 import { initiatePayment, initiateTransfer, finalizeTransfer, verifyPayment, verifyTransfer, handlePaystackWebhook } from "../controllers/payment";
 import { addEducation, deleteEducation, getEducation, updateEducation } from "../controllers/education";
@@ -111,7 +111,7 @@ routes.delete('/accounts/:recipientCode', allowRoles(UserRole.PROFESSIONAL, User
 routes.post('/create-wallet', /*allowRoles(UserRole.SEEKER),*/ createWallet);
 routes.get('/view-wallet', /*allowRoles(UserRole.SEEKER),*/ viewWallet);
 routes.post('/debit-wallet', /*allowRoles(UserRole.SEEKER),*/ debitWallet);
-routes.post('/debit-wallet/product', /*allowRoles(UserRole.SEEKER),*/ debitWalletForProduct);
+routes.post('/debit-wallet/product', /*allowRoles(UserRole.SEEKER),*/ debitWalletForProductOrder);
 routes.post('/credit-wallet', /*allowRoles(UserRole.SEEKER),*/ creditWallet);
 routes.post('/set-pin', /*allowRoles(UserRole.SEEKER),*/ setPin);
 routes.post('/reset-pin', resetPin);

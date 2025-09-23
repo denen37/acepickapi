@@ -49,6 +49,27 @@ const dbUptimeGauge = new prom_client_1.default.Gauge({
     name: "mysql_uptime_seconds",
     help: "MySQL server uptime in seconds",
 });
+const dbConnectionsTotal = new prom_client_1.default.Gauge({
+    name: "mysql_connections_total",
+    help: "Total number of connection attempts (successful or not) to MySQL",
+});
+const dbThreadsRunning = new prom_client_1.default.Gauge({
+    name: "mysql_threads_running",
+    help: "Number of threads that are not sleeping (active queries)",
+});
+const dbSlowQueries = new prom_client_1.default.Gauge({
+    name: "mysql_slow_queries_total",
+    help: "Total number of slow queries since server start",
+});
+const dbQueriesTotal = new prom_client_1.default.Gauge({
+    name: "mysql_queries_total",
+    help: "Total number of statements executed by the server",
+});
+// Register them
+register.registerMetric(dbConnectionsTotal);
+register.registerMetric(dbThreadsRunning);
+register.registerMetric(dbSlowQueries);
+register.registerMetric(dbQueriesTotal);
 // Register metrics
 register.registerMetric(apiResponseHistogram);
 register.registerMetric(dbConnectionsGauge);
@@ -60,16 +81,29 @@ app.use((0, response_time_1.default)((req, res, time) => {
         .labels(req.method, ((_a = req.route) === null || _a === void 0 ? void 0 : _a.path) || req.url, res.statusCode.toString())
         .observe(time);
 }));
+const getDBMetrics = () => __awaiter(void 0, void 0, void 0, function* () {
+    let [rows] = yield db_1.default.query("SHOW STATUS LIKE 'Threads_connected'");
+    if (rows && rows.length > 0) {
+        dbConnectionsGauge.set(parseInt(rows[0].Value, 10));
+    }
+    [rows] = yield db_1.default.query("SHOW STATUS LIKE 'Connections'");
+    dbConnectionsTotal.set(parseInt(rows[0].Value, 10));
+    [rows] = yield db_1.default.query("SHOW GLOBAL STATUS LIKE 'Uptime'");
+    const uptime = parseInt(rows[0].Value, 10) || 0;
+    dbUptimeGauge.set(uptime);
+    // 🔸 Threads running
+    [rows] = yield db_1.default.query("SHOW STATUS LIKE 'Threads_running'");
+    dbThreadsRunning.set(parseInt(rows[0].Value, 10));
+    // 🔸 Slow queries
+    [rows] = yield db_1.default.query("SHOW STATUS LIKE 'Slow_queries'");
+    dbSlowQueries.set(parseInt(rows[0].Value, 10));
+    // 🔸 Total queries
+    [rows] = yield db_1.default.query("SHOW STATUS LIKE 'Queries'");
+    dbQueriesTotal.set(parseInt(rows[0].Value, 10));
+});
 app.get("/metrics", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // Update DB connection metric
-        const [rows] = yield db_1.default.query("SHOW STATUS LIKE 'Threads_connected'");
-        if (rows && rows.length > 0) {
-            dbConnectionsGauge.set(parseInt(rows[0].Value, 10));
-        }
-        const [rows2] = yield db_1.default.query("SHOW GLOBAL STATUS LIKE 'Uptime'");
-        const uptime = parseInt(rows2[0].Value, 10) || 0;
-        dbUptimeGauge.set(uptime);
+        yield getDBMetrics();
         res.set("Content-Type", register.contentType);
         res.end(yield register.metrics());
     }
@@ -80,11 +114,7 @@ app.get("/metrics", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 }));
 app.get("/metrics/json", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // Update DB connection metric
-        const [rows] = yield db_1.default.query("SHOW STATUS LIKE 'Threads_connected'");
-        if (rows && rows.length > 0) {
-            dbConnectionsGauge.set(parseInt(rows[0].Value, 10));
-        }
+        yield getDBMetrics();
         res.set("Content-Type", register.contentType);
         res.json(yield register.getMetricsAsJSON());
     }

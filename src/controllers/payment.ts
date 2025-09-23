@@ -360,7 +360,7 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
 
                     productTransaction.product.quantity -= productTransaction.quantity;
                     await productTransaction.product.save();
-                    //send notification to buyer
+                    //send notification to seller
 
                     sendPushNotification(
                         transaction.user.fcmToken,
@@ -369,7 +369,7 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
                         {}
                     );
 
-                    //send email to buyer
+                    //send email to seller
                     const email = productPaymentEmail(productTransaction);
 
                     const msgStat = await sendEmail(
