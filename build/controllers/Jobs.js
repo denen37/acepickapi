@@ -21,6 +21,8 @@ const param_1 = require("../validation/param");
 const notification_1 = require("../services/notification");
 const chat_1 = require("../chat");
 const events_1 = require("../utils/events");
+const ledgerService_1 = require("../services/ledgerService");
+const CommissionService_1 = require("../services/CommissionService");
 const testApi = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     return (0, modules_1.successResponse)(res, "success", "Your Api is working!");
 });
@@ -218,7 +220,7 @@ const createJobOrder = (req, res) => __awaiter(void 0, void 0, void 0, function*
         io.to(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.socketId).emit(events_1.Emit.JOB_CREATED, { text: 'This a new Job', data: job });
     }
     const newActivity = yield Models_1.Activity.create({
-        userId: job.client.id,
+        userId: id,
         action: `${client === null || client === void 0 ? void 0 : client.profile.firstName} ${client === null || client === void 0 ? void 0 : client.profile.lastName} has created a new Job #${job.id}`,
         type: 'Job Created',
         status: 'success'
@@ -318,6 +320,7 @@ const cancelJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.cancelJob = cancelJob;
 const respondToJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id, role } = req.user;
     const result = param_1.jobIdParamSchema.safeParse(req.params);
     if (!result.success) {
         return res.status(400).json({
@@ -331,6 +334,9 @@ const respondToJob = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const job = yield Models_1.Job.findByPk(jobId);
         if (!job) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Job not found');
+        }
+        if (id !== job.professionalId) {
+            return (0, modules_1.handleResponse)(res, 400, false, 'You are not authorized to perform this action');
         }
         yield job.update({
             accepted,
@@ -377,7 +383,9 @@ const respondToJob = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.respondToJob = respondToJob;
 const generateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     const result = body_1.jobCostingSchema.safeParse(req.body);
+    const { id, role } = req.user;
     if (!result.success) {
         return res.status(400).json({
             error: "Invalid input",
@@ -390,7 +398,8 @@ const generateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function
             include: [
                 {
                     model: Models_1.User,
-                    as: 'client'
+                    as: 'client',
+                    include: [Models_1.Profile]
                 },
                 {
                     model: Models_1.User,
@@ -401,6 +410,9 @@ const generateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function
         });
         if (!job) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Job not found');
+        }
+        if (id !== job.professionalId) {
+            return (0, modules_1.handleResponse)(res, 400, false, 'You are not authorized to perform this action');
         }
         if (job.workmanship) {
             return (0, modules_1.handleResponse)(res, 400, false, 'Invoice already generated');
@@ -420,7 +432,7 @@ const generateInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function
             yield job.save();
             //send an email to the client
             const emailTosend = (0, messages_1.invoiceGeneratedEmail)(job.dataValues);
-            const emailResponse = yield (0, gmail_1.sendEmail)(job.dataValues.client.email, emailTosend.title, emailTosend.body, job.dataValues.client.profile.firstName + ' ' + job.dataValues.client.profile.lastName
+            const emailResponse = yield (0, gmail_1.sendEmail)(job.dataValues.client.email, emailTosend.title, emailTosend.body, ((_a = job.dataValues.client.profile) === null || _a === void 0 ? void 0 : _a.firstName) + ' ' + ((_b = job.dataValues.client.profile) === null || _b === void 0 ? void 0 : _b.lastName)
             //'User'
             );
             //Send notification to the client
@@ -696,9 +708,47 @@ const approveJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         job.client.profile.totalJobsApproved = (((_b = job.client.profile) === null || _b === void 0 ? void 0 : _b.totalJobsApproved) || 0) + 1;
         yield ((_c = job.client.profile) === null || _c === void 0 ? void 0 : _c.save());
         if (job.professional.wallet) {
+            let amount = job.workmanship + job.materialsCost;
+            const commission = yield CommissionService_1.CommissionService.calculateCommission(job.workmanship, enum_1.CommissionScope.JOB);
+            amount = amount - commission;
             job.professional.wallet.previousBalance = job.professional.wallet.currentBalance || 0;
-            job.professional.wallet.currentBalance = (job.professional.wallet.currentBalance || 0) + job.workmanship + job.materialsCost;
+            job.professional.wallet.currentBalance = (job.professional.wallet.currentBalance || 0) + amount;
             yield job.professional.wallet.save();
+            const transaction = yield Models_1.Transaction.create({
+                userId: job.professional.id,
+                amount: amount,
+                reference: (0, modules_1.randomId)(12),
+                status: enum_1.TransactionStatus.PENDING,
+                currency: 'NGN',
+                timestamp: new Date(),
+                description: 'wallet deposit',
+                jobId: job.id,
+                productTransactionId: null,
+                type: enum_1.TransactionType.CREDIT
+            });
+            yield ledgerService_1.LedgerService.createEntry([
+                {
+                    transactionId: transaction.id,
+                    userId: transaction.userId,
+                    amount: transaction.amount + commission,
+                    type: enum_1.TransactionType.DEBIT,
+                    account: enum_1.Accounts.PLATFORM_ESCROW
+                },
+                {
+                    transactionId: transaction.id,
+                    userId: transaction.userId,
+                    amount: transaction.amount,
+                    type: enum_1.TransactionType.CREDIT,
+                    account: enum_1.Accounts.PROFESSIONAL_WALLET
+                },
+                {
+                    transactionId: transaction.id,
+                    userId: null,
+                    amount: commission,
+                    type: enum_1.TransactionType.CREDIT,
+                    account: enum_1.Accounts.PLATFORM_REVENUE
+                }
+            ]);
         }
         //send an email to the professional
         const emailTosend = (0, messages_1.approveJobEmail)(job.dataValues);

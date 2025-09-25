@@ -3,7 +3,7 @@ import { Transfer, Transaction, Wallet, User, OnlineUser, Job, Profile, ProductT
 import { randomId, errorResponse, handleResponse, successResponse } from "../utils/modules";
 import config from "../config/configSetup"
 import axios from 'axios'
-import { JobStatus, OrderStatus, PayStatus, ProductStatus, ProductTransactionStatus, TransactionDescription, TransactionStatus, TransactionType, TransferStatus } from "../utils/enum";
+import { Accounts, JobStatus, OrderStatus, PayStatus, ProductStatus, ProductTransactionStatus, TransactionDescription, TransactionStatus, TransactionType, TransferStatus } from "../utils/enum";
 import { v4 as uuidv4 } from 'uuid';
 import { where } from "sequelize";
 import { sendPushNotification } from "../services/notification";
@@ -13,6 +13,7 @@ import { getIO } from "../chat";
 import { Emit } from "../utils/events";
 import { jobPaymentEmail, productPaymentEmail } from "../utils/messages";
 import { sendEmail } from "../services/gmail";
+import { LedgerService } from "../services/ledgerService";
 
 
 
@@ -54,13 +55,12 @@ export const initiatePayment = async (req: Request, res: Response) => {
             amount: amount,
             reference: data.reference,
             status: TransactionStatus.PENDING,
-            //channel: data.channel,
             currency: data.currency,
             timestamp: new Date(),
             description: description.toLowerCase(),
             jobId: description.toString().includes('job') ? jobId : null,
             productTransactionId: description.toString().includes('product') ? productTransactionId : null,
-            type: TransactionType.CREDIT,
+            type: description.toLowerCase() === TransactionDescription.WALLET_TOPUP ? TransactionType.CREDIT : TransactionType.DEBIT,
         })
 
 
@@ -158,6 +158,19 @@ export const initiateTransfer = async (req: Request, res: Response) => {
         timestamp: new Date(),
     })
 
+    const transaction = await Transaction.create({
+        userId: id,
+        amount: amount,
+        reference: transfer.reference,
+        status: TransactionStatus.PENDING,
+        currency: 'NGN',
+        timestamp: new Date(),
+        description: 'wallet withdrawal',
+        jobId: null,
+        productTransactionId: null,
+        type: TransactionType.DEBIT,
+    })
+
     const response = await axios.post(
         'https://api.paystack.co/transfer',
         {
@@ -207,8 +220,16 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
                 where: { reference: payload.data.reference }
             });
 
+            const transaction = await Transaction.findOne({
+                where: { reference: payload.data.reference }
+            });
+
             if (!transfer) {
                 return res.status(200).send('Transfer not found');
+            }
+
+            if (!transaction) {
+                return res.status(200).send('Transaction not found');
             }
 
             const user = await User.findOne({
@@ -225,9 +246,30 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
                     transfer.status = TransferStatus.SUCCESS;
                     await transfer.save();
 
+                    transaction.status = TransactionStatus.SUCCESS;
+                    await transaction.save();
+
                     user.wallet.previousBalance = user.wallet.currentBalance;
                     user.wallet.currentBalance -= transfer.amount;
                     await user.wallet.save();
+
+                    await LedgerService.createEntry([
+                        {
+                            transactionId: transaction.id,
+                            userId: transaction.userId,
+                            amount: transaction.amount,
+                            type: TransactionType.DEBIT,
+                            account: Accounts.PROFESSIONAL_WALLET
+                        },
+
+                        {
+                            transactionId: transaction.id,
+                            userId: transaction.userId,
+                            amount: transaction.amount,
+                            type: TransactionType.CREDIT,
+                            account: Accounts.PAYMENT_GATEWAY
+                        }
+                    ])
 
                     sendPushNotification(
                         user.fcmToken,
@@ -315,6 +357,25 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
 
                     await job.save();
 
+                    await LedgerService.createEntry([
+                        {
+                            transactionId: transaction.id,
+                            userId: transaction.userId,
+                            amount: transaction.amount,
+                            type: TransactionType.DEBIT,
+                            account: Accounts.PAYMENT_GATEWAY
+                        },
+
+                        {
+                            transactionId: transaction.id,
+                            userId: null,
+                            amount: transaction.amount,
+                            type: TransactionType.CREDIT,
+                            account: Accounts.PLATFORM_ESCROW
+                        }
+                    ])
+
+
                     sendPushNotification(
                         transaction.user.fcmToken,
                         `Job Payment`,
@@ -360,6 +421,25 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
 
                     productTransaction.product.quantity -= productTransaction.quantity;
                     await productTransaction.product.save();
+
+                    await LedgerService.createEntry([
+                        {
+                            transactionId: transaction.id,
+                            userId: transaction.userId,
+                            amount: transaction.amount,
+                            type: TransactionType.DEBIT,
+                            account: Accounts.PAYMENT_GATEWAY
+                        },
+
+                        {
+                            transactionId: transaction.id,
+                            userId: null,
+                            amount: transaction.amount,
+                            type: TransactionType.CREDIT,
+                            account: Accounts.PLATFORM_ESCROW
+                        }
+                    ])
+
                     //send notification to seller
 
                     sendPushNotification(
@@ -406,6 +486,24 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
                     transaction.user.wallet.currentBalance = prevAmount + newAmount;
 
                     await transaction.user.wallet.save()
+
+                    await LedgerService.createEntry([
+                        {
+                            transactionId: transaction.id,
+                            userId: transaction.userId,
+                            amount: transaction.amount,
+                            type: TransactionType.DEBIT,
+                            account: Accounts.PAYMENT_GATEWAY
+                        },
+
+                        {
+                            transactionId: transaction.id,
+                            userId: transaction.userId,
+                            amount: transaction.amount,
+                            type: TransactionType.CREDIT,
+                            account: Accounts.USER_WALLET
+                        }
+                    ])
                 }
             }
 

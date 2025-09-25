@@ -1409,17 +1409,39 @@ const postlocationData = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.postlocationData = postlocationData;
 const verifyBvnMatch = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { bvn } = req.body;
-    // try {
-    const response = yield axios_1.default.get(`https://api.paystack.co/bank/resolve_bvn/${bvn}`, {
-        headers: {
-            "Authorization": `Bearer ${configSetup_1.default.PAYSTACK_SECRET_KEY}`
+    const { id, role } = req.user;
+    try {
+        const user = yield Models_1.User.findByPk(id, {
+            include: [Models_1.Profile]
+        });
+        if (!user) {
+            return (0, modules_1.handleResponse)(res, 404, false, 'User not found');
         }
-    });
-    let verifyStatus = response.data;
-    return (0, modules_1.successResponse)(res, "BVN verified successfully", verifyStatus);
-    // } catch (error) {
-    //     return errorResponse(res, "BVN verification failed", error);
-    // }
+        if (!user.phone || !user.profile.firstName || !user.profile.lastName) {
+            return (0, modules_1.handleResponse)(res, 404, false, 'Phone or First Name or Last name is missing');
+        }
+        const baseUrl = 'https://api.qoreid.com';
+        let response = yield axios_1.default.post(`${baseUrl}/token`, {
+            "clientId": "Z2YZZNAWSGPFF63Z2M5H",
+            "secret": "f1b57902f30f4a8998228ef36aa0d6b8"
+        });
+        const token = response.data.accessToken;
+        response = yield axios_1.default.post(`${baseUrl}/v1/ng/identities/bvn-match/${bvn}`, {
+            firstname: user.profile.firstName,
+            lastname: user.profile.lastName,
+            phone: user.phone
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        const verifyStatus = response.data.bvn_match.fieldMatches;
+        return (0, modules_1.successResponse)(res, "BVN verified successfully", verifyStatus);
+    }
+    catch (error) {
+        console.log(error);
+        return (0, modules_1.errorResponse)(res, "BVN verification failed", error);
+    }
 });
 exports.verifyBvnMatch = verifyBvnMatch;
 const verifyBvnHook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

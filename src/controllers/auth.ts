@@ -1800,19 +1800,47 @@ export const postlocationData = async (req: Request, res: Response) => {
 export const verifyBvnMatch = async (req: Request, res: Response) => {
     let { bvn } = req.body;
 
-    // try {
-    const response = await axios.get(`https://api.paystack.co/bank/resolve_bvn/${bvn}`, {
+    const {id, role} = req.user;
+
+    try {
+    const user = await User.findByPk(id, {
+        include: [Profile]
+    })
+
+    if(!user){
+        return handleResponse(res, 404, false, 'User not found');
+    }
+
+    if(!user.phone || !user.profile.firstName || !user.profile.lastName){
+        return handleResponse(res, 404, false, 'Phone or First Name or Last name is missing');
+    }
+
+    const baseUrl = 'https://api.qoreid.com'
+
+    let response = await axios.post(`${baseUrl}/token`,{
+        "clientId": "Z2YZZNAWSGPFF63Z2M5H",
+        "secret": "f1b57902f30f4a8998228ef36aa0d6b8"
+    });
+
+    const token = response.data.accessToken;
+
+    response = await axios.post(`${baseUrl}/v1/ng/identities/bvn-match/${bvn}`,{
+        firstname: user.profile.firstName,
+        lastname: user.profile.lastName,
+        phone: user.phone
+    },{
         headers: {
-            "Authorization": `Bearer ${config.PAYSTACK_SECRET_KEY}`
+            Authorization: `Bearer ${token}`
         }
     });
 
-    let verifyStatus = response.data
+    const verifyStatus = response.data.bvn_match.fieldMatches;
 
     return successResponse(res, "BVN verified successfully", verifyStatus);
-    // } catch (error) {
-    //     return errorResponse(res, "BVN verification failed", error);
-    // }
+    } catch (error) {
+        console.log(error);
+        return errorResponse(res, "BVN verification failed", error);
+    }
 }
 
 

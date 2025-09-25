@@ -16,6 +16,8 @@ const enum_1 = require("../utils/enum");
 const modules_1 = require("../utils/modules");
 const DeliveryPricing_1 = require("../models/DeliveryPricing");
 const query_1 = require("../validation/query");
+const CommissionService_1 = require("../services/CommissionService");
+const ledgerService_1 = require("../services/ledgerService");
 const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
     try {
@@ -541,10 +543,47 @@ const confirmDelivery = (req, res) => __awaiter(void 0, void 0, void 0, function
         if (!rider) {
             throw new Error('Rider not found');
         }
+        let amount = Number(order.cost);
+        const commission = yield CommissionService_1.CommissionService.calculateCommission(amount, enum_1.CommissionScope.DELIVERY);
+        amount = amount - commission;
         rider.wallet.previousBalance = rider.wallet.currentBalance;
-        rider.wallet.currentBalance = Number(rider.wallet.currentBalance) + Number(order.cost);
+        rider.wallet.currentBalance = Number(rider.wallet.currentBalance) + amount;
         yield rider.wallet.save();
-        // await t.commit();
+        const transaction = yield Models_1.Transaction.create({
+            userId: rider.id,
+            amount: amount,
+            reference: (0, modules_1.randomId)(12),
+            status: enum_1.TransactionStatus.PENDING,
+            currency: 'NGN',
+            timestamp: new Date(),
+            description: 'wallet deposit',
+            jobId: null,
+            productTransactionId: order.productTransactionId,
+            type: enum_1.TransactionType.CREDIT
+        });
+        yield ledgerService_1.LedgerService.createEntry([
+            {
+                transactionId: transaction.id,
+                userId: transaction.userId,
+                amount: transaction.amount + commission,
+                type: enum_1.TransactionType.DEBIT,
+                account: enum_1.Accounts.PLATFORM_ESCROW
+            },
+            {
+                transactionId: transaction.id,
+                userId: transaction.userId,
+                amount: transaction.amount,
+                type: enum_1.TransactionType.CREDIT,
+                account: enum_1.Accounts.PROFESSIONAL_WALLET
+            },
+            {
+                transactionId: transaction.id,
+                userId: null,
+                amount: commission,
+                type: enum_1.TransactionType.CREDIT,
+                account: enum_1.Accounts.PLATFORM_REVENUE
+            }
+        ]);
         const newActivity = yield Models_1.Activity.create({
             userId: order.productTransaction.buyer,
             action: `${order.productTransaction.buyer.profile.firstName} ${order.productTransaction.buyer.profile.lastName} has confirmed delivery of Order #${order.id}`,

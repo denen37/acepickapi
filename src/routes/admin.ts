@@ -3,6 +3,7 @@ import { emailUser, getAllUsers, toggleSuspension } from "../controllers/admin/u
 import { UserAccountInfo } from "../controllers/profiles";
 import { approveProducts, getProducts } from "../controllers/admin/product";
 import { getActivities, getTopPerformers, overviewStat } from "../controllers/admin/dashboard";
+import {newUsersTodayCount} from "../controllers/admin/user_analytics";
 import { createCommission, deleteCommission, getCommissionById, getCommissions, toggleCommission, updateCommission } from "../controllers/admin/commision";
 
 const routes = Router();
@@ -17,6 +18,7 @@ routes.post('/products/approve/:productId', approveProducts);
 routes.get('/dashboard/overview', overviewStat);
 routes.get('/dashboard/activities', getActivities);
 routes.get('/dashboard/top-performers', getTopPerformers);
+routes.get('/dashboard/new-users-today', newUsersTodayCount);
 
 routes.get('/commission', getCommissions);
 routes.get('/commission/:id', getCommissionById);

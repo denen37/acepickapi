@@ -3,7 +3,7 @@ import { Accounts, TransactionType } from "../utils/enum";
 
 type LedgerSide = {
     transactionId: number;
-    userId?: string;
+    userId?: string | null;
     account: Accounts;
     type: TransactionType;
     amount: number;

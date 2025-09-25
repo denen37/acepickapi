@@ -1,12 +1,14 @@
 import { Request, Response } from "express";
 import { deliverySchema } from "../validation/body";
-import { Activity, Location, Order, Product, ProductTransaction, Profile, Rider, User, Wallet } from "../models/Models";
-import { OrderMethod, OrderStatus, ProductTransactionStatus } from "../utils/enum";
-import { errorResponse, getDistanceFromLatLonInKm, handleResponse, successResponse } from "../utils/modules";
+import { Activity, Location, Order, Product, ProductTransaction, Profile, Rider, Transaction, User, Wallet } from "../models/Models";
+import { Accounts, CommissionScope, OrderMethod, OrderStatus, ProductTransactionStatus, TransactionStatus, TransactionType } from "../utils/enum";
+import { errorResponse, getDistanceFromLatLonInKm, handleResponse, randomId, successResponse } from "../utils/modules";
 import { DeliveryPricing } from "../models/DeliveryPricing";
 import { Op, Sequelize } from 'sequelize';
 import { getOrdersSchema } from "../validation/query";
 import dbsequelize from "../config/db";
+import { CommissionService } from "../services/CommissionService";
+import { LedgerService } from "../services/ledgerService";
 
 export const createOrder = async (req: Request, res: Response) => {
     const { id } = req.user;
@@ -675,12 +677,55 @@ export const confirmDelivery = async (req: Request, res: Response) => {
             throw new Error('Rider not found')
         }
 
+        let amount = Number(order.cost);
+
+        const commission = await CommissionService.calculateCommission(amount, CommissionScope.DELIVERY);
+
+        amount = amount - commission
+
         rider.wallet.previousBalance = rider.wallet.currentBalance;
-        rider.wallet.currentBalance = Number(rider.wallet.currentBalance) + Number(order.cost);
+        rider.wallet.currentBalance = Number(rider.wallet.currentBalance) + amount;
 
         await rider.wallet.save();
 
-        // await t.commit();
+        const transaction = await Transaction.create({
+            userId: rider.id,
+            amount: amount,
+            reference: randomId(12),
+            status: TransactionStatus.PENDING,
+            currency: 'NGN',
+            timestamp: new Date(),
+            description: 'wallet deposit',
+            jobId: null,
+            productTransactionId: order.productTransactionId,
+            type: TransactionType.CREDIT
+        })
+
+        await LedgerService.createEntry([
+            {
+                transactionId: transaction.id,
+                userId: transaction.userId,
+                amount: transaction.amount + commission,
+                type: TransactionType.DEBIT,
+                account: Accounts.PLATFORM_ESCROW
+            },
+
+            {
+                transactionId: transaction.id,
+                userId: transaction.userId,
+                amount: transaction.amount,
+                type: TransactionType.CREDIT,
+                account: Accounts.PROFESSIONAL_WALLET
+            },
+
+            {
+                transactionId: transaction.id,
+                userId: null,
+                amount: commission,
+                type: TransactionType.CREDIT,
+                account: Accounts.PLATFORM_REVENUE
+            }
+        ])
 
         const newActivity = await Activity.create({
             userId: order.productTransaction.buyer,

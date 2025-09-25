@@ -1,8 +1,8 @@
 import { Request, Response } from "express"
-import { successResponse, errorResponse, handleResponse } from "../utils/modules"
+import { successResponse, errorResponse, handleResponse, randomId } from "../utils/modules"
 import { randomUUID } from "crypto";
-import { Job, User, Material, Dispute, Profile, Professional, Wallet, OnlineUser, Activity } from "../models/Models"
-import { JobMode, JobStatus, PayStatus, UserRole } from "../utils/enum"
+import { Job, User, Material, Dispute, Profile, Professional, Wallet, OnlineUser, Activity, Transaction } from "../models/Models"
+import { Accounts, CommissionScope, JobMode, JobStatus, PayStatus, TransactionStatus, TransactionType, UserRole } from "../utils/enum"
 import { sendEmail } from "../services/gmail";
 import { jobResponseEmail, jobCreatedEmail, jobDisputeEmail, invoiceGeneratedEmail, invoiceUpdatedEmail, completeJobEmail, approveJobEmail, disputedJobEmail, jobUpdatedEmail, jobCancelledEmail } from "../utils/messages";
 import { jobStatusQuerySchema } from "../validation/query";
@@ -11,6 +11,8 @@ import { jobIdParamSchema } from "../validation/param";
 import { sendPushNotification } from "../services/notification";
 import { getIO } from '../chat';
 import { Emit } from "../utils/events";
+import { LedgerService } from "../services/ledgerService";
+import { CommissionService } from "../services/CommissionService";
 
 export const testApi = async (req: Request, res: Response) => {
     return successResponse(res, "success", "Your Api is working!")
@@ -261,7 +263,7 @@ export const createJobOrder = async (req: Request, res: Response) => {
 
 
     const newActivity = await Activity.create({
-        userId: job.client.id,
+        userId: id,
         action: `${client?.profile.firstName} ${client?.profile.lastName} has created a new Job #${job.id}`,
         type: 'Job Created',
         status: 'success'
@@ -405,6 +407,8 @@ export const cancelJob = async (req: Request, res: Response) => {
 }
 
 export const respondToJob = async (req: Request, res: Response) => {
+    const {id, role} = req.user;
+
     const result = jobIdParamSchema.safeParse(req.params);
 
     if (!result.success) {
@@ -423,6 +427,10 @@ export const respondToJob = async (req: Request, res: Response) => {
 
         if (!job) {
             return handleResponse(res, 404, false, 'Job not found')
+        }
+
+        if(id !== job.professionalId){
+            return handleResponse(res, 400, false, 'You are not authorized to perform this action')
         }
 
         await job.update({
@@ -494,6 +502,8 @@ export const respondToJob = async (req: Request, res: Response) => {
 export const generateInvoice = async (req: Request, res: Response) => {
     const result = jobCostingSchema.safeParse(req.body);
 
+    const {id, role} = req.user;
+
     if (!result.success) {
         return res.status(400).json({
             error: "Invalid input",
@@ -509,7 +519,8 @@ export const generateInvoice = async (req: Request, res: Response) => {
             include: [
                 {
                     model: User,
-                    as: 'client'
+                    as: 'client',
+                    include: [Profile]
                 },
                 {
                     model: User,
@@ -522,6 +533,12 @@ export const generateInvoice = async (req: Request, res: Response) => {
         if (!job) {
             return handleResponse(res, 404, false, 'Job not found');
         }
+
+
+        if(id !== job.professionalId){
+            return handleResponse(res, 400, false, 'You are not authorized to perform this action')
+        }
+
 
         if (job.workmanship) {
             return handleResponse(res, 400, false, 'Invoice already generated');
@@ -559,7 +576,7 @@ export const generateInvoice = async (req: Request, res: Response) => {
                 job.dataValues.client.email,
                 emailTosend.title,
                 emailTosend.body,
-                job.dataValues.client.profile.firstName + ' ' + job.dataValues.client.profile.lastName
+                job.dataValues.client.profile?.firstName + ' ' + job.dataValues.client.profile?.lastName
                 //'User'
             )
 
@@ -965,11 +982,56 @@ export const approveJob = async (req: Request, res: Response) => {
 
 
         if (job.professional.wallet) {
+            let amount = job.workmanship + job.materialsCost;
+
+            const commission = await CommissionService.calculateCommission(job.workmanship, CommissionScope.JOB);
+
+            amount = amount - commission;
+
             job.professional.wallet.previousBalance = job.professional.wallet.currentBalance || 0;
 
-            job.professional.wallet.currentBalance = (job.professional.wallet.currentBalance || 0) + job.workmanship + job.materialsCost;
+            job.professional.wallet.currentBalance = (job.professional.wallet.currentBalance || 0) + amount
 
             await job.professional.wallet.save();
+
+            const transaction = await Transaction.create({
+                userId: job.professional.id,
+                amount: amount,
+                reference: randomId(12),
+                status: TransactionStatus.PENDING,
+                currency: 'NGN',
+                timestamp: new Date(),
+                description: 'wallet deposit',
+                jobId: job.id,
+                productTransactionId: null,
+                type: TransactionType.CREDIT
+            })
+
+            await LedgerService.createEntry([
+                {
+                    transactionId: transaction.id,
+                    userId: transaction.userId,
+                    amount: transaction.amount + commission,
+                    type: TransactionType.DEBIT,
+                    account: Accounts.PLATFORM_ESCROW
+                },
+
+                {
+                    transactionId: transaction.id,
+                    userId: transaction.userId,
+                    amount: transaction.amount,
+                    type: TransactionType.CREDIT,
+                    account: Accounts.PROFESSIONAL_WALLET
+                },
+
+                {
+                    transactionId: transaction.id,
+                    userId: null,
+                    amount: commission,
+                    type: TransactionType.CREDIT,
+                    account: Accounts.PLATFORM_REVENUE
+                }
+            ])
         }
 
         //send an email to the professional

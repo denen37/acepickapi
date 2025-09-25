@@ -22,6 +22,7 @@ const messages_1 = require("../utils/messages");
 const gmail_1 = require("../services/gmail");
 const notification_1 = require("../services/notification");
 const zod_1 = __importDefault(require("zod"));
+const ledgerService_1 = require("../services/ledgerService");
 const createWallet = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
     const { currency = 'NGN' } = req.body;
@@ -127,9 +128,25 @@ const debitWallet = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             status: 'success',
             channel: 'wallet',
             timestamp: Date.now(),
-            description: reason || 'Wallet payment',
+            description: 'job wallet payment',
             type: enum_1.TransactionType.DEBIT,
         });
+        yield ledgerService_1.LedgerService.createEntry([
+            {
+                transactionId: transaction.id,
+                userId: transaction.userId,
+                amount: transaction.amount,
+                type: enum_1.TransactionType.DEBIT,
+                account: enum_1.Accounts.USER_WALLET
+            },
+            {
+                transactionId: transaction.id,
+                userId: null,
+                amount: transaction.amount,
+                type: enum_1.TransactionType.CREDIT,
+                account: enum_1.Accounts.PLATFORM_ESCROW
+            }
+        ]);
         const emailTosend = (0, messages_1.jobPaymentEmail)(job);
         const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.professional.email, emailTosend.title, emailTosend.body, job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName
         //'User'
@@ -237,6 +254,22 @@ const debitWalletForProductOrder = (req, res) => __awaiter(void 0, void 0, void 
             description: desc,
             type: enum_1.TransactionType.DEBIT,
         });
+        yield ledgerService_1.LedgerService.createEntry([
+            {
+                transactionId: transaction.id,
+                userId: transaction.userId,
+                amount: transaction.amount,
+                type: enum_1.TransactionType.DEBIT,
+                account: enum_1.Accounts.USER_WALLET
+            },
+            {
+                transactionId: transaction.id,
+                userId: null,
+                amount: transaction.amount,
+                type: enum_1.TransactionType.CREDIT,
+                account: enum_1.Accounts.PLATFORM_ESCROW
+            }
+        ]);
         const email = (0, messages_1.productPaymentEmail)(productTransaction);
         const msgStat = yield (0, gmail_1.sendEmail)(productTransaction.seller.email, email.title, email.body, productTransaction.seller.profile.firstName + ' ' + productTransaction.seller.profile.lastName);
         //Send notification to the client

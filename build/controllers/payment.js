@@ -25,6 +25,7 @@ const chat_1 = require("../chat");
 const events_1 = require("../utils/events");
 const messages_1 = require("../utils/messages");
 const gmail_1 = require("../services/gmail");
+const ledgerService_1 = require("../services/ledgerService");
 const initiatePayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, email, role } = req.user;
     try {
@@ -52,13 +53,12 @@ const initiatePayment = (req, res) => __awaiter(void 0, void 0, void 0, function
             amount: amount,
             reference: data.reference,
             status: enum_1.TransactionStatus.PENDING,
-            //channel: data.channel,
             currency: data.currency,
             timestamp: new Date(),
             description: description.toLowerCase(),
             jobId: description.toString().includes('job') ? jobId : null,
             productTransactionId: description.toString().includes('product') ? productTransactionId : null,
-            type: enum_1.TransactionType.CREDIT,
+            type: description.toLowerCase() === enum_1.TransactionDescription.WALLET_TOPUP ? enum_1.TransactionType.CREDIT : enum_1.TransactionType.DEBIT,
         });
         return (0, modules_1.successResponse)(res, 'success', data);
     }
@@ -130,6 +130,18 @@ const initiateTransfer = (req, res) => __awaiter(void 0, void 0, void 0, functio
         reason,
         timestamp: new Date(),
     });
+    const transaction = yield Models_1.Transaction.create({
+        userId: id,
+        amount: amount,
+        reference: transfer.reference,
+        status: enum_1.TransactionStatus.PENDING,
+        currency: 'NGN',
+        timestamp: new Date(),
+        description: 'wallet withdrawal',
+        jobId: null,
+        productTransactionId: null,
+        type: enum_1.TransactionType.DEBIT,
+    });
     const response = yield axios_1.default.post('https://api.paystack.co/transfer', {
         source: 'balance',
         amount: amount * 100,
@@ -169,8 +181,14 @@ const handlePaystackWebhook = (req, res) => __awaiter(void 0, void 0, void 0, fu
             const transfer = yield Models_1.Transfer.findOne({
                 where: { reference: payload.data.reference }
             });
+            const transaction = yield Models_1.Transaction.findOne({
+                where: { reference: payload.data.reference }
+            });
             if (!transfer) {
                 return res.status(200).send('Transfer not found');
+            }
+            if (!transaction) {
+                return res.status(200).send('Transaction not found');
             }
             const user = yield Models_1.User.findOne({
                 where: { id: transfer.userId },
@@ -183,9 +201,27 @@ const handlePaystackWebhook = (req, res) => __awaiter(void 0, void 0, void 0, fu
                 case 'transfer.success':
                     transfer.status = enum_1.TransferStatus.SUCCESS;
                     yield transfer.save();
+                    transaction.status = enum_1.TransactionStatus.SUCCESS;
+                    yield transaction.save();
                     user.wallet.previousBalance = user.wallet.currentBalance;
                     user.wallet.currentBalance -= transfer.amount;
                     yield user.wallet.save();
+                    yield ledgerService_1.LedgerService.createEntry([
+                        {
+                            transactionId: transaction.id,
+                            userId: transaction.userId,
+                            amount: transaction.amount,
+                            type: enum_1.TransactionType.DEBIT,
+                            account: enum_1.Accounts.PROFESSIONAL_WALLET
+                        },
+                        {
+                            transactionId: transaction.id,
+                            userId: transaction.userId,
+                            amount: transaction.amount,
+                            type: enum_1.TransactionType.CREDIT,
+                            account: enum_1.Accounts.PAYMENT_GATEWAY
+                        }
+                    ]);
                     (0, notification_1.sendPushNotification)(user.fcmToken, `Transfer Success`, `Your transfer of ${transfer.amount} was successful`, {});
                     break;
                 case 'transfer.failed':
@@ -244,6 +280,22 @@ const handlePaystackWebhook = (req, res) => __awaiter(void 0, void 0, void 0, fu
                     job.payStatus = enum_1.PayStatus.PAID;
                     job.paymentRef = reference;
                     yield job.save();
+                    yield ledgerService_1.LedgerService.createEntry([
+                        {
+                            transactionId: transaction.id,
+                            userId: transaction.userId,
+                            amount: transaction.amount,
+                            type: enum_1.TransactionType.DEBIT,
+                            account: enum_1.Accounts.PAYMENT_GATEWAY
+                        },
+                        {
+                            transactionId: transaction.id,
+                            userId: null,
+                            amount: transaction.amount,
+                            type: enum_1.TransactionType.CREDIT,
+                            account: enum_1.Accounts.PLATFORM_ESCROW
+                        }
+                    ]);
                     (0, notification_1.sendPushNotification)(transaction.user.fcmToken, `Job Payment`, `Job titled: ${job === null || job === void 0 ? void 0 : job.title} has been paid by ${(_b = (_a = job === null || job === void 0 ? void 0 : job.client) === null || _a === void 0 ? void 0 : _a.profile) === null || _b === void 0 ? void 0 : _b.firstName} ${(_d = (_c = job === null || job === void 0 ? void 0 : job.client) === null || _c === void 0 ? void 0 : _c.profile) === null || _d === void 0 ? void 0 : _d.lastName}}`, {});
                     const email = (0, messages_1.jobPaymentEmail)(job === null || job === void 0 ? void 0 : job.toJSON());
                     const msgStat = yield (0, gmail_1.sendEmail)(job.dataValues.professional.email, email.title, email.body, job.dataValues.professional.profile.firstName + ' ' + job.dataValues.professional.profile.lastName);
@@ -274,6 +326,22 @@ const handlePaystackWebhook = (req, res) => __awaiter(void 0, void 0, void 0, fu
                     yield productTransaction.save();
                     productTransaction.product.quantity -= productTransaction.quantity;
                     yield productTransaction.product.save();
+                    yield ledgerService_1.LedgerService.createEntry([
+                        {
+                            transactionId: transaction.id,
+                            userId: transaction.userId,
+                            amount: transaction.amount,
+                            type: enum_1.TransactionType.DEBIT,
+                            account: enum_1.Accounts.PAYMENT_GATEWAY
+                        },
+                        {
+                            transactionId: transaction.id,
+                            userId: null,
+                            amount: transaction.amount,
+                            type: enum_1.TransactionType.CREDIT,
+                            account: enum_1.Accounts.PLATFORM_ESCROW
+                        }
+                    ]);
                     //send notification to seller
                     (0, notification_1.sendPushNotification)(transaction.user.fcmToken, `Product Payment`, `${productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.quantity} of your product: ${productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.product.name} has been paid by ${productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.buyer.profile.firstName} ${productTransaction === null || productTransaction === void 0 ? void 0 : productTransaction.buyer.profile.lastName}`, {});
                     //send email to seller
@@ -300,6 +368,22 @@ const handlePaystackWebhook = (req, res) => __awaiter(void 0, void 0, void 0, fu
                     transaction.user.wallet.previousBalance = prevAmount;
                     transaction.user.wallet.currentBalance = prevAmount + newAmount;
                     yield transaction.user.wallet.save();
+                    yield ledgerService_1.LedgerService.createEntry([
+                        {
+                            transactionId: transaction.id,
+                            userId: transaction.userId,
+                            amount: transaction.amount,
+                            type: enum_1.TransactionType.DEBIT,
+                            account: enum_1.Accounts.PAYMENT_GATEWAY
+                        },
+                        {
+                            transactionId: transaction.id,
+                            userId: transaction.userId,
+                            amount: transaction.amount,
+                            type: enum_1.TransactionType.CREDIT,
+                            account: enum_1.Accounts.USER_WALLET
+                        }
+                    ]);
                 }
             }
             (0, notification_1.sendPushNotification)(transaction.user.fcmToken, `Payment Success`, `Your Payment of ${transaction.amount} was successful`, {});

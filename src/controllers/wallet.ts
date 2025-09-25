@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import bcrypt from "bcryptjs"
 import { errorResponse, handleResponse, successResponse, randomId } from "../utils/modules";
-import { JobStatus, OrderMethod, OrderStatus, PayStatus, ProductTransactionStatus, TransactionType } from "../utils/enum";
+import { Accounts, JobStatus, OrderMethod, OrderStatus, PayStatus, ProductTransactionStatus, TransactionType } from "../utils/enum";
 import { v4 as uuidv4 } from 'uuid';
 import { paymentSchema, pinForgotSchema, pinResetSchema, productPaymentSchema } from "../validation/body";
 import { Job, Wallet, Transaction, User, Profile, ProductTransaction, Product, Order } from "../models/Models";
@@ -10,6 +10,7 @@ import { jobPaymentEmail, productPaymentEmail } from "../utils/messages";
 import { sendEmail } from "../services/gmail";
 import { sendPushNotification } from "../services/notification";
 import z from "zod";
+import { LedgerService } from "../services/ledgerService";
 
 export const createWallet = async (req: Request, res: Response) => {
     const { id } = req.user;
@@ -151,9 +152,27 @@ export const debitWallet = async (req: Request, res: Response) => {
             status: 'success',
             channel: 'wallet',
             timestamp: Date.now(),
-            description: reason || 'Wallet payment',
+            description: 'job wallet payment',
             type: TransactionType.DEBIT,
         })
+
+        await LedgerService.createEntry([
+            {
+                transactionId: transaction.id,
+                userId: transaction.userId,
+                amount: transaction.amount,
+                type: TransactionType.DEBIT,
+                account: Accounts.USER_WALLET
+            },
+
+            {
+                transactionId: transaction.id,
+                userId: null,
+                amount: transaction.amount,
+                type: TransactionType.CREDIT,
+                account: Accounts.PLATFORM_ESCROW
+            }
+        ])
 
         const emailTosend = jobPaymentEmail(job);
 
@@ -302,6 +321,25 @@ export const debitWalletForProductOrder = async (req: Request, res: Response) =>
             description: desc,
             type: TransactionType.DEBIT,
         })
+
+        await LedgerService.createEntry([
+            {
+                transactionId: transaction.id,
+                userId: transaction.userId,
+                amount: transaction.amount,
+                type: TransactionType.DEBIT,
+                account: Accounts.USER_WALLET
+            },
+
+            {
+                transactionId: transaction.id,
+                userId: null,
+                amount: transaction.amount,
+                type: TransactionType.CREDIT,
+                account: Accounts.PLATFORM_ESCROW
+            }
+        ])
+
 
         const email = productPaymentEmail(productTransaction);
 

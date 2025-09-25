@@ -41,6 +41,7 @@ export class Commission extends Model {
     active!: boolean;
 
     @AllowNull(true)
+    @Default(new Date())
     @Column(DataType.DATE)
     effectiveFrom!: Date
 

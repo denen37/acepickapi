@@ -60,6 +60,7 @@ __decorate([
 ], Commission.prototype, "active", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(true),
+    (0, sequelize_typescript_1.Default)(new Date()),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DATE),
     __metadata("design:type", Date)
 ], Commission.prototype, "effectiveFrom", void 0);
