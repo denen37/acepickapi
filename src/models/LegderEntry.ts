@@ -1,6 +1,7 @@
 import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNull, Unique, Default, Index, BelongsTo, ForeignKey, PrimaryKey, AutoIncrement } from 'sequelize-typescript';
-import { Accounts, TransactionStatus, TransactionType } from '../utils/enum';
+import { Accounts, EntryCategory, TransactionStatus, TransactionType } from '../utils/enum';
 import { Transaction, User } from './Models';
+import { object } from 'zod';
 // import { User } from './Models';
 
 
@@ -37,6 +38,10 @@ export class LedgerEntry extends Model {
     @AllowNull(false)
     @Column(DataType.ENUM(...Object.values(Accounts)))
     account!: string;
+
+    @AllowNull(true)
+    @Column(DataType.ENUM(...Object.values(EntryCategory)))
+    category!: string;
 
     @BelongsTo(() => Transaction)
     transaction!: Transaction;

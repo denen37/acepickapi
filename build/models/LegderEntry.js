@@ -52,6 +52,11 @@ __decorate([
     __metadata("design:type", String)
 ], LedgerEntry.prototype, "account", void 0);
 __decorate([
+    (0, sequelize_typescript_1.AllowNull)(true),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(...Object.values(enum_1.EntryCategory))),
+    __metadata("design:type", String)
+], LedgerEntry.prototype, "category", void 0);
+__decorate([
     (0, sequelize_typescript_1.BelongsTo)(() => Models_1.Transaction),
     __metadata("design:type", Models_1.Transaction)
 ], LedgerEntry.prototype, "transaction", void 0);

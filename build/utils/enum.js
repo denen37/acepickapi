@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CommissionScope = exports.CommissionType = exports.Accounts = exports.RiderStatus = exports.VehicleType = exports.TransactionDescription = exports.OrderStatus = exports.OrderMethod = exports.ProductTransactionStatus = exports.ENV = exports.ProductStatus = exports.TransferStatus = exports.TransactionType = exports.TransactionStatus = exports.PaidFor = exports.JobStatus = exports.PayStatus = exports.JobMode = exports.UserState = exports.UserStatus = exports.UserRole = exports.VerificationType = exports.OTPReason = void 0;
+exports.EntryCategory = exports.CommissionScope = exports.CommissionType = exports.Accounts = exports.RiderStatus = exports.VehicleType = exports.TransactionDescription = exports.OrderStatus = exports.OrderMethod = exports.ProductTransactionStatus = exports.ENV = exports.ProductStatus = exports.TransferStatus = exports.TransactionType = exports.TransactionStatus = exports.PaidFor = exports.JobStatus = exports.PayStatus = exports.JobMode = exports.UserState = exports.UserStatus = exports.UserRole = exports.VerificationType = exports.OTPReason = void 0;
 var OTPReason;
 (function (OTPReason) {
     OTPReason["VERIFICATION"] = "verification";
@@ -157,3 +157,9 @@ var CommissionScope;
     CommissionScope["DELIVERY"] = "delivery";
     CommissionScope["ALL"] = "all";
 })(CommissionScope || (exports.CommissionScope = CommissionScope = {}));
+var EntryCategory;
+(function (EntryCategory) {
+    EntryCategory["JOB"] = "job";
+    EntryCategory["PRODUCT"] = "product";
+    EntryCategory["DELIVERY"] = "delivery";
+})(EntryCategory || (exports.EntryCategory = EntryCategory = {}));

@@ -3,8 +3,9 @@ import { emailUser, getAllUsers, toggleSuspension } from "../controllers/admin/u
 import { UserAccountInfo } from "../controllers/profiles";
 import { approveProducts, getProducts } from "../controllers/admin/product";
 import { getActivities, getTopPerformers, overviewStat } from "../controllers/admin/dashboard";
-import {newUsersTodayCount} from "../controllers/admin/user_analytics";
+import { newUsersTodayCount, cumulativeUsersByMonth, getWeeklyUserGrowth, getCurrentVsPreviousWeekGrowth } from "../controllers/admin/user_analytics";
 import { createCommission, deleteCommission, getCommissionById, getCommissions, toggleCommission, updateCommission } from "../controllers/admin/commision";
+import { getMonthlyRevenue, getMonthlyRevenueByCategory, getMonthlyRevenueWithCumulative, getRevenueByCategory } from "../controllers/admin/revenue_analytics";
 
 const routes = Router();
 
@@ -19,6 +20,14 @@ routes.get('/dashboard/overview', overviewStat);
 routes.get('/dashboard/activities', getActivities);
 routes.get('/dashboard/top-performers', getTopPerformers);
 routes.get('/dashboard/new-users-today', newUsersTodayCount);
+routes.get('/dashboard/cummulative-users', cumulativeUsersByMonth);
+routes.get('/dashboard/weekly-user-growth', getWeeklyUserGrowth);
+routes.get('/dashboard/curr-vs-prev-week-growth', getCurrentVsPreviousWeekGrowth);
+
+routes.get('/revenue/monthly', getMonthlyRevenue);
+routes.get('/revenue/monthly-cummulative', getMonthlyRevenueWithCumulative);
+routes.get('/revenue/by-category', getRevenueByCategory);
+routes.get('/revenue/monthly-by-category', getMonthlyRevenueByCategory);
 
 routes.get('/commission', getCommissions);
 routes.get('/commission/:id', getCommissionById);

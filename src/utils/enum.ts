@@ -160,3 +160,9 @@ export enum CommissionScope {
     DELIVERY = 'delivery',
     ALL = 'all'
 }
+
+export enum EntryCategory {
+    JOB = 'job',
+    PRODUCT = 'product',
+    DELIVERY = 'delivery',
+}
