@@ -1,8 +1,10 @@
 import Redis from "ioredis";
+import config from "./configSetup"
 
 const redis = new Redis({
-    host: "127.0.0.1",
-    port: 6379,
+    host: config.REDIS_HOST,
+    port: config.REDIS_PORT,
+    password: config.REDIS_PASSWORD,
     retryStrategy(times) {
         console.log(`🔁 Reconnecting to Redis... attempt #${times}`);
         return Math.min(times * 1000, 5000); // Retry up to every 5s

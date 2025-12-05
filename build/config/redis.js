@@ -4,9 +4,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const ioredis_1 = __importDefault(require("ioredis"));
+const configSetup_1 = __importDefault(require("./configSetup"));
 const redis = new ioredis_1.default({
-    host: "127.0.0.1",
-    port: 6379,
+    host: configSetup_1.default.REDIS_HOST,
+    port: configSetup_1.default.REDIS_PORT,
+    password: configSetup_1.default.REDIS_PASSWORD,
     retryStrategy(times) {
         console.log(`🔁 Reconnecting to Redis... attempt #${times}`);
         return Math.min(times * 1000, 5000); // Retry up to every 5s

@@ -24,6 +24,7 @@ type Config = {
     REDIS_INSTANCE_URL: string | undefined;
     REDIS_HOST: string | undefined;
     REDIS_PORT: number;
+    REDIS_PASSWORD: string | undefined;
     SMS_API_KEY: string | undefined;
     SMS_SENDER_ID: string | undefined;
     OTP_EXPIRY_TIME: number,
@@ -58,6 +59,7 @@ const getConfig = (): Config => {
         REDIS_INSTANCE_URL: process.env.REDIS_INSTANCE_URL,
         REDIS_HOST: process.env.REDIS_HOST,
         REDIS_PORT: Number(process.env.REDIS_PORT) || 6379,
+        REDIS_PASSWORD: process.env.REDIS_PASSWORD,
         SMS_API_KEY: process.env.SMS_API_KEY,
         SMS_SENDER_ID: process.env.SMS_SENDER_ID,
         AZURE_STORAGE_CONNECTION_STRING: process.env.AZURE_STORAGE_CONNECTION_STRING,
