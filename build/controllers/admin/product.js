@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.rejectProducts = exports.approveProducts = exports.getProducts = void 0;
+exports.deliveryOversight = exports.marketOversight = exports.rejectProducts = exports.approveProducts = exports.getProducts = void 0;
 const query_1 = require("../../validation/query");
 const modules_1 = require("../../utils/modules");
 const sequelize_1 = require("sequelize");
@@ -17,6 +17,7 @@ const Models_1 = require("../../models/Models");
 const notification_1 = require("../../services/notification");
 const messages_1 = require("../../utils/messages");
 const gmail_1 = require("../../services/gmail");
+const enum_1 = require("../../utils/enum");
 const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = query_1.getProductSchema.safeParse(req.query);
     if (!result.success) {
@@ -128,3 +129,48 @@ const rejectProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.rejectProducts = rejectProducts;
+const marketOversight = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const totalProducts = yield Models_1.Product.count();
+        const pendingProducts = yield Models_1.Product.count({ where: { approved: null } });
+        const approvedProducts = yield Models_1.Product.count({ where: { approved: true } });
+        const rejectedProducts = yield Models_1.Product.count({ where: { approved: false } });
+        const totalTransactions = yield Models_1.Transaction.count({ where: { status: enum_1.TransactionStatus.SUCCESS } });
+        const disputedProducts = yield Models_1.ProductTransaction.count({ where: { status: enum_1.ProductTransactionStatus.DISPUTED } });
+        return (0, modules_1.successResponse)(res, 'success', {
+            totalProducts,
+            approvedProducts,
+            rejectedProducts,
+            pendingProducts,
+            totalTransactions
+        });
+    }
+    catch (error) {
+        console.log(error);
+        return (0, modules_1.errorResponse)(res, 'error', 'Internal Server Error');
+    }
+});
+exports.marketOversight = marketOversight;
+const deliveryOversight = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const totalDeliveries = yield Models_1.Order.count();
+        const unassignedDeliveries = yield Models_1.Order.count({ where: { status: enum_1.OrderStatus.PAID } });
+        const assignedDeliveries = yield Models_1.Order.count({ where: { status: enum_1.OrderStatus.ACCEPTED } });
+        const pickedUpDevliveries = yield Models_1.Order.count({ where: { status: enum_1.OrderStatus.CONFIRM_PICKUP } });
+        const completedDeliveries = yield Models_1.Order.count({ where: { status: enum_1.OrderStatus.CONFIRM_DELIVERY } });
+        const disputedDeliveries = yield Models_1.Order.count({ where: { status: enum_1.OrderStatus.DISPUTED } });
+        return (0, modules_1.successResponse)(res, 'success', {
+            totalDeliveries,
+            unassignedDeliveries,
+            assignedDeliveries,
+            pickedUpDevliveries,
+            completedDeliveries,
+            disputedDeliveries
+        });
+    }
+    catch (error) {
+        console.log(error);
+        return (0, modules_1.errorResponse)(res, 'error', 'Internal Server Error');
+    }
+});
+exports.deliveryOversight = deliveryOversight;

@@ -6,7 +6,7 @@ export const getSectors = async (req: Request, res: Response) => {
   try {
 
     const sectors = await Sector.findAll({
-      order: [['name', 'ASC']],
+      order: [['title', 'ASC']],
     });
 
     return successResponse(res, 'success', sectors)

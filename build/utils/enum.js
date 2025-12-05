@@ -97,6 +97,7 @@ var ProductTransactionStatus;
     ProductTransactionStatus["PENDING"] = "pending";
     ProductTransactionStatus["ORDERED"] = "ordered";
     ProductTransactionStatus["DELIVERED"] = "delivered";
+    ProductTransactionStatus["DISPUTED"] = "disputed";
 })(ProductTransactionStatus || (exports.ProductTransactionStatus = ProductTransactionStatus = {}));
 var OrderMethod;
 (function (OrderMethod) {
@@ -114,6 +115,7 @@ var OrderStatus;
     OrderStatus["DELIVERED"] = "delivered";
     OrderStatus["CONFIRM_DELIVERY"] = "confirm_delivery";
     OrderStatus["CANCELLED"] = "cancelled";
+    OrderStatus["DISPUTED"] = "disputed";
 })(OrderStatus || (exports.OrderStatus = OrderStatus = {}));
 var TransactionDescription;
 (function (TransactionDescription) {

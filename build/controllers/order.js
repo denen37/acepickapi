@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cancelOrder = exports.confirmDelivery = exports.deliverOrder = exports.transportOrder = exports.confirmPickup = exports.pickupOrder = exports.acceptOrder = exports.getOrdersSeller = exports.getOrdersBuyer = exports.getOrdersRider = exports.getNearestPaidOrders = exports.createOrder = void 0;
+exports.resolveDispute = exports.disputeOrder = exports.cancelOrder = exports.confirmDelivery = exports.deliverOrder = exports.transportOrder = exports.confirmPickup = exports.pickupOrder = exports.acceptOrder = exports.getOrdersSeller = exports.getOrdersBuyer = exports.getOrdersRider = exports.getNearestPaidOrders = exports.createOrder = void 0;
 const body_1 = require("../validation/body");
 const Models_1 = require("../models/Models");
 const enum_1 = require("../utils/enum");
@@ -18,6 +18,9 @@ const DeliveryPricing_1 = require("../models/DeliveryPricing");
 const query_1 = require("../validation/query");
 const CommissionService_1 = require("../services/CommissionService");
 const ledgerService_1 = require("../services/ledgerService");
+const messages_1 = require("../utils/messages");
+const gmail_1 = require("../services/gmail");
+const Dispute_1 = require("../models/Dispute");
 const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
     try {
@@ -100,11 +103,13 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             locationId: existingLocation === null || existingLocation === void 0 ? void 0 : existingLocation.id,
         });
         const newActivity = yield Models_1.Activity.create({
-            userId: order.rider.id,
+            userId: id,
             action: `${productTransaction.buyer.profile.firstName} ${productTransaction.buyer.profile.lastName} has created Order #${order.id}`,
             type: 'Order created',
             status: 'success'
         });
+        // productTransaction.status = ProductTransactionStatus.ORDERED;
+        yield productTransaction.save();
         return (0, modules_1.successResponse)(res, 'success', Object.assign(Object.assign({}, order.toJSON()), { totalCost: order.cost + productTransaction.price, productTransaction: productTransaction.toJSON() }));
     }
     catch (error) {
@@ -362,6 +367,7 @@ const acceptOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                     include: [Models_1.Profile]
                 }]
         });
+        // console.log('first name', order?.rider.profile.firstName);
         if (!order) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Order not found');
         }
@@ -372,7 +378,7 @@ const acceptOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         order.riderId = id;
         yield order.save();
         const newActivity = yield Models_1.Activity.create({
-            userId: order.rider.id,
+            userId: order.riderId,
             action: `${order.rider.profile.firstName} ${order.rider.profile.lastName} has accepted Order #${order.id}`,
             type: 'Order accepted',
             status: 'success'
@@ -443,7 +449,7 @@ const confirmPickup = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         order.status = enum_1.OrderStatus.IN_TRANSIT;
         yield order.save();
         const newActivity = yield Models_1.Activity.create({
-            userId: order.productTransaction.buyer,
+            userId: order.productTransaction.buyer.id,
             action: `${order.productTransaction.buyer.profile.firstName} ${order.productTransaction.buyer.profile.lastName} has confirmed delivery of Order #${order.id}`,
             type: 'Order pickup confirmation',
             status: 'success'
@@ -510,87 +516,144 @@ const deliverOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.deliverOrder = deliverOrder;
 const confirmDelivery = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
-    const { orderId } = req.params;
-    // const t = await dbsequelize.transaction();
+    const { productTransactionId } = req.params;
     try {
-        const order = yield Models_1.Order.findByPk(orderId, {
-            include: [{
-                    model: Models_1.ProductTransaction,
-                    include: [{
-                            model: Models_1.User,
-                            as: 'buyer',
-                            include: [Models_1.Profile]
-                        }]
-                }]
+        const productTransaction = yield Models_1.ProductTransaction.findByPk(productTransactionId, {
+            include: [
+                {
+                    model: Models_1.User,
+                    as: 'buyer',
+                    include: [Models_1.Profile]
+                },
+                {
+                    model: Models_1.User,
+                    as: 'seller',
+                    include: [Models_1.Profile, Models_1.Wallet]
+                },
+                {
+                    model: Models_1.Order,
+                }
+            ]
         });
-        if (!order) {
-            return (0, modules_1.handleResponse)(res, 404, false, 'Order not found');
+        if (!productTransaction) {
+            return (0, modules_1.handleResponse)(res, 404, false, 'Product transaction not found');
         }
-        if (order.status !== enum_1.OrderStatus.DELIVERED) {
-            return (0, modules_1.handleResponse)(res, 400, false, 'Order not delivered');
-        }
-        if (order.productTransaction.buyerId !== id) {
+        if (productTransaction.buyerId !== id) {
             return (0, modules_1.handleResponse)(res, 400, false, 'You are not authorized to confirm this order');
         }
-        order.status = enum_1.OrderStatus.CONFIRM_DELIVERY;
-        yield order.save();
-        const rider = yield Models_1.User.findOne({
-            where: {
-                id: order.riderId
-            },
-            include: [Models_1.Wallet]
-        });
-        if (!rider) {
-            throw new Error('Rider not found');
+        if (productTransaction.order && productTransaction.order.status !== enum_1.OrderStatus.DELIVERED) {
+            return (0, modules_1.handleResponse)(res, 400, false, 'Order not delivered');
         }
-        let amount = Number(order.cost);
-        const commission = yield CommissionService_1.CommissionService.calculateCommission(amount, enum_1.CommissionScope.DELIVERY);
+        let amount = Number(productTransaction.price);
+        let commission = yield CommissionService_1.CommissionService.calculateCommission(amount, enum_1.CommissionScope.PRODUCT);
         amount = amount - commission;
-        rider.wallet.previousBalance = rider.wallet.currentBalance;
-        rider.wallet.currentBalance = Number(rider.wallet.currentBalance) + amount;
-        yield rider.wallet.save();
-        const transaction = yield Models_1.Transaction.create({
-            userId: rider.id,
+        productTransaction.seller.wallet.previousBalance = productTransaction.seller.wallet.currentBalance;
+        productTransaction.seller.wallet.currentBalance = Number(productTransaction.seller.wallet.currentBalance) + amount;
+        yield productTransaction.seller.wallet.save();
+        productTransaction.status = enum_1.ProductTransactionStatus.DELIVERED;
+        yield productTransaction.save();
+        const productCashTransaction = yield Models_1.Transaction.create({
+            userId: productTransaction.seller.id,
             amount: amount,
             reference: (0, modules_1.randomId)(12),
-            status: enum_1.TransactionStatus.PENDING,
+            status: enum_1.TransactionStatus.SUCCESS,
             currency: 'NGN',
             timestamp: new Date(),
-            description: 'wallet deposit',
+            description: 'product sale',
             jobId: null,
-            productTransactionId: order.productTransactionId,
+            productTransactionId: productTransaction.id,
             type: enum_1.TransactionType.CREDIT
         });
         yield ledgerService_1.LedgerService.createEntry([
             {
-                transactionId: transaction.id,
-                userId: transaction.userId,
-                amount: transaction.amount + commission,
+                transactionId: productCashTransaction.id,
+                userId: productCashTransaction.userId,
+                amount: productCashTransaction.amount + commission,
                 type: enum_1.TransactionType.DEBIT,
-                account: enum_1.Accounts.PLATFORM_ESCROW
+                account: enum_1.Accounts.PLATFORM_ESCROW,
+                category: enum_1.EntryCategory.PRODUCT
             },
             {
-                transactionId: transaction.id,
-                userId: transaction.userId,
-                amount: transaction.amount,
+                transactionId: productCashTransaction.id,
+                userId: productCashTransaction.userId,
+                amount: productCashTransaction.amount,
                 type: enum_1.TransactionType.CREDIT,
-                account: enum_1.Accounts.PROFESSIONAL_WALLET
+                account: enum_1.Accounts.PROFESSIONAL_WALLET,
+                category: enum_1.EntryCategory.PRODUCT
             },
             {
-                transactionId: transaction.id,
+                transactionId: productCashTransaction.id,
                 userId: null,
                 amount: commission,
                 type: enum_1.TransactionType.CREDIT,
-                account: enum_1.Accounts.PLATFORM_REVENUE
+                account: enum_1.Accounts.PLATFORM_REVENUE,
+                category: enum_1.EntryCategory.PRODUCT
             }
         ]);
+        if (productTransaction.orderMethod === enum_1.OrderMethod.DELIVERY && productTransaction.order) {
+            productTransaction.order.status = enum_1.OrderStatus.CONFIRM_DELIVERY;
+            yield productTransaction.order.save();
+            const rider = yield Models_1.User.findOne({
+                where: {
+                    id: productTransaction.order.riderId
+                },
+                include: [Models_1.Wallet]
+            });
+            if (!rider) {
+                throw new Error('Rider not found');
+            }
+            amount = Number(productTransaction.order.cost);
+            commission = yield CommissionService_1.CommissionService.calculateCommission(amount, enum_1.CommissionScope.DELIVERY);
+            amount = amount - commission;
+            rider.wallet.previousBalance = rider.wallet.currentBalance;
+            rider.wallet.currentBalance = Number(rider.wallet.currentBalance) + amount;
+            yield rider.wallet.save();
+            const orderTransaction = yield Models_1.Transaction.create({
+                userId: rider.id,
+                amount: amount,
+                reference: (0, modules_1.randomId)(12),
+                status: enum_1.TransactionStatus.SUCCESS,
+                currency: 'NGN',
+                timestamp: new Date(),
+                description: 'wallet deposit',
+                jobId: null,
+                productTransactionId: productTransaction.order.productTransactionId,
+                type: enum_1.TransactionType.CREDIT
+            });
+            yield ledgerService_1.LedgerService.createEntry([
+                {
+                    transactionId: orderTransaction.id,
+                    userId: orderTransaction.userId,
+                    amount: orderTransaction.amount + commission,
+                    type: enum_1.TransactionType.DEBIT,
+                    account: enum_1.Accounts.PLATFORM_ESCROW,
+                    category: enum_1.EntryCategory.DELIVERY
+                },
+                {
+                    transactionId: orderTransaction.id,
+                    userId: orderTransaction.userId,
+                    amount: orderTransaction.amount,
+                    type: enum_1.TransactionType.CREDIT,
+                    account: enum_1.Accounts.PROFESSIONAL_WALLET,
+                    category: enum_1.EntryCategory.DELIVERY
+                },
+                {
+                    transactionId: orderTransaction.id,
+                    userId: null,
+                    amount: commission,
+                    type: enum_1.TransactionType.CREDIT,
+                    account: enum_1.Accounts.PLATFORM_REVENUE,
+                    category: enum_1.EntryCategory.DELIVERY
+                }
+            ]);
+        }
         const newActivity = yield Models_1.Activity.create({
-            userId: order.productTransaction.buyer,
-            action: `${order.productTransaction.buyer.profile.firstName} ${order.productTransaction.buyer.profile.lastName} has confirmed delivery of Order #${order.id}`,
+            userId: productTransaction.buyerId,
+            action: `${productTransaction.buyer.profile.firstName} ${productTransaction.buyer.profile.lastName} has confirmed delivery of Order #${productTransaction.order.id}`,
             type: 'Order confirmation',
             status: 'success'
         });
-        return (0, modules_1.successResponse)(res, 'success', order);
+        return (0, modules_1.successResponse)(res, 'success', 'Order confirmed successfully');
     }
     catch (error) {
         console.log(error);
@@ -620,3 +683,95 @@ const cancelOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.cancelOrder = cancelOrder;
+const disputeOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.user;
+    const result = body_1.disputeSchema.safeParse(req.body);
+    if (!result.success) {
+        return res.status(400).json({
+            message: 'Validation error',
+            errors: result.error.flatten()
+        });
+    }
+    const { reason, description, url, productTransactionId, partnerId } = result.data;
+    if (!productTransactionId) {
+        return res.status(400).json({
+            message: 'You must provide a productTransactionId to dispute an order'
+        });
+    }
+    const productTransaction = yield Models_1.ProductTransaction.findByPk(productTransactionId, {
+        include: [Models_1.Order, Models_1.Product]
+    });
+    if (!productTransaction) {
+        return res.status(404).json({
+            message: 'Product transaction not found'
+        });
+    }
+    if (productTransaction.buyerId !== id) {
+        return res.status(403).json({
+            message: 'You are not authorized to dispute this order'
+        });
+    }
+    if (productTransaction.order && productTransaction.order.status !== enum_1.OrderStatus.DELIVERED) {
+        return res.status(400).json({
+            message: 'You can only dispute an order that has been delivered'
+        });
+    }
+    const partner = yield Models_1.User.findByPk(partnerId || productTransaction.sellerId, { include: [Models_1.Profile] });
+    const reporter = yield Models_1.User.findByPk(id, { include: [Models_1.Profile] });
+    if (!partner) {
+        return res.status(404).json({
+            message: 'Partner not found'
+        });
+    }
+    productTransaction.status = enum_1.ProductTransactionStatus.DISPUTED;
+    yield productTransaction.save();
+    productTransaction.order.status = enum_1.OrderStatus.DISPUTED;
+    yield productTransaction.order.save();
+    const dispute = yield Models_1.Dispute.create({
+        reason,
+        description,
+        url,
+        productTransactionId: productTransaction.id,
+        reporterId: id,
+        partnerId: partnerId || productTransaction.sellerId,
+    });
+    const newActivity = yield Models_1.Activity.create({
+        userId: id,
+        action: `${reporter === null || reporter === void 0 ? void 0 : reporter.profile.firstName} has raised a dispute for product transaction #${productTransaction.id}`,
+        type: 'Product Transaction dispute',
+        status: 'pending'
+    });
+    const emailMsg = (0, messages_1.disputedOrderEmail)(productTransaction, dispute);
+    yield (0, gmail_1.sendEmail)(partner === null || partner === void 0 ? void 0 : partner.email, emailMsg.title, emailMsg.body, (partner === null || partner === void 0 ? void 0 : partner.profile.firstName) || 'User');
+    return (0, modules_1.successResponse)(res, 'success', dispute);
+});
+exports.disputeOrder = disputeOrder;
+const resolveDispute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.user;
+    const { disputeId } = req.params;
+    const dispute = yield Models_1.Dispute.findByPk(disputeId, {
+        include: [{
+                model: Models_1.User,
+                as: 'reporter'
+            }, {
+                model: Models_1.User,
+                as: 'partner'
+            }]
+    });
+    if (!dispute) {
+        return (0, modules_1.handleResponse)(res, 400, false, "Dispute not found");
+    }
+    dispute.status = Dispute_1.DisputeStatus.RESOLVED;
+    yield dispute.save();
+    const newActivity = yield Models_1.Activity.create({
+        userId: id,
+        action: `Dispute #${dispute.id} has been resolved by admin`,
+        type: 'Dispute resolution',
+        status: 'success'
+    });
+    const emailMsg = (0, messages_1.resolveDisputeEmail)(dispute);
+    yield (0, gmail_1.sendEmail)(dispute.reporter.email, emailMsg.title, emailMsg.body, 'User');
+    yield (0, gmail_1.sendEmail)(dispute.partner.email, emailMsg.title, emailMsg.body, 'User');
+    return (0, modules_1.successResponse)(res, 'success', dispute);
+});
+exports.resolveDispute = resolveDispute;

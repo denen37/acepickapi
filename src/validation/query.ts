@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { JobStatus, OrderStatus, ProductTransactionStatus, UserRole } from "../utils/enum";
+import { JobStatus, OrderStatus, ProductTransactionStatus, TransactionStatus, UserRole } from "../utils/enum";
 
 export const jobStatusQuerySchema = z.object({
     status: z.enum(['all', ...Object.values(JobStatus)]).optional(),
@@ -17,6 +17,7 @@ export const professionalSearchQuerySchema = z.object({
     chargeFrom: z.coerce.number().int().min(0).optional(),
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(10),
+    allowUnverified: z.enum(['true', 'false']).transform((val) => val === 'true').optional(),
     // sortBy: z.enum(['rating', 'chargeFrom', 'available']).optional(),
     // sortOrder: z.enum(['asc', 'desc']).optional(),
 });
@@ -75,3 +76,9 @@ export const activitySchema = z.object({
     type: z.string().optional(),
     status: z.enum(['all', 'success', 'failed', 'pending']).optional(),
 });
+
+export const getTransactionSchema = z.object({
+    status: z.enum(['all', ...Object.values(TransactionStatus)]).optional(),
+    page: z.coerce.number().min(1).default(1),
+    limit: z.coerce.number().min(1).default(10)
+})

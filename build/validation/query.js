@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.activitySchema = exports.isRatedSchema = exports.getUsersQuerySchema = exports.getOrdersSchema = exports.boughtProductSchema = exports.getProductSchema = exports.professionalSearchQuerySchema = exports.jobStatusQuerySchema = void 0;
+exports.getTransactionSchema = exports.activitySchema = exports.isRatedSchema = exports.getUsersQuerySchema = exports.getOrdersSchema = exports.boughtProductSchema = exports.getProductSchema = exports.professionalSearchQuerySchema = exports.jobStatusQuerySchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum");
 exports.jobStatusQuerySchema = zod_1.z.object({
@@ -17,6 +17,7 @@ exports.professionalSearchQuerySchema = zod_1.z.object({
     chargeFrom: zod_1.z.coerce.number().int().min(0).optional(),
     page: zod_1.z.coerce.number().int().min(1).default(1),
     limit: zod_1.z.coerce.number().int().min(1).max(100).default(10),
+    allowUnverified: zod_1.z.enum(['true', 'false']).transform((val) => val === 'true').optional(),
     // sortBy: z.enum(['rating', 'chargeFrom', 'available']).optional(),
     // sortOrder: z.enum(['asc', 'desc']).optional(),
 });
@@ -61,4 +62,9 @@ exports.activitySchema = zod_1.z.object({
     search: zod_1.z.string().optional(),
     type: zod_1.z.string().optional(),
     status: zod_1.z.enum(['all', 'success', 'failed', 'pending']).optional(),
+});
+exports.getTransactionSchema = zod_1.z.object({
+    status: zod_1.z.enum(['all', ...Object.values(enum_1.TransactionStatus)]).optional(),
+    page: zod_1.z.coerce.number().min(1).default(1),
+    limit: zod_1.z.coerce.number().min(1).default(10)
 });

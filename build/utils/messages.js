@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.rejectProductEmail = exports.approveProductEmail = exports.reactivateUserEmail = exports.suspendUserEmail = exports.jobCancelledEmail = exports.productPaymentEmail = exports.jobPaymentEmail = exports.disputedJobEmail = exports.approveJobEmail = exports.completeJobEmail = exports.invoiceUpdatedEmail = exports.invoiceGeneratedEmail = exports.jobDisputeEmail = exports.jobResponseEmail = exports.jobUpdatedEmail = exports.jobCreatedEmail = exports.forgotPasswordEmail = exports.sendOTPEmail = exports.sendOTPPhone = exports.registerEmail = void 0;
+exports.resolveDisputeEmail = exports.disputedOrderEmail = exports.reactivatedUserEmail = exports.suspendedUserEmail = exports.deactivatedUserEmail = exports.rejectProductEmail = exports.approveProductEmail = exports.reactivateUserEmail = exports.suspendUserEmail = exports.jobCancelledEmail = exports.productPaymentEmail = exports.jobPaymentEmail = exports.disputedJobEmail = exports.approveJobEmail = exports.completeJobEmail = exports.invoiceUpdatedEmail = exports.invoiceGeneratedEmail = exports.jobDisputeEmail = exports.jobResponseEmail = exports.jobUpdatedEmail = exports.jobCreatedEmail = exports.forgotPasswordEmail = exports.sendOTPEmail = exports.sendOTPPhone = exports.registerEmail = void 0;
 const registerEmail = (user) => {
     var _a, _b;
     return {
@@ -282,3 +282,54 @@ const rejectProductEmail = (product) => {
     };
 };
 exports.rejectProductEmail = rejectProductEmail;
+const deactivatedUserEmail = (user) => {
+    return {
+        title: `Account Deactivated`,
+        body: `Your account has been deactivated by the admin. Please contact the admin for more information.`
+    };
+};
+exports.deactivatedUserEmail = deactivatedUserEmail;
+const suspendedUserEmail = (user) => {
+    return {
+        title: `Account Suspended`,
+        body: `Your account has been suspended by the admin. Please contact the admin for more information.`
+    };
+};
+exports.suspendedUserEmail = suspendedUserEmail;
+const reactivatedUserEmail = (user) => {
+    return {
+        title: `Account Reactivated`,
+        body: `Your account has been reactivated by the admin. You can now log in and start using the platform.`
+    };
+};
+exports.reactivatedUserEmail = reactivatedUserEmail;
+const disputedOrderEmail = (productTrans, dispute) => {
+    return {
+        title: `Dispute Created`,
+        body: `A dispute has been created for your order with the product <b>${productTrans.product.name}</b>. Please review the dispute and take appropriate action.<br><br>
+        
+        <h3>Product</h3>
+        <p><b>Product name: </b>${productTrans.product.name}</p>
+        <p><b>Product description: </b>${productTrans.product.description}</p>
+        <p><b>Price: </b>${productTrans.price}</p>
+
+
+        <h3>Dispute</h3>
+        <p><b>Dispute title: </b>${dispute.reason}</p>
+        <p><b>Dispute description: </b>${dispute.description}</p>
+        `
+    };
+};
+exports.disputedOrderEmail = disputedOrderEmail;
+const resolveDisputeEmail = (dispute) => {
+    return {
+        title: "Dispute resolved",
+        body: `
+            Your dispute has been successfully resolved. All withheld funds will be released to you shortly.
+            <h3>Dispute</h3>
+            <p><b>Dispute title:</b> ${dispute.reason}</p>
+            <p><b>Dispute description:</b> ${dispute.description}</p>
+        `
+    };
+};
+exports.resolveDisputeEmail = resolveDisputeEmail;

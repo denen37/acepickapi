@@ -2,7 +2,7 @@ import { Request, Response } from "express"
 import { successResponse, errorResponse, handleResponse, randomId } from "../utils/modules"
 import { randomUUID } from "crypto";
 import { Job, User, Material, Dispute, Profile, Professional, Wallet, OnlineUser, Activity, Transaction } from "../models/Models"
-import { Accounts, CommissionScope, JobMode, JobStatus, PayStatus, TransactionStatus, TransactionType, UserRole } from "../utils/enum"
+import { Accounts, CommissionScope, EntryCategory, JobMode, JobStatus, PayStatus, TransactionStatus, TransactionType, UserRole } from "../utils/enum"
 import { sendEmail } from "../services/gmail";
 import { jobResponseEmail, jobCreatedEmail, jobDisputeEmail, invoiceGeneratedEmail, invoiceUpdatedEmail, completeJobEmail, approveJobEmail, disputedJobEmail, jobUpdatedEmail, jobCancelledEmail } from "../utils/messages";
 import { jobStatusQuerySchema } from "../validation/query";
@@ -407,7 +407,7 @@ export const cancelJob = async (req: Request, res: Response) => {
 }
 
 export const respondToJob = async (req: Request, res: Response) => {
-    const {id, role} = req.user;
+    const { id, role } = req.user;
 
     const result = jobIdParamSchema.safeParse(req.params);
 
@@ -429,7 +429,7 @@ export const respondToJob = async (req: Request, res: Response) => {
             return handleResponse(res, 404, false, 'Job not found')
         }
 
-        if(id !== job.professionalId){
+        if (id !== job.professionalId) {
             return handleResponse(res, 400, false, 'You are not authorized to perform this action')
         }
 
@@ -502,7 +502,7 @@ export const respondToJob = async (req: Request, res: Response) => {
 export const generateInvoice = async (req: Request, res: Response) => {
     const result = jobCostingSchema.safeParse(req.body);
 
-    const {id, role} = req.user;
+    const { id, role } = req.user;
 
     if (!result.success) {
         return res.status(400).json({
@@ -535,7 +535,7 @@ export const generateInvoice = async (req: Request, res: Response) => {
         }
 
 
-        if(id !== job.professionalId){
+        if (id !== job.professionalId) {
             return handleResponse(res, 400, false, 'You are not authorized to perform this action')
         }
 
@@ -767,86 +767,6 @@ export const viewInvoice = async (req: Request, res: Response) => {
 }
 
 
-// export const payforJob = async (req: Request, res: Response) => {
-//     const { id } = req.user;
-
-//     const result = paymentSchema.safeParse(req.body);
-
-//     if (!result.success) {
-//         return res.status(400).json({
-//             error: "Invalid input",
-//             issues: result.error.format(),
-//         });
-//     }
-
-//     const { amount, paidFor, pin, jobId } = result.data;
-
-
-//     try {
-
-//         const job = await Job.findByPk(jobId);
-//         if (!job) {
-//             return handleResponse(res, 404, false, 'Job not found');
-//         }
-
-//         if (job.payStatus === PayStatus.PAID) {
-//             return handleResponse(res, 400, false, 'Job has already been paid for')
-//         }
-
-
-
-//         // try {
-//         //     response = await axios.post(`${config.PAYMENT_BASE_URL}/pay-api/debit-wallet`, {
-//         //         amount,
-//         //         pin,
-//         //         reason: 'job payment',
-//         //         jobId
-//         //     }, {
-//         //         headers: {
-//         //             Authorization: req.headers.authorization,
-//         //         }
-//         //     });
-//         // } catch (error: any) {
-//         //     // axios error - get meaningful message from backend
-//         //     const errData = error.response?.data || {};
-//         //     const errMessage = errData.message || error.message || 'Payment failed';
-//         //     return handleResponse(res, 400, false, errMessage, errData.data);
-//         // }
-
-
-//         //if (response.data.status) {
-//         job.payStatus = PayStatus.PAID;
-
-
-//         job.paymentRef = randomUUID();
-
-//         job.status = JobStatus.ONGOING;
-
-//         await job.save();
-
-//         if (job.payStatus === PayStatus.PAID) {
-//             const updatedProfessionalProfile = await Profile.update({
-//                 totalJobsOngoing: (job.professional.profile.totalJobsOngoing || 0) + 1,
-//             }, {
-//                 where: { userId: job.professionalId }
-//             })
-
-
-//             const updatedClientProfile = await Profile.update({
-//                 totalJobsOngoing: (job.professional.profile.totalJobsOngoing || 0) + 1,
-//             }, {
-//                 where: { userId: job.clientId }
-//             })
-//         }
-
-//         return successResponse(res, 'success', { message: 'Job payment successful' });
-//         //   }
-
-
-//     } catch (error: any) {
-//         return errorResponse(res, 'error', { message: error.message, error });
-//     }
-// };
 
 export const completeJob = async (req: Request, res: Response) => {
     const { jobId } = req.params;
@@ -871,6 +791,14 @@ export const completeJob = async (req: Request, res: Response) => {
 
         if (!job) {
             return handleResponse(res, 404, false, 'Job does not exist / Job already completed');
+        }
+
+        if (job.status !== JobStatus.ONGOING) {
+            return handleResponse(res, 400, false, `You cannot complete a/an ${job.status} job`)
+        }
+
+        if (job.professionalId !== req.user.id) {
+            return handleResponse(res, 403, false, 'You are not authorized to complete this job');
         }
 
         job.status = JobStatus.COMPLETED
@@ -930,7 +858,7 @@ export const completeJob = async (req: Request, res: Response) => {
             status: 'success'
         })
 
-        return successResponse(res, 'success', { message: 'Job completed sucessfully', emailSendStatus: Boolean(emailResponse) })
+        return successResponse(res, 'success', { message: 'Job completed sucessfully', emailSendStatus: emailResponse.success })
     } catch (error: any) {
         return errorResponse(res, 'error', error.message)
     }
@@ -945,7 +873,7 @@ export const approveJob = async (req: Request, res: Response) => {
             where: {
                 id: jobId,
                 //clientId: req.user.id, 
-                status: JobStatus.COMPLETED
+                // status: JobStatus.COMPLETED
             },
             include: [{
                 model: User,
@@ -959,7 +887,7 @@ export const approveJob = async (req: Request, res: Response) => {
         })
 
         if (!job) {
-            return handleResponse(res, 404, false, 'Job does not exist / Job already approved');
+            return handleResponse(res, 404, false, 'Job does not exist');
         }
 
         if (job.status !== JobStatus.COMPLETED) {
@@ -982,15 +910,17 @@ export const approveJob = async (req: Request, res: Response) => {
 
 
         if (job.professional.wallet) {
-            let amount = job.workmanship + job.materialsCost;
+            let amount = Number(job.workmanship) + Number(job.materialsCost);
 
-            const commission = await CommissionService.calculateCommission(job.workmanship, CommissionScope.JOB);
+            const commission = await CommissionService.calculateCommission(Number(job.workmanship), CommissionScope.JOB);
 
             amount = amount - commission;
 
-            job.professional.wallet.previousBalance = job.professional.wallet.currentBalance || 0;
+            let prevBal = Number(job.professional.wallet.currentBalance) || 0;
+            let newBal = prevBal + amount
 
-            job.professional.wallet.currentBalance = (job.professional.wallet.currentBalance || 0) + amount
+            job.professional.wallet.previousBalance = prevBal;
+            job.professional.wallet.currentBalance = newBal;
 
             await job.professional.wallet.save();
 
@@ -1013,7 +943,8 @@ export const approveJob = async (req: Request, res: Response) => {
                     userId: transaction.userId,
                     amount: transaction.amount + commission,
                     type: TransactionType.DEBIT,
-                    account: Accounts.PLATFORM_ESCROW
+                    account: Accounts.PLATFORM_ESCROW,
+                    category: EntryCategory.JOB
                 },
 
                 {
@@ -1021,7 +952,8 @@ export const approveJob = async (req: Request, res: Response) => {
                     userId: transaction.userId,
                     amount: transaction.amount,
                     type: TransactionType.CREDIT,
-                    account: Accounts.PROFESSIONAL_WALLET
+                    account: Accounts.PROFESSIONAL_WALLET,
+                    category: EntryCategory.JOB
                 },
 
                 {
@@ -1029,7 +961,8 @@ export const approveJob = async (req: Request, res: Response) => {
                     userId: null,
                     amount: commission,
                     type: TransactionType.CREDIT,
-                    account: Accounts.PLATFORM_REVENUE
+                    account: Accounts.PLATFORM_REVENUE,
+                    category: EntryCategory.JOB
                 }
             ])
         }
@@ -1075,7 +1008,7 @@ export const approveJob = async (req: Request, res: Response) => {
         })
 
 
-        return successResponse(res, 'success', { message: 'Job approved sucessfully', emailSendStatus: emailResponse.success })
+        return successResponse(res, 'success', { message: 'Job approved sucessfully', /*emailSendStatus: emailResponse.success */ })
     } catch (error: any) {
         return errorResponse(res, 'error', error.message)
     }

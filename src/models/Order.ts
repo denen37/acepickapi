@@ -36,11 +36,6 @@ export class Order extends Model {
     weight!: number
 
 
-    // @AllowNull(false)
-    // @Default(PayStatus.UNPAID)
-    // @Column(DataType.ENUM(...Object.values(PayStatus)))
-    // payStatus!: string
-
 
     @AllowNull(false)
     @ForeignKey(() => Location)

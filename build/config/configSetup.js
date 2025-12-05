@@ -57,6 +57,8 @@ const getConfig = () => {
         OTP_EXPIRY_TIME: Number(process.env.OTP_EXPIRY_TIME || 5),
         TOKEN_SECRET: process.env.TOKEN_SECRET || 'supersecret',
         REDIS_INSTANCE_URL: process.env.REDIS_INSTANCE_URL,
+        REDIS_HOST: process.env.REDIS_HOST,
+        REDIS_PORT: Number(process.env.REDIS_PORT) || 6379,
         SMS_API_KEY: process.env.SMS_API_KEY,
         SMS_SENDER_ID: process.env.SMS_SENDER_ID,
         AZURE_STORAGE_CONNECTION_STRING: process.env.AZURE_STORAGE_CONNECTION_STRING,

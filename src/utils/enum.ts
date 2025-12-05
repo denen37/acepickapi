@@ -100,6 +100,7 @@ export enum ProductTransactionStatus {
     PENDING = 'pending',
     ORDERED = 'ordered',
     DELIVERED = 'delivered',
+    DISPUTED = 'disputed'
 }
 
 export enum OrderMethod {
@@ -117,6 +118,7 @@ export enum OrderStatus {
     DELIVERED = 'delivered',
     CONFIRM_DELIVERY = 'confirm_delivery',
     CANCELLED = 'cancelled',
+    DISPUTED = 'disputed'
 }
 
 export enum TransactionDescription {

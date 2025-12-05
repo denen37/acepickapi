@@ -7,6 +7,7 @@ type LedgerSide = {
     account: Accounts;
     type: TransactionType;
     amount: number;
+    category?: string | null;
 };
 
 export class LedgerService {

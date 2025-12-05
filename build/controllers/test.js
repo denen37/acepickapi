@@ -41,8 +41,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.testNotification = exports.sendEmailTest = exports.sendSMSTest = void 0;
+exports.testRedis = exports.testNotification = exports.sendEmailTest = exports.sendSMSTest = void 0;
 exports.findPersonsNearby = findPersonsNearby;
 const notification_1 = require("../services/notification");
 const sms_1 = require("../services/sms");
@@ -51,6 +54,7 @@ const messages_1 = require("../utils/messages");
 const gmail_1 = require("../services/gmail");
 const Location_1 = require("../models/Location");
 const sequelize_1 = __importStar(require("sequelize"));
+const redis_1 = __importDefault(require("../config/redis"));
 const sendSMSTest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { phone } = req.body;
     // try {
@@ -110,3 +114,14 @@ function findPersonsNearby(req, res) {
         return (0, modules_1.successResponse)(res, 'Persons found nearby', { location });
     });
 }
+const testRedis = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield redis_1.default.set("testKey", "Redis is working!");
+        const value = yield redis_1.default.get("testKey");
+        return (0, modules_1.successResponse)(res, 'success', { status: "ok", message: value });
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error);
+    }
+});
+exports.testRedis = testRedis;

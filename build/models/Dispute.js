@@ -16,11 +16,12 @@ const sequelize_typescript_1 = require("sequelize-typescript");
 // import { LanLog } from './LanLog';
 // import { User } from './User';
 const Job_1 = require("./Job");
+const ProductTransaction_1 = require("./ProductTransaction");
+const User_1 = require("./User");
 var DisputeStatus;
 (function (DisputeStatus) {
     DisputeStatus["RESOLVED"] = "RESOLVED";
     DisputeStatus["PENDING"] = "PENDING";
-    DisputeStatus["SUPERADMIN"] = "SUPERADMIN";
 })(DisputeStatus || (exports.DisputeStatus = DisputeStatus = {}));
 let Dispute = class Dispute extends sequelize_typescript_1.Model {
 };
@@ -37,7 +38,7 @@ __decorate([
 ], Dispute.prototype, "description", void 0);
 __decorate([
     (0, sequelize_typescript_1.Default)(DisputeStatus.PENDING),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(DisputeStatus.RESOLVED, DisputeStatus.PENDING, DisputeStatus.SUPERADMIN)),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.ENUM(DisputeStatus.RESOLVED, DisputeStatus.PENDING)),
     __metadata("design:type", String)
 ], Dispute.prototype, "status", void 0);
 __decorate([
@@ -52,11 +53,19 @@ __decorate([
     __metadata("design:type", Number)
 ], Dispute.prototype, "jobId", void 0);
 __decorate([
+    (0, sequelize_typescript_1.ForeignKey)(() => ProductTransaction_1.ProductTransaction),
+    (0, sequelize_typescript_1.AllowNull)(true),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.INTEGER),
+    __metadata("design:type", Number)
+], Dispute.prototype, "productTransactionId", void 0);
+__decorate([
+    (0, sequelize_typescript_1.ForeignKey)(() => User_1.User),
     (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.UUID),
     __metadata("design:type", String)
 ], Dispute.prototype, "reporterId", void 0);
 __decorate([
+    (0, sequelize_typescript_1.ForeignKey)(() => User_1.User),
     (0, sequelize_typescript_1.AllowNull)(true),
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.UUID),
     __metadata("design:type", String)
@@ -65,6 +74,18 @@ __decorate([
     (0, sequelize_typescript_1.BelongsTo)(() => Job_1.Job, { onDelete: 'CASCADE' }),
     __metadata("design:type", Job_1.Job)
 ], Dispute.prototype, "job", void 0);
+__decorate([
+    (0, sequelize_typescript_1.BelongsTo)(() => ProductTransaction_1.ProductTransaction, { onDelete: 'CASCADE' }),
+    __metadata("design:type", ProductTransaction_1.ProductTransaction)
+], Dispute.prototype, "productTransaction", void 0);
+__decorate([
+    (0, sequelize_typescript_1.BelongsTo)(() => User_1.User, { onDelete: 'CASCADE', foreignKey: 'reporterId', as: 'reporter', }),
+    __metadata("design:type", User_1.User)
+], Dispute.prototype, "reporter", void 0);
+__decorate([
+    (0, sequelize_typescript_1.BelongsTo)(() => User_1.User, { onDelete: 'CASCADE', foreignKey: 'partnerId', as: 'partner', }),
+    __metadata("design:type", User_1.User)
+], Dispute.prototype, "partner", void 0);
 exports.Dispute = Dispute = __decorate([
     (0, sequelize_typescript_1.Table)({ timestamps: true, tableName: 'dispute' })
 ], Dispute);

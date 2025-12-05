@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateCommissionSchema = exports.commissionSchema = exports.addReviewSchema = exports.addRatingSchema = exports.deliverySchema = exports.productTransactionIdSchema = exports.restockProductSchema = exports.selectProductSchema = exports.initPaymentSchema = exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.productPaymentSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.storeLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerRiderSchema = exports.updateRiderSchema = exports.riderSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
+exports.disputeSchema = exports.updateCommissionSchema = exports.commissionSchema = exports.addReviewSchema = exports.addRatingSchema = exports.deliverySchema = exports.productTransactionIdSchema = exports.restockProductSchema = exports.selectProductSchema = exports.initPaymentSchema = exports.updateProductSchema = exports.createProductSchema = exports.updatePortfolioSchema = exports.portfolioSchema = exports.updateExperienceSchema = exports.experienceSchema = exports.updateCertificationSchema = exports.certificationSchema = exports.updateEducationSchema = exports.educationSchema = exports.pinForgotSchema = exports.pinResetSchema = exports.withdrawSchema = exports.productPaymentSchema = exports.paymentSchema = exports.resolveBankSchema = exports.bankDetailsSchema = exports.updateLocationSchema = exports.storeLocationSchema = exports.jobCostingUpdateSchema = exports.jobCostingSchema = exports.jobUpdateSchema = exports.jobPostSchema = exports.updateUserProfileSchema = exports.registerRiderSchema = exports.updateRiderSchema = exports.riderSchema = exports.registerCoporateSchema = exports.registrationProfSchema = exports.registrationSchema = exports.verifyOTPSchema = exports.otpRequestSchema = void 0;
 const zod_1 = require("zod");
 const enum_1 = require("../utils/enum"); // adjust the path
 const enum_2 = require("../utils/enum");
@@ -820,4 +820,39 @@ exports.updateCommissionSchema = zod_1.z
     .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided",
     path: [],
+});
+exports.disputeSchema = zod_1.z.object({
+    reason: zod_1.z
+        .string({ required_error: "Reason is required" })
+        .min(1, "Reason cannot be empty"),
+    description: zod_1.z
+        .string({ required_error: "Description is required" })
+        .min(1, "Description cannot be empty"),
+    // status: z
+    //     .nativeEnum(DisputeStatus)
+    //     .default(DisputeStatus.PENDING),
+    url: zod_1.z
+        .string()
+        .url("Invalid URL format")
+        .optional()
+        .or(zod_1.z.literal("").transform(() => undefined)),
+    jobId: zod_1.z
+        .number()
+        .int("Job ID must be an integer")
+        .optional(),
+    productTransactionId: zod_1.z
+        .number()
+        .int("Product Transaction ID must be an integer")
+        .optional(),
+    // reporterId: z
+    //     .string()
+    //     .uuid("Reporter ID must be a valid UUID")
+    //     .optional(),
+    partnerId: zod_1.z
+        .string()
+        .uuid("Partner ID must be a valid UUID")
+        .optional(),
+}).refine((data) => data.jobId || data.productTransactionId, {
+    message: "Either jobId or productTransactionId must be provided",
+    path: ["jobId"],
 });

@@ -27,7 +27,7 @@ __decorate([
 ], Transaction.prototype, "id", void 0);
 __decorate([
     (0, sequelize_typescript_1.AllowNull)(false),
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DECIMAL),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DECIMAL(10, 2)),
     __metadata("design:type", Number)
 ], Transaction.prototype, "amount", void 0);
 __decorate([

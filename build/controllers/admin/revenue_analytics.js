@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMonthlyRevenueByCategory = exports.getRevenueByCategory = exports.getMonthlyRevenueWithCumulative = exports.getMonthlyRevenue = void 0;
+exports.revenueOverview = exports.getMonthlyRevenueByCategory = exports.getRevenueByCategory = exports.getMonthlyRevenueWithCumulative = exports.getMonthlyRevenue = void 0;
 const db_1 = __importDefault(require("../../config/db"));
 const sequelize_1 = require("sequelize");
 const modules_1 = require("../../utils/modules");
@@ -111,3 +111,26 @@ const getMonthlyRevenueByCategory = (req, res) => __awaiter(void 0, void 0, void
     }
 });
 exports.getMonthlyRevenueByCategory = getMonthlyRevenueByCategory;
+const revenueOverview = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const balances = yield LegderEntry_1.LedgerEntry.findAll({
+            attributes: [
+                'account',
+                [
+                    (0, sequelize_1.literal)(`
+            SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END) -
+            SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END)
+          `),
+                    'balance'
+                ]
+            ],
+            group: ['account']
+        });
+        return (0, modules_1.successResponse)(res, 'success', balances);
+    }
+    catch (error) {
+        console.log(error);
+        return (0, modules_1.errorResponse)(res, 'error', 'Internal server error');
+    }
+});
+exports.revenueOverview = revenueOverview;

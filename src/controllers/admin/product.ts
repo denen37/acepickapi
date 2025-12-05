@@ -3,13 +3,13 @@ import { z } from "zod";
 import { getProductSchema } from "../../validation/query";
 import { errorResponse, handleResponse, successResponse } from "../../utils/modules";
 import { Op } from "sequelize";
-import { Category, Product, Location, User, Profile } from "../../models/Models";
+import { Category, Product, Location, User, Profile, Transaction, Order, ProductTransaction } from "../../models/Models";
 import { sendPushNotification } from "../../services/notification";
 import { approveProductEmail, rejectProductEmail } from "../../utils/messages";
 import { sendEmail } from "../../services/gmail";
+import { OrderStatus, ProductTransactionStatus, TransactionStatus } from "../../utils/enum";
 
 export const getProducts = async (req: Request, res: Response) => {
-
     const result = getProductSchema.safeParse(req.query);
 
     if (!result.success) {
@@ -180,5 +180,51 @@ export const rejectProducts = async (req: Request, res: Response) => {
     } catch (error) {
         console.log(error);
         return errorResponse(res, 'error', 'Failed to reject product')
+    }
+}
+
+export const marketOversight = async (req: Request, res: Response) => {
+    try {
+        const totalProducts = await Product.count();
+        const pendingProducts = await Product.count({ where: { approved: null } });
+        const approvedProducts = await Product.count({ where: { approved: true } });
+        const rejectedProducts = await Product.count({ where: { approved: false } });
+        const totalTransactions = await Transaction.count({ where: { status: TransactionStatus.SUCCESS } });
+        const disputedProducts = await ProductTransaction.count({ where: { status: ProductTransactionStatus.DISPUTED } });
+
+        return successResponse(res, 'success', {
+            totalProducts,
+            approvedProducts,
+            rejectedProducts,
+            pendingProducts,
+            totalTransactions
+        });
+    } catch (error) {
+        console.log(error);
+        return errorResponse(res, 'error', 'Internal Server Error');
+    }
+}
+
+
+export const deliveryOversight = async (req: Request, res: Response) => {
+    try {
+        const totalDeliveries = await Order.count();
+        const unassignedDeliveries = await Order.count({ where: { status: OrderStatus.PAID } });
+        const assignedDeliveries = await Order.count({ where: { status: OrderStatus.ACCEPTED } });
+        const pickedUpDevliveries = await Order.count({ where: { status: OrderStatus.CONFIRM_PICKUP } });
+        const completedDeliveries = await Order.count({ where: { status: OrderStatus.CONFIRM_DELIVERY } });
+        const disputedDeliveries = await Order.count({ where: { status: OrderStatus.DISPUTED } });
+
+        return successResponse(res, 'success', {
+            totalDeliveries,
+            unassignedDeliveries,
+            assignedDeliveries,
+            pickedUpDevliveries,
+            completedDeliveries,
+            disputedDeliveries
+        });
+    } catch (error) {
+        console.log(error);
+        return errorResponse(res, 'error', 'Internal Server Error');
     }
 }

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { deliverySchema } from "../validation/body";
-import { Activity, Location, Order, Product, ProductTransaction, Profile, Rider, Transaction, User, Wallet } from "../models/Models";
-import { Accounts, CommissionScope, OrderMethod, OrderStatus, ProductTransactionStatus, TransactionStatus, TransactionType } from "../utils/enum";
+import { deliverySchema, disputeSchema } from "../validation/body";
+import { Activity, Dispute, Location, Order, Product, ProductTransaction, Profile, Rider, Transaction, User, Wallet } from "../models/Models";
+import { Accounts, CommissionScope, EntryCategory, OrderMethod, OrderStatus, ProductTransactionStatus, TransactionStatus, TransactionType } from "../utils/enum";
 import { errorResponse, getDistanceFromLatLonInKm, handleResponse, randomId, successResponse } from "../utils/modules";
 import { DeliveryPricing } from "../models/DeliveryPricing";
 import { Op, Sequelize } from 'sequelize';
@@ -9,6 +9,9 @@ import { getOrdersSchema } from "../validation/query";
 import dbsequelize from "../config/db";
 import { CommissionService } from "../services/CommissionService";
 import { LedgerService } from "../services/ledgerService";
+import { disputedOrderEmail, resolveDisputeEmail } from "../utils/messages";
+import { sendEmail } from "../services/gmail";
+import { DisputeStatus } from "../models/Dispute";
 
 export const createOrder = async (req: Request, res: Response) => {
     const { id } = req.user;
@@ -118,11 +121,15 @@ export const createOrder = async (req: Request, res: Response) => {
         })
 
         const newActivity = await Activity.create({
-            userId: order.rider.id,
+            userId: id,
             action: `${productTransaction.buyer.profile.firstName} ${productTransaction.buyer.profile.lastName} has created Order #${order.id}`,
             type: 'Order created',
             status: 'success'
         })
+
+        // productTransaction.status = ProductTransactionStatus.ORDERED;
+
+        await productTransaction.save();
 
 
         return successResponse(res, 'success', {
@@ -448,6 +455,10 @@ export const acceptOrder = async (req: Request, res: Response) => {
             }]
         });
 
+
+
+        // console.log('first name', order?.rider.profile.firstName);
+
         if (!order) {
             return handleResponse(res, 404, false, 'Order not found')
         }
@@ -463,7 +474,7 @@ export const acceptOrder = async (req: Request, res: Response) => {
         await order.save();
 
         const newActivity = await Activity.create({
-            userId: order.rider.id,
+            userId: order.riderId,
             action: `${order.rider.profile.firstName} ${order.rider.profile.lastName} has accepted Order #${order.id}`,
             type: 'Order accepted',
             status: 'success'
@@ -549,7 +560,7 @@ export const confirmPickup = async (req: Request, res: Response) => {
         await order.save();
 
         const newActivity = await Activity.create({
-            userId: order.productTransaction.buyer,
+            userId: order.productTransaction.buyer.id,
             action: `${order.productTransaction.buyer.profile.firstName} ${order.productTransaction.buyer.profile.lastName} has confirmed delivery of Order #${order.id}`,
             type: 'Order pickup confirmation',
             status: 'success'
@@ -634,111 +645,184 @@ export const deliverOrder = async (req: Request, res: Response) => {
 export const confirmDelivery = async (req: Request, res: Response) => {
     const { id } = req.user;
 
-    const { orderId } = req.params;
-
-    // const t = await dbsequelize.transaction();
+    const { productTransactionId } = req.params;
 
     try {
-        const order = await Order.findByPk(orderId, {
-            include: [{
-                model: ProductTransaction,
-                include: [{
+        const productTransaction = await ProductTransaction.findByPk(productTransactionId, {
+            include: [
+                {
                     model: User,
                     as: 'buyer',
                     include: [Profile]
-                }]
-            }]
+                },
+                {
+                    model: User,
+                    as: 'seller',
+                    include: [Profile, Wallet]
+                },
+                {
+                    model: Order,
+                }
+            ]
         });
 
-        if (!order) {
-            return handleResponse(res, 404, false, 'Order not found')
+
+        if (!productTransaction) {
+            return handleResponse(res, 404, false, 'Product transaction not found')
         }
 
-        if (order.status !== OrderStatus.DELIVERED) {
-            return handleResponse(res, 400, false, 'Order not delivered')
-        }
 
-        if (order.productTransaction.buyerId !== id) {
+        if (productTransaction.buyerId !== id) {
             return handleResponse(res, 400, false, 'You are not authorized to confirm this order')
         }
 
-        order.status = OrderStatus.CONFIRM_DELIVERY;
 
-        await order.save();
-
-        const rider = await User.findOne({
-            where: {
-                id: order.riderId
-            },
-            include: [Wallet]
-        })
-
-        if (!rider) {
-            throw new Error('Rider not found')
+        if (productTransaction.order && productTransaction.order.status !== OrderStatus.DELIVERED) {
+            return handleResponse(res, 400, false, 'Order not delivered')
         }
 
-        let amount = Number(order.cost);
+        let amount = Number(productTransaction.price);
 
-        const commission = await CommissionService.calculateCommission(amount, CommissionScope.DELIVERY);
+        let commission = await CommissionService.calculateCommission(amount, CommissionScope.PRODUCT);
 
         amount = amount - commission
 
-        rider.wallet.previousBalance = rider.wallet.currentBalance;
-        rider.wallet.currentBalance = Number(rider.wallet.currentBalance) + amount;
+        productTransaction.seller.wallet.previousBalance = productTransaction.seller.wallet.currentBalance;
+        productTransaction.seller.wallet.currentBalance = Number(productTransaction.seller.wallet.currentBalance) + amount;
 
-        await rider.wallet.save();
+        await productTransaction.seller.wallet.save();
 
-        const transaction = await Transaction.create({
-            userId: rider.id,
+        productTransaction.status = ProductTransactionStatus.DELIVERED;
+
+        await productTransaction.save();
+
+        const productCashTransaction = await Transaction.create({
+            userId: productTransaction.seller.id,
             amount: amount,
             reference: randomId(12),
-            status: TransactionStatus.PENDING,
+            status: TransactionStatus.SUCCESS,
             currency: 'NGN',
             timestamp: new Date(),
-            description: 'wallet deposit',
+            description: 'product sale',
             jobId: null,
-            productTransactionId: order.productTransactionId,
+            productTransactionId: productTransaction.id,
             type: TransactionType.CREDIT
         })
 
+
         await LedgerService.createEntry([
             {
-                transactionId: transaction.id,
-                userId: transaction.userId,
-                amount: transaction.amount + commission,
+                transactionId: productCashTransaction.id,
+                userId: productCashTransaction.userId,
+                amount: productCashTransaction.amount + commission,
                 type: TransactionType.DEBIT,
-                account: Accounts.PLATFORM_ESCROW
+                account: Accounts.PLATFORM_ESCROW,
+                category: EntryCategory.PRODUCT
             },
 
             {
-                transactionId: transaction.id,
-                userId: transaction.userId,
-                amount: transaction.amount,
+                transactionId: productCashTransaction.id,
+                userId: productCashTransaction.userId,
+                amount: productCashTransaction.amount,
                 type: TransactionType.CREDIT,
-                account: Accounts.PROFESSIONAL_WALLET
+                account: Accounts.PROFESSIONAL_WALLET,
+                category: EntryCategory.PRODUCT
             },
 
             {
-                transactionId: transaction.id,
+                transactionId: productCashTransaction.id,
                 userId: null,
                 amount: commission,
                 type: TransactionType.CREDIT,
-                account: Accounts.PLATFORM_REVENUE
+                account: Accounts.PLATFORM_REVENUE,
+                category: EntryCategory.PRODUCT
             }
         ])
 
+
+        if (productTransaction.orderMethod === OrderMethod.DELIVERY && productTransaction.order) {
+            productTransaction.order.status = OrderStatus.CONFIRM_DELIVERY;
+
+            await productTransaction.order.save();
+
+            const rider = await User.findOne({
+                where: {
+                    id: productTransaction.order.riderId
+                },
+                include: [Wallet]
+            })
+
+            if (!rider) {
+                throw new Error('Rider not found')
+            }
+
+            amount = Number(productTransaction.order.cost);
+
+            commission = await CommissionService.calculateCommission(amount, CommissionScope.DELIVERY);
+
+            amount = amount - commission
+
+            rider.wallet.previousBalance = rider.wallet.currentBalance;
+            rider.wallet.currentBalance = Number(rider.wallet.currentBalance) + amount;
+
+            await rider.wallet.save();
+
+            const orderTransaction = await Transaction.create({
+                userId: rider.id,
+                amount: amount,
+                reference: randomId(12),
+                status: TransactionStatus.SUCCESS,
+                currency: 'NGN',
+                timestamp: new Date(),
+                description: 'wallet deposit',
+                jobId: null,
+                productTransactionId: productTransaction.order.productTransactionId,
+                type: TransactionType.CREDIT
+            })
+
+            await LedgerService.createEntry([
+                {
+                    transactionId: orderTransaction.id,
+                    userId: orderTransaction.userId,
+                    amount: orderTransaction.amount + commission,
+                    type: TransactionType.DEBIT,
+                    account: Accounts.PLATFORM_ESCROW,
+                    category: EntryCategory.DELIVERY
+                },
+
+                {
+                    transactionId: orderTransaction.id,
+                    userId: orderTransaction.userId,
+                    amount: orderTransaction.amount,
+                    type: TransactionType.CREDIT,
+                    account: Accounts.PROFESSIONAL_WALLET,
+                    category: EntryCategory.DELIVERY
+                },
+
+                {
+                    transactionId: orderTransaction.id,
+                    userId: null,
+                    amount: commission,
+                    type: TransactionType.CREDIT,
+                    account: Accounts.PLATFORM_REVENUE,
+                    category: EntryCategory.DELIVERY
+                }
+            ])
+
+        }
+
+
         const newActivity = await Activity.create({
-            userId: order.productTransaction.buyer,
-            action: `${order.productTransaction.buyer.profile.firstName} ${order.productTransaction.buyer.profile.lastName} has confirmed delivery of Order #${order.id}`,
+            userId: productTransaction.buyerId,
+            action: `${productTransaction.buyer.profile.firstName} ${productTransaction.buyer.profile.lastName} has confirmed delivery of Order #${productTransaction.order.id}`,
             type: 'Order confirmation',
             status: 'success'
         })
 
-        return successResponse(res, 'success', order);
+        return successResponse(res, 'success', 'Order confirmed successfully');
     } catch (error) {
         console.log(error);
         // await t.rollback();
-
         return errorResponse(res, 'error', 'Error confirming delivery');
     }
 }
@@ -770,4 +854,142 @@ export const cancelOrder = async (req: Request, res: Response) => {
         console.log(error);
         return errorResponse(res, 'error', 'Error cancelling order');
     }
+}
+
+
+export const disputeOrder = async (req: Request, res: Response) => {
+    const { id } = req.user;
+
+
+    const result = disputeSchema.safeParse(req.body);
+
+    if (!result.success) {
+        return res.status(400).json({
+            message: 'Validation error',
+            errors: result.error.flatten()
+        });
+    }
+
+    const { reason, description, url, productTransactionId, partnerId } = result.data
+
+    if (!productTransactionId) {
+        return res.status(400).json({
+            message: 'You must provide a productTransactionId to dispute an order'
+        });
+    }
+
+    const productTransaction = await ProductTransaction.findByPk(productTransactionId, {
+        include: [Order, Product]
+    });
+
+    if (!productTransaction) {
+        return res.status(404).json({
+            message: 'Product transaction not found'
+        });
+    }
+
+    if (productTransaction.buyerId !== id) {
+        return res.status(403).json({
+            message: 'You are not authorized to dispute this order'
+        });
+    }
+
+    if (productTransaction.order && productTransaction.order.status !== OrderStatus.DELIVERED) {
+        return res.status(400).json({
+            message: 'You can only dispute an order that has been delivered'
+        });
+    }
+
+    const partner = await User.findByPk(partnerId || productTransaction.sellerId, { include: [Profile] });
+    const reporter = await User.findByPk(id, { include: [Profile] });
+
+    if (!partner) {
+        return res.status(404).json({
+            message: 'Partner not found'
+        });
+    }
+
+    productTransaction.status = ProductTransactionStatus.DISPUTED;
+    await productTransaction.save();
+
+    productTransaction.order.status = OrderStatus.DISPUTED;
+    await productTransaction.order.save();
+
+    const dispute = await Dispute.create({
+        reason,
+        description,
+        url,
+        productTransactionId: productTransaction.id,
+        reporterId: id,
+        partnerId: partnerId || productTransaction.sellerId,
+    })
+
+
+    const newActivity = await Activity.create({
+        userId: id,
+        action: `${reporter?.profile.firstName} has raised a dispute for product transaction #${productTransaction.id}`,
+        type: 'Product Transaction dispute',
+        status: 'pending'
+    });
+
+    const emailMsg = disputedOrderEmail(productTransaction, dispute);
+
+    await sendEmail(
+        partner?.email,
+        emailMsg.title,
+        emailMsg.body,
+        partner?.profile.firstName || 'User'
+    )
+
+    return successResponse(res, 'success', dispute);
+}
+
+export const resolveDispute = async (req: Request, res: Response) => {
+    const { id } = req.user;
+
+    const { disputeId } = req.params
+
+
+    const dispute = await Dispute.findByPk(disputeId, {
+        include: [{
+            model: User,
+            as: 'reporter'
+        }, {
+            model: User,
+            as: 'partner'
+        }]
+    })
+
+    if (!dispute) {
+        return handleResponse(res, 400, false, "Dispute not found")
+    }
+
+    dispute.status = DisputeStatus.RESOLVED;
+
+    await dispute.save();
+
+    const newActivity = await Activity.create({
+        userId: id,
+        action: `Dispute #${dispute.id} has been resolved by admin`,
+        type: 'Dispute resolution',
+        status: 'success'
+    });
+
+    const emailMsg = resolveDisputeEmail(dispute);
+
+    await sendEmail(
+        dispute.reporter.email,
+        emailMsg.title,
+        emailMsg.body,
+        'User'
+    );
+
+    await sendEmail(
+        dispute.partner.email,
+        emailMsg.title,
+        emailMsg.body,
+        'User'
+    );
+
+    return successResponse(res, 'success', dispute);
 }

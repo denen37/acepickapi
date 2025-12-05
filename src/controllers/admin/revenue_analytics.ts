@@ -3,6 +3,7 @@ import sequelize from '../../config/db'
 import { Op, QueryTypes, fn, col, literal } from "sequelize";
 import { errorResponse, successResponse } from "../../utils/modules";
 import { LedgerEntry } from "../../models/LegderEntry";
+import { Accounts } from "../../utils/enum";
 
 export const getMonthlyRevenue = async (req: Request, res: Response) => {
     try {
@@ -105,5 +106,28 @@ export const getMonthlyRevenueByCategory = async (req: Request, res: Response) =
         return errorResponse(res, 'error', 'Internal server error');
     }
 };
+
+export const revenueOverview = async (req: Request, res: Response) => {
+    try {
+        const balances = await LedgerEntry.findAll({
+            attributes: [
+                'account',
+                [
+                    literal(`
+            SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END) -
+            SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END)
+          `),
+                    'balance'
+                ]
+            ],
+            group: ['account']
+        });
+
+        return successResponse(res, 'success', balances);
+    } catch (error) {
+        console.log(error);
+        return errorResponse(res, 'error', 'Internal server error');
+    }
+}
 
 

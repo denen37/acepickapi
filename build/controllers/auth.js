@@ -1420,6 +1420,9 @@ const verifyBvnMatch = (req, res) => __awaiter(void 0, void 0, void 0, function*
         if (!user.phone || !user.profile.firstName || !user.profile.lastName) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Phone or First Name or Last name is missing');
         }
+        if (user.profile.bvnVerified) {
+            return (0, modules_1.handleResponse)(res, 400, false, "BVN already verified");
+        }
         const baseUrl = 'https://api.qoreid.com';
         let response = yield axios_1.default.post(`${baseUrl}/token`, {
             "clientId": "Z2YZZNAWSGPFF63Z2M5H",
@@ -1435,6 +1438,8 @@ const verifyBvnMatch = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 Authorization: `Bearer ${token}`
             }
         });
+        user.profile.bvnVerified = response.data.metadata.match;
+        yield user.profile.save();
         const verifyStatus = response.data.bvn_match.fieldMatches;
         return (0, modules_1.successResponse)(res, "BVN verified successfully", verifyStatus);
     }

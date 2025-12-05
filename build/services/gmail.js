@@ -19,7 +19,8 @@ const template_1 = require("../config/template");
 const transporter = nodemailer.createTransport({
     host: configSetup_1.default.EMAIL_HOST,
     port: configSetup_1.default.EMAIL_PORT,
-    secure: false,
+    secure: true,
+    requireTLS: false,
     auth: {
         user: configSetup_1.default.EMAIL_USER,
         pass: configSetup_1.default.EMAIL_PASS

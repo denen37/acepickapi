@@ -81,6 +81,7 @@ const getProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.getProduct = getProduct;
 const getMyProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, role } = req.user;
+    console.log("id", id);
     try {
         const products = yield Models_1.Product.findAll({
             where: {

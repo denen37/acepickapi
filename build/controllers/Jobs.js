@@ -557,64 +557,6 @@ const viewInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.viewInvoice = viewInvoice;
-// export const payforJob = async (req: Request, res: Response) => {
-//     const { id } = req.user;
-//     const result = paymentSchema.safeParse(req.body);
-//     if (!result.success) {
-//         return res.status(400).json({
-//             error: "Invalid input",
-//             issues: result.error.format(),
-//         });
-//     }
-//     const { amount, paidFor, pin, jobId } = result.data;
-//     try {
-//         const job = await Job.findByPk(jobId);
-//         if (!job) {
-//             return handleResponse(res, 404, false, 'Job not found');
-//         }
-//         if (job.payStatus === PayStatus.PAID) {
-//             return handleResponse(res, 400, false, 'Job has already been paid for')
-//         }
-//         // try {
-//         //     response = await axios.post(`${config.PAYMENT_BASE_URL}/pay-api/debit-wallet`, {
-//         //         amount,
-//         //         pin,
-//         //         reason: 'job payment',
-//         //         jobId
-//         //     }, {
-//         //         headers: {
-//         //             Authorization: req.headers.authorization,
-//         //         }
-//         //     });
-//         // } catch (error: any) {
-//         //     // axios error - get meaningful message from backend
-//         //     const errData = error.response?.data || {};
-//         //     const errMessage = errData.message || error.message || 'Payment failed';
-//         //     return handleResponse(res, 400, false, errMessage, errData.data);
-//         // }
-//         //if (response.data.status) {
-//         job.payStatus = PayStatus.PAID;
-//         job.paymentRef = randomUUID();
-//         job.status = JobStatus.ONGOING;
-//         await job.save();
-//         if (job.payStatus === PayStatus.PAID) {
-//             const updatedProfessionalProfile = await Profile.update({
-//                 totalJobsOngoing: (job.professional.profile.totalJobsOngoing || 0) + 1,
-//             }, {
-//                 where: { userId: job.professionalId }
-//             })
-//             const updatedClientProfile = await Profile.update({
-//                 totalJobsOngoing: (job.professional.profile.totalJobsOngoing || 0) + 1,
-//             }, {
-//                 where: { userId: job.clientId }
-//             })
-//         }
-//         return successResponse(res, 'success', { message: 'Job payment successful' });
-//         //   }
-//     } catch (error: any) {
-//         return errorResponse(res, 'error', { message: error.message, error });
-//     }
-// };
 const completeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
     const { jobId } = req.params;
@@ -637,6 +579,12 @@ const completeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
         if (!job) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Job does not exist / Job already completed');
+        }
+        if (job.status !== enum_1.JobStatus.ONGOING) {
+            return (0, modules_1.handleResponse)(res, 400, false, `You cannot complete a/an ${job.status} job`);
+        }
+        if (job.professionalId !== req.user.id) {
+            return (0, modules_1.handleResponse)(res, 403, false, 'You are not authorized to complete this job');
         }
         job.status = enum_1.JobStatus.COMPLETED;
         yield job.save();
@@ -667,7 +615,7 @@ const completeJob = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             type: 'Job Completion',
             status: 'success'
         });
-        return (0, modules_1.successResponse)(res, 'success', { message: 'Job completed sucessfully', emailSendStatus: Boolean(emailResponse) });
+        return (0, modules_1.successResponse)(res, 'success', { message: 'Job completed sucessfully', emailSendStatus: emailResponse.success });
     }
     catch (error) {
         return (0, modules_1.errorResponse)(res, 'error', error.message);
@@ -682,7 +630,7 @@ const approveJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             where: {
                 id: jobId,
                 //clientId: req.user.id, 
-                status: enum_1.JobStatus.COMPLETED
+                // status: JobStatus.COMPLETED
             },
             include: [{
                     model: Models_1.User,
@@ -695,7 +643,7 @@ const approveJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 }]
         });
         if (!job) {
-            return (0, modules_1.handleResponse)(res, 404, false, 'Job does not exist / Job already approved');
+            return (0, modules_1.handleResponse)(res, 404, false, 'Job does not exist');
         }
         if (job.status !== enum_1.JobStatus.COMPLETED) {
             return (0, modules_1.handleResponse)(res, 404, false, `You cannot approve a/an ${job.status} job`);
@@ -708,11 +656,13 @@ const approveJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         job.client.profile.totalJobsApproved = (((_b = job.client.profile) === null || _b === void 0 ? void 0 : _b.totalJobsApproved) || 0) + 1;
         yield ((_c = job.client.profile) === null || _c === void 0 ? void 0 : _c.save());
         if (job.professional.wallet) {
-            let amount = job.workmanship + job.materialsCost;
-            const commission = yield CommissionService_1.CommissionService.calculateCommission(job.workmanship, enum_1.CommissionScope.JOB);
+            let amount = Number(job.workmanship) + Number(job.materialsCost);
+            const commission = yield CommissionService_1.CommissionService.calculateCommission(Number(job.workmanship), enum_1.CommissionScope.JOB);
             amount = amount - commission;
-            job.professional.wallet.previousBalance = job.professional.wallet.currentBalance || 0;
-            job.professional.wallet.currentBalance = (job.professional.wallet.currentBalance || 0) + amount;
+            let prevBal = Number(job.professional.wallet.currentBalance) || 0;
+            let newBal = prevBal + amount;
+            job.professional.wallet.previousBalance = prevBal;
+            job.professional.wallet.currentBalance = newBal;
             yield job.professional.wallet.save();
             const transaction = yield Models_1.Transaction.create({
                 userId: job.professional.id,
@@ -732,21 +682,24 @@ const approveJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                     userId: transaction.userId,
                     amount: transaction.amount + commission,
                     type: enum_1.TransactionType.DEBIT,
-                    account: enum_1.Accounts.PLATFORM_ESCROW
+                    account: enum_1.Accounts.PLATFORM_ESCROW,
+                    category: enum_1.EntryCategory.JOB
                 },
                 {
                     transactionId: transaction.id,
                     userId: transaction.userId,
                     amount: transaction.amount,
                     type: enum_1.TransactionType.CREDIT,
-                    account: enum_1.Accounts.PROFESSIONAL_WALLET
+                    account: enum_1.Accounts.PROFESSIONAL_WALLET,
+                    category: enum_1.EntryCategory.JOB
                 },
                 {
                     transactionId: transaction.id,
                     userId: null,
                     amount: commission,
                     type: enum_1.TransactionType.CREDIT,
-                    account: enum_1.Accounts.PLATFORM_REVENUE
+                    account: enum_1.Accounts.PLATFORM_REVENUE,
+                    category: enum_1.EntryCategory.JOB
                 }
             ]);
         }
@@ -772,7 +725,7 @@ const approveJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             type: 'Job Approval',
             status: 'success'
         });
-        return (0, modules_1.successResponse)(res, 'success', { message: 'Job approved sucessfully', emailSendStatus: emailResponse.success });
+        return (0, modules_1.successResponse)(res, 'success', { message: 'Job approved sucessfully', /*emailSendStatus: emailResponse.success */ });
     }
     catch (error) {
         return (0, modules_1.errorResponse)(res, 'error', error.message);

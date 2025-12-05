@@ -7,7 +7,8 @@ import { templateData } from '../config/template';
 const transporter = nodemailer.createTransport({
     host: config.EMAIL_HOST,
     port: config.EMAIL_PORT,
-    secure: false,
+    secure: true,
+    requireTLS: false,
     auth: {
         user: config.EMAIL_USER,
         pass: config.EMAIL_PASS

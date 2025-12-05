@@ -291,3 +291,55 @@ export const rejectProductEmail = (product: Product) => {
         <p><b>Product description: </b>${product.description}</p>
              `}
 }
+
+export const deactivatedUserEmail = (user: User) => {
+    return {
+        title: `Account Deactivated`,
+        body: `Your account has been deactivated by the admin. Please contact the admin for more information.`
+    }
+}
+
+export const suspendedUserEmail = (user: User) => {
+    return {
+        title: `Account Suspended`,
+        body: `Your account has been suspended by the admin. Please contact the admin for more information.`
+    }
+}
+
+export const reactivatedUserEmail = (user: User) => {
+    return {
+        title: `Account Reactivated`,
+        body: `Your account has been reactivated by the admin. You can now log in and start using the platform.`
+    }
+}
+
+export const disputedOrderEmail = (productTrans: ProductTransaction, dispute: Dispute) => {
+    return {
+        title: `Dispute Created`,
+        body: `A dispute has been created for your order with the product <b>${productTrans.product.name}</b>. Please review the dispute and take appropriate action.<br><br>
+        
+        <h3>Product</h3>
+        <p><b>Product name: </b>${productTrans.product.name}</p>
+        <p><b>Product description: </b>${productTrans.product.description}</p>
+        <p><b>Price: </b>${productTrans.price}</p>
+
+
+        <h3>Dispute</h3>
+        <p><b>Dispute title: </b>${dispute.reason}</p>
+        <p><b>Dispute description: </b>${dispute.description}</p>
+        `
+    }
+}
+
+export const resolveDisputeEmail = (dispute: Dispute) => {
+    return {
+        title: "Dispute resolved",
+        body: `
+            Your dispute has been successfully resolved. All withheld funds will be released to you shortly.
+            <h3>Dispute</h3>
+            <p><b>Dispute title:</b> ${dispute.reason}</p>
+            <p><b>Dispute description:</b> ${dispute.description}</p>
+        `
+    };
+};
+

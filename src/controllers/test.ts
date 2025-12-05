@@ -7,6 +7,7 @@ import { sendOTPEmail } from '../utils/messages';
 import { sendEmail } from '../services/gmail';
 import { Location } from '../models/Location';
 import sequelize, { Op } from 'sequelize';
+import redis from '../config/redis';
 
 export const sendSMSTest = async (req: Request, res: Response) => {
     const { phone } = req.body;
@@ -87,4 +88,16 @@ export async function findPersonsNearby(req: Request, res: Response) {
     });
 
     return successResponse(res, 'Persons found nearby', { location });
+}
+
+export const testRedis = async (req: Request, res: Response) => {
+    try {
+        await redis.set("testKey", "Redis is working!");
+
+        const value = await redis.get("testKey");
+
+        return successResponse(res, 'success', { status: "ok", message: value })
+    } catch (error) {
+        return errorResponse(res, 'error', error);
+    }
 }

@@ -56,4 +56,6 @@ export class Rating extends Model {
 
     @BelongsTo(() => Order, { onDelete: 'CASCADE' })
     order!: Order;
+
+    avgRating!: number;
 }

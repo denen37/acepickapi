@@ -4,6 +4,8 @@ import { Table, Model, Column, DataType, HasOne, BelongsToMany, HasMany, AllowNu
 // import { LanLog } from './LanLog';
 // import { User } from './User';
 import { Job } from './Job';
+import { ProductTransaction } from './ProductTransaction';
+import { User } from './User';
 
 
 
@@ -11,7 +13,6 @@ import { Job } from './Job';
 export enum DisputeStatus {
     RESOLVED = 'RESOLVED',
     PENDING = 'PENDING',
-    SUPERADMIN = "SUPERADMIN"
 }
 
 
@@ -30,7 +31,7 @@ export class Dispute extends Model {
     description!: string;
 
     @Default(DisputeStatus.PENDING)
-    @Column(DataType.ENUM(DisputeStatus.RESOLVED, DisputeStatus.PENDING, DisputeStatus.SUPERADMIN))
+    @Column(DataType.ENUM(DisputeStatus.RESOLVED, DisputeStatus.PENDING))
     status!: DisputeStatus;
 
 
@@ -45,15 +46,21 @@ export class Dispute extends Model {
     jobId!: number;
 
 
+    @ForeignKey(() => ProductTransaction)
+    @AllowNull(true)
+    @Column(DataType.INTEGER)
+    productTransactionId!: number;
 
-    // @ForeignKey(() => User)
+
+
+    @ForeignKey(() => User)
     @AllowNull(true)
     @Column(DataType.UUID)
     reporterId!: string;
 
 
 
-    // @ForeignKey(() => User)
+    @ForeignKey(() => User)
     @AllowNull(true)
     @Column(DataType.UUID)
     partnerId!: string;
@@ -63,13 +70,14 @@ export class Dispute extends Model {
     @BelongsTo(() => Job, { onDelete: 'CASCADE' })
     job!: Job;
 
+    @BelongsTo(() => ProductTransaction, { onDelete: 'CASCADE' })
+    productTransaction!: ProductTransaction;
+
+    @BelongsTo(() => User, { onDelete: 'CASCADE', foreignKey: 'reporterId', as: 'reporter', })
+    reporter!: User;
 
 
-    // @BelongsTo(() => User, { onDelete: 'CASCADE', foreignKey: 'reporterId', as: 'reporter', })
-    // reporter!: User;
-
-
-    // @BelongsTo(() => User, { onDelete: 'CASCADE', foreignKey: 'partnerId', as: 'partner', })
-    // partner!: User;
+    @BelongsTo(() => User, { onDelete: 'CASCADE', foreignKey: 'partnerId', as: 'partner', })
+    partner!: User;
 
 }

@@ -29,7 +29,7 @@ const getProfessionals = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 issues: result.error.format(),
             });
         }
-        const { professionId, profession, sector, span, state, lga, rating, page, limit, chargeFrom } = result.data;
+        const { professionId, profession, sector, span, state, lga, rating, page, limit, chargeFrom, allowUnverified = false } = result.data;
         const { id } = req.user;
         let spanValue;
         let userLocation;
@@ -62,6 +62,7 @@ const getProfessionals = (req, res) => __awaiter(void 0, void 0, void 0, functio
       profile.lastName AS 'profile.lastName',
       profile.avatar AS 'profile.avatar',
       profile.verified AS 'profile.verified',
+      profile.bvnVerified AS 'profile.bvnVerified',
       profile.userId AS 'profile.userId',
 
       user.id AS 'profile.user.id',
@@ -94,7 +95,7 @@ const getProfessionals = (req, res) => __awaiter(void 0, void 0, void 0, functio
       sector.image AS 'profession.sector.image'
 
     FROM professionals AS Professional
-    LEFT JOIN profiles AS profile ON Professional.profileId = profile.id
+    LEFT JOIN profiles AS profile ON Professional.profileId = profile.id ${!allowUnverified ? 'AND profile.bvnVerified = true' : ''}
     LEFT JOIN users AS user ON profile.userId = user.id AND user.status = '${enum_1.UserStatus.ACTIVE}'
     LEFT JOIN review AS professionalReviews ON user.id = professionalReviews.professionalUserId
     LEFT JOIN rating AS professionalRatings ON user.id = professionalRatings.professionalUserId
@@ -208,6 +209,8 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
                         'totalJobsApproved', 'totalJobsCanceled', 'totalDisputes', 'bvn',
                         'bvnVerified', 'switch', 'store', 'position', 'userId', 'createdAt', 'updatedAt'
                     ],
+                    // where:{
+                    // },
                     include: [
                         {
                             model: Models_1.User,

@@ -19,6 +19,7 @@ import { LedgerService } from "../services/ledgerService";
 
 export const initiatePayment = async (req: Request, res: Response) => {
     const { id, email, role } = req.user
+    
 
     try {
         const result = initPaymentSchema.safeParse(req.body);
@@ -32,6 +33,55 @@ export const initiatePayment = async (req: Request, res: Response) => {
         }
 
         const { amount, description, jobId, productTransactionId } = result.data;
+
+        let expectedAmount;
+
+        switch (description.toLowerCase()) {
+            case "job payment": {
+                const job = await Job.findOne({
+                    where: {
+                        id: jobId
+                    }
+                });
+        
+                expectedAmount = Number(job?.workmanship ?? 0) + Number(job?.materialsCost ?? 0);
+                break;
+            }
+        
+            case "product payment": {
+                const productTrans = await ProductTransaction.findOne({
+                    where: {
+                        id: productTransactionId
+                    }
+                });
+        
+                expectedAmount = Number(productTrans?.price ?? 0);
+                break;
+            }
+        
+            case "product_order payment": {
+                const productOrderTrans = await ProductTransaction.findOne({
+                    where: {
+                        id: productTransactionId
+                    },
+                    include: [Order]
+                });
+        
+                expectedAmount = Number(productOrderTrans?.price ?? 0) 
+                               + Number(productOrderTrans?.order?.cost ?? 0);
+                break;
+            }
+        
+            default:
+                break;
+        }
+        
+        //expectedAmount is undefined for wallet topup
+        if(expectedAmount){
+            if(amount < expectedAmount){
+                return handleResponse(res, 400, false, "Insufficient amount");
+            }
+        }
 
         // Initiate payment with Paystack API
         const paystackResponseInit = await axios.post(

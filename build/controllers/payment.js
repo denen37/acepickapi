@@ -27,6 +27,7 @@ const messages_1 = require("../utils/messages");
 const gmail_1 = require("../services/gmail");
 const ledgerService_1 = require("../services/ledgerService");
 const initiatePayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d, _e, _f;
     const { id, email, role } = req.user;
     try {
         const result = body_1.initPaymentSchema.safeParse(req.body);
@@ -38,6 +39,46 @@ const initiatePayment = (req, res) => __awaiter(void 0, void 0, void 0, function
             });
         }
         const { amount, description, jobId, productTransactionId } = result.data;
+        let expectedAmount;
+        switch (description.toLowerCase()) {
+            case "job payment": {
+                const job = yield Models_1.Job.findOne({
+                    where: {
+                        id: jobId
+                    }
+                });
+                expectedAmount = Number((_a = job === null || job === void 0 ? void 0 : job.workmanship) !== null && _a !== void 0 ? _a : 0) + Number((_b = job === null || job === void 0 ? void 0 : job.materialsCost) !== null && _b !== void 0 ? _b : 0);
+                break;
+            }
+            case "product payment": {
+                const productTrans = yield Models_1.ProductTransaction.findOne({
+                    where: {
+                        id: productTransactionId
+                    }
+                });
+                expectedAmount = Number((_c = productTrans === null || productTrans === void 0 ? void 0 : productTrans.price) !== null && _c !== void 0 ? _c : 0);
+                break;
+            }
+            case "product_order payment": {
+                const productOrderTrans = yield Models_1.ProductTransaction.findOne({
+                    where: {
+                        id: productTransactionId
+                    },
+                    include: [Models_1.Order]
+                });
+                expectedAmount = Number((_d = productOrderTrans === null || productOrderTrans === void 0 ? void 0 : productOrderTrans.price) !== null && _d !== void 0 ? _d : 0)
+                    + Number((_f = (_e = productOrderTrans === null || productOrderTrans === void 0 ? void 0 : productOrderTrans.order) === null || _e === void 0 ? void 0 : _e.cost) !== null && _f !== void 0 ? _f : 0);
+                break;
+            }
+            default:
+                break;
+        }
+        //expectedAmount is undefined for wallet topup
+        if (expectedAmount) {
+            if (amount < expectedAmount) {
+                return (0, modules_1.handleResponse)(res, 400, false, "Insufficient amount");
+            }
+        }
         // Initiate payment with Paystack API
         const paystackResponseInit = yield axios_1.default.post("https://api.paystack.co/transaction/initialize", {
             email: email,

@@ -17,7 +17,7 @@ export class Transaction extends Model {
 
 
     @AllowNull(false)
-    @Column(DataType.DECIMAL)
+    @Column(DataType.DECIMAL(10, 2))
     amount!: number
 
 

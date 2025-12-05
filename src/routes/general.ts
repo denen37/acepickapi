@@ -6,7 +6,7 @@ import { getCooperates } from "../controllers/cooperates";
 import { approveJob, cancelJob, completeJob, createJobOrder, disputeJob, generateInvoice, getJobById, getJobs, getLatestJob, respondToJob, updateInvoice, updateJob, viewInvoice } from "../controllers/Jobs";
 import { UserRole } from "../utils/enum";
 import { allowRoles } from "../middlewares/allowRoles";
-import { findPersonsNearby, sendEmailTest, sendSMSTest, testNotification } from "../controllers/test";
+import { findPersonsNearby, sendEmailTest, sendSMSTest, testNotification, testRedis } from "../controllers/test";
 import { addLocation, deleteLocation, getLocationById, getMyLocations, updateLocation } from "../controllers/location";
 import { getClient } from "../controllers/client";
 import { addAccount, deleteAccount, getAccounts, getBanks, resolveAccount, updateAccount } from "../controllers/account";
@@ -22,7 +22,7 @@ import { addProduct, deleteProduct, getProducts, getMyProducts, updateProduct, s
 import { addCategory, deleteCategory, getCategories, updateCategory } from "../controllers/category";
 import { uploads } from "../services/upload";
 import { uploadFiles } from "../controllers/upload";
-import { acceptOrder, cancelOrder, confirmDelivery, confirmPickup, createOrder, deliverOrder, getNearestPaidOrders, getOrdersBuyer, getOrdersRider, getOrdersSeller, pickupOrder, transportOrder } from "../controllers/order";
+import { acceptOrder, cancelOrder, confirmDelivery, confirmPickup, createOrder, deliverOrder, disputeOrder, getNearestPaidOrders, getOrdersBuyer, getOrdersRider, getOrdersSeller, pickupOrder, resolveDispute, transportOrder } from "../controllers/order";
 import { giveRating, isRated } from "../controllers/rating";
 import { deleteReview, editReview, giveReview } from "../controllers/review";
 
@@ -93,6 +93,7 @@ routes.post('/notification-test', testNotification);
 routes.post('/send-sms', sendSMSTest);
 routes.post('/send-email', sendEmailTest);
 routes.post('/nearest-person', findPersonsNearby);
+routes.get('/redis-test', testRedis);
 
 routes.put('/location', updateLocation);
 routes.get('/my-locations', getMyLocations);
@@ -129,13 +130,13 @@ routes.post('/transfer/verify/:ref', verifyTransfer);
 
 
 routes.get('/products', getProducts);
+routes.get('/products/mine', getMyProducts);
 routes.get('/products/:id', getProduct);
 routes.post('/products', addProduct);
 routes.put('/products/:id', updateProduct);
 routes.delete('/products/:id', deleteProduct);
 routes.post('/products/upload', uploads.array('product', 5), uploadFiles);
 routes.post('/products/select', selectProduct);
-routes.get('/products/mine', getMyProducts);
 routes.post('/products/restock', restockProduct);
 routes.get('/products/transactions/sold', soldProducts);
 routes.get('/products/transactions/bought', boughtProducts);
@@ -147,7 +148,7 @@ routes.post('/categories', addCategory);
 routes.put('/categories/:id', updateCategory);
 routes.delete('/categories/:id', deleteCategory);
 
-routes.post('/create-order', allowRoles(UserRole.CLIENT), createOrder);
+routes.post('/create-order', allowRoles('*'), createOrder);
 routes.get('/paid-orders', allowRoles(UserRole.DELIVERY), getNearestPaidOrders);
 routes.get('/rider-orders', allowRoles(UserRole.DELIVERY), getOrdersRider);
 routes.get('/buyer-orders', allowRoles(UserRole.CLIENT), getOrdersBuyer);
@@ -157,14 +158,16 @@ routes.put('/orders/pickup/:orderId', allowRoles(UserRole.DELIVERY), pickupOrder
 routes.put('/orders/confirm_pickup/:orderId', allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), confirmPickup);
 // routes.put('/orders/transport/:orderId', allowRoles(UserRole.DELIVERY), transportOrder);
 routes.put('/orders/deliver/:orderId', allowRoles(UserRole.DELIVERY), deliverOrder);
-routes.put('/orders/confirm_delivery/:orderId', allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), confirmDelivery);
+routes.put('/orders/confirm_delivery/:productTransactionId', allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), confirmDelivery);
 routes.put('/orders/cancel/:orderId', allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), cancelOrder);
+routes.post('/orders/dispute', allowRoles(UserRole.CLIENT, UserRole.PROFESSIONAL), disputeOrder);
+routes.post('/orders/dispute/resolve/:disputeId', resolveDispute);
 
-routes.post('/ratings', giveRating)
-routes.get('/is-rated', isRated)
-routes.post('/reviews', giveReview)
-routes.put('/reviews/:reviewId', editReview)
-routes.delete('/reviews/:reviewId', deleteReview)
+routes.post('/ratings', giveRating);
+routes.get('/is-rated', isRated);
+routes.post('/reviews', giveReview);
+routes.put('/reviews/:reviewId', editReview);
+routes.delete('/reviews/:reviewId', deleteReview);
 
 
 export default routes;

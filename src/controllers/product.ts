@@ -99,6 +99,8 @@ export const getProduct = async (req: Request, res: Response) => {
 export const getMyProducts = async (req: Request, res: Response) => {
     const { id, role } = req.user
 
+    console.log("id", id);
+
     try {
         const products = await Product.findAll({
             where: {

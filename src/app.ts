@@ -4,6 +4,7 @@ import * as dotenv from 'dotenv';
 import path from "path";
 import db from './config/db';
 import config from './config/configSetup';
+import redis from './config/redis';
 import cors from 'cors';
 import { logRoutes } from './middlewares/logRoutes';
 import { isAuthorized } from './middlewares/authorize';
