@@ -35,6 +35,9 @@ export const MyAccountInfo = async (req: Request, res: Response) => {
                             {
                                 model: Wallet,
                                 attributes: { exclude: ['pin'] }
+                            },
+                            {
+                                model: Rider
                             }
                         ]
                     },
@@ -63,9 +66,6 @@ export const MyAccountInfo = async (req: Request, res: Response) => {
 
                     {
                         model: Portfolio,
-                    },
-                    {
-                        model: Rider
                     }
 
                 ],
@@ -80,8 +80,8 @@ export const MyAccountInfo = async (req: Request, res: Response) => {
         profile.user.wallet.setDataValue('isActive', profile.user.wallet.pin !== null)
 
         return successResponse(res, "Successful", profile)
-    } catch (error) {
-        return errorResponse(res, "Failed", error)
+    } catch (error: any) {
+        return errorResponse(res, "Failed", { error: error?.message })
     }
 };
 

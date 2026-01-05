@@ -118,6 +118,7 @@ export const getActivities = async (req: Request, res: Response) => {
                 }),
                 ...(status && (status === 'all' ? {} : { status })),
             },
+            order: [['createdAt', 'DESC']],
             offset: (page - 1) * limit,
             limit
         })

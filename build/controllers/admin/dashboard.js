@@ -112,6 +112,7 @@ const getActivities = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     { action: { [sequelize_1.Op.like]: `%${search}%` } },
                 ],
             })), (status && (status === 'all' ? {} : { status }))),
+            order: [['createdAt', 'DESC']],
             offset: (page - 1) * limit,
             limit
         });

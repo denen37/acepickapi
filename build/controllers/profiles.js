@@ -35,6 +35,9 @@ const MyAccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                         {
                             model: Models_1.Wallet,
                             attributes: { exclude: ['pin'] }
+                        },
+                        {
+                            model: Models_1.Rider
                         }
                     ]
                 },
@@ -59,9 +62,6 @@ const MyAccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 },
                 {
                     model: Models_1.Portfolio,
-                },
-                {
-                    model: Models_1.Rider
                 }
             ],
         });
@@ -71,7 +71,7 @@ const MyAccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return (0, modules_1.successResponse)(res, "Successful", profile);
     }
     catch (error) {
-        return (0, modules_1.errorResponse)(res, "Failed", error);
+        return (0, modules_1.errorResponse)(res, "Failed", { error: error === null || error === void 0 ? void 0 : error.message });
     }
 });
 exports.MyAccountInfo = MyAccountInfo;
