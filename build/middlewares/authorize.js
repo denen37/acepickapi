@@ -31,16 +31,21 @@ const isAuthorized = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
     token = token.split(' ')[1];
     if (token === 'null' || !token)
         return (0, modules_1.handleResponse)(res, 401, false, `Unauthorized request`);
-    let verified = (0, jsonwebtoken_1.verify)(token, configSetup_1.default.TOKEN_SECRET);
-    if (!verified)
-        return (0, modules_1.handleResponse)(res, 401, false, `Unauthorized request`);
-    if (verified.admin === true) {
-        req.admin = verified;
+    try {
+        let verified = (0, jsonwebtoken_1.verify)(token, configSetup_1.default.TOKEN_SECRET);
+        if (!verified)
+            return (0, modules_1.handleResponse)(res, 401, false, `Unauthorized request`);
+        if (verified.admin === true) {
+            req.admin = verified;
+        }
+        else {
+            req.user = verified;
+        }
+        next();
     }
-    else {
-        req.user = verified;
+    catch (error) {
+        return (0, modules_1.handleResponse)(res, 401, false, `Invalid or expired token`);
     }
-    next();
 });
 exports.isAuthorized = isAuthorized;
 const socketAuthorize = (socket, next) => __awaiter(void 0, void 0, void 0, function* () {

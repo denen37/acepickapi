@@ -23,15 +23,20 @@ export const isAuthorized = async (req: Request, res: Response, next: NextFuncti
     token = token.split(' ')[1];
 
     if (token === 'null' || !token) return handleResponse(res, 401, false, `Unauthorized request`);
-    let verified: any = verify(token, config.TOKEN_SECRET);
-    if (!verified) return handleResponse(res, 401, false, `Unauthorized request`);
-    if (verified.admin === true) {
-        req.admin = verified;
-    } else {
-        req.user = verified;
-    }
 
-    next();
+    try {
+        let verified: any = verify(token, config.TOKEN_SECRET);
+        if (!verified) return handleResponse(res, 401, false, `Unauthorized request`);
+        if (verified.admin === true) {
+            req.admin = verified;
+        } else {
+            req.user = verified;
+        }
+
+        next();
+    } catch (error) {
+        return handleResponse(res, 401, false, `Invalid or expired token`);
+    }
 };
 
 
