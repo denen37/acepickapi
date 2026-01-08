@@ -15,7 +15,12 @@ const body_1 = require("../validation/body");
 const modules_1 = require("../utils/modules");
 const updateLocation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
+        const { locationId } = req.params;
+        if (!locationId || Number.isNaN(Number(locationId))) {
+            return res.status(400).json({
+                error: "Invalid or missing locationId parameter",
+            });
+        }
         const result = body_1.updateLocationSchema.safeParse(req.body);
         if (!result.success) {
             return res.status(400).json({
@@ -32,7 +37,7 @@ const updateLocation = (req, res) => __awaiter(void 0, void 0, void 0, function*
             state,
             zipcode
         }, {
-            where: { id: id }
+            where: { id: locationId },
         });
         return (0, modules_1.successResponse)(res, 'Location updated successfully', location);
     }

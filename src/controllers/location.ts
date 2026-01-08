@@ -5,7 +5,13 @@ import { errorResponse, successResponse } from '../utils/modules';
 
 export const updateLocation = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const { locationId } = req.params;
+
+        if (!locationId || Number.isNaN(Number(locationId))) {
+            return res.status(400).json({
+                error: "Invalid or missing locationId parameter",
+            });
+        }
 
         const result = updateLocationSchema.safeParse(req.body);
 
@@ -26,7 +32,7 @@ export const updateLocation = async (req: Request, res: Response) => {
             state,
             zipcode
         }, {
-            where: { id: id }
+            where: { id: locationId },
         });
 
         return successResponse(res, 'Location updated successfully', location);

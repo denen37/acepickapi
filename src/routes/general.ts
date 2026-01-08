@@ -95,7 +95,7 @@ routes.post('/send-email', sendEmailTest);
 routes.post('/nearest-person', findPersonsNearby);
 routes.get('/redis-test', testRedis);
 
-routes.put('/location', updateLocation);
+routes.put('/location/:locationId', updateLocation);
 routes.get('/my-locations', getMyLocations);
 routes.get('/locations/:id', getLocationById);
 routes.post('/locations', addLocation);
