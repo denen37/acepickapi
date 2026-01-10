@@ -236,7 +236,7 @@ export const getProfessionalById = async (req: Request, res: Response) => {
                 {
                   model: Review,
                   as: 'professionalReviews',
-                  attributes: ['id', 'rating', 'review', 'professionalUserId', 'clientUserId', 'createdAt', 'updatedAt'],// used only for aggregation
+                  attributes: ['id', 'text', 'professionalUserId', 'clientUserId', 'createdAt', 'updatedAt'],// used only for aggregation
                   include: [
                     {
                       model: User,
@@ -327,7 +327,7 @@ export const getProfessionalById = async (req: Request, res: Response) => {
         'profile.switch',
         'profile.store',
         'profile.position',
-        'profile.userId',
+        // 'profile.userId',
         'profile.createdAt',
         'profile.updatedAt',
 

@@ -228,7 +228,7 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
                                 {
                                     model: Models_1.Review,
                                     as: 'professionalReviews',
-                                    attributes: ['id', 'rating', 'review', 'professionalUserId', 'clientUserId', 'createdAt', 'updatedAt'], // used only for aggregation
+                                    attributes: ['id', 'text', 'professionalUserId', 'clientUserId', 'createdAt', 'updatedAt'], // used only for aggregation
                                     include: [
                                         {
                                             model: Models_1.User,
@@ -316,7 +316,7 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
                 'profile.switch',
                 'profile.store',
                 'profile.position',
-                'profile.userId',
+                // 'profile.userId',
                 'profile.createdAt',
                 'profile.updatedAt',
                 'profile.user.id',
