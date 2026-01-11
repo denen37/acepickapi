@@ -181,7 +181,7 @@ export const getProfessionalById = async (req: Request, res: Response) => {
             dbsequelize.literal(`(
               SELECT AVG(value)
               FROM rating
-              WHERE rating.professionalUserId = Profile.userId
+              WHERE rating.professionalUserId = profiles.userId
             )`),
             'avgRating'
           ],
@@ -189,7 +189,7 @@ export const getProfessionalById = async (req: Request, res: Response) => {
             dbsequelize.literal(`(
               SELECT COUNT(*)
               FROM rating
-              WHERE rating.professionalUserId = Profile.userId
+              WHERE rating.professionalUserId = profiles.userId
             )`),
             'numRatings'
           ]
