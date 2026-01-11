@@ -174,7 +174,7 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
                         db_1.default.literal(`(
               SELECT AVG(value)
               FROM rating
-              WHERE rating.professionalUserId = profiles.userId
+              WHERE rating.professionalUserId = Profile.userId
             )`),
                         'avgRating'
                     ],
@@ -182,7 +182,7 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
                         db_1.default.literal(`(
               SELECT COUNT(*)
               FROM rating
-              WHERE rating.professionalUserId = profiles.userId
+              WHERE rating.professionalUserId = Profile.userId
             )`),
                         'numRatings'
                     ]
