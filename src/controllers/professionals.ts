@@ -177,6 +177,11 @@ export const getProfessionalById = async (req: Request, res: Response) => {
       where: { id: professionalId },
       include: [
         {
+          model: Profile,
+          as: 'profile',
+          attributes: ['id']
+        },
+        {
           model: Profession,
           as: 'profession',
           include: [
@@ -186,224 +191,81 @@ export const getProfessionalById = async (req: Request, res: Response) => {
             }
           ]
         },
-        {
-          model: Profile,
-          as: 'profile',
-          attributes: [
-            'id', 'firstName', 'lastName', 'fcmToken', 'avatar', 'verified', 'notified',
-            'totalJobs', 'totalExpense', 'rate', 'totalJobsDeclined', 'totalJobsPending',
-            'count', 'totalJobsOngoing', 'totalJobsCompleted', 'totalReview',
-            'totalJobsApproved', 'totalJobsCanceled', 'totalDisputes', 'bvn',
-            'bvnVerified', 'switch', 'store', 'position', 'userId', 'createdAt', 'updatedAt'
-          ],
-          // where:{
-
-          // },
-          include: [
-            {
-              model: User,
-              as: 'user',
-              attributes: ['id', 'email', 'phone', 'status', 'role', 'createdAt', 'updatedAt'],
-              // where: {
-              //   status: UserStatus.ACTIVE
-              // },
-              include: [
-                {
-                  model: Location,
-                  as: 'location',
-                  attributes: ['id', 'address', 'lga', 'state', 'latitude', 'longitude', 'zipcode']
-                },
-                {
-                  model: Review,
-                  as: 'professionalReviews',
-                  attributes: ['id', 'text', 'professionalUserId', 'clientUserId', 'createdAt', 'updatedAt'],// used only for aggregation
-                  include: [
-                    {
-                      model: User,
-                      as: 'clientUser',
-                      attributes: ['id', 'email', 'phone', 'status', 'role'],
-                      include: [
-                        {
-                          model: Profile,
-                          as: 'profile',
-                          attributes: ['id', 'firstName', 'lastName', 'birthDate', 'avatar']
-                        }
-                      ]
-                    }
-                  ]
-                },
-
-              ]
-            },
-            {
-              model: Education,
-              as: 'education',
-            },
-            {
-              model: Certification,
-              as: 'certification'
-            },
-            {
-              model: Portfolio,
-              as: 'portfolio'
-            },
-            {
-              model: Experience,
-              as: 'experience'
-            }
-          ]
-        }
       ],
       attributes: {
         include: [
           [
             dbsequelize.literal(`(
-              SELECT AVG(value)
-              FROM rating
-              WHERE rating.professionalUserId = Profile.userId
-            )`),
+                                SELECT AVG(value)
+                                FROM rating
+                                WHERE rating.professionalUserId = profile.userId
+                                )`),
             'avgRating'
           ],
           [
             dbsequelize.literal(`(
-              SELECT COUNT(*)
-              FROM rating
-              WHERE rating.professionalUserId = Profile.userId
-            )`),
-            'numRatings'
+                                SELECT COUNT(*)
+                                FROM rating
+                                WHERE rating.professionalUserId = profile.userId
+                                )`),
+            'numRating'
           ]
         ]
-      },
-      group: [
-        'Professional.id',
-        'Professional.file',
-        'Professional.intro',
-        'Professional.chargeFrom',
-        'Professional.language',
-        'Professional.available',
-        'Professional.workType',
-        'Professional.totalEarning',
-        'Professional.completedAmount',
-        'Professional.pendingAmount',
-        'Professional.rejectedAmount',
-        'Professional.availableWithdrawalAmount',
-        'Professional.regNum',
-        'Professional.yearsOfExp',
-        'Professional.online',
-        'Professional.profileId',
-        'Professional.professionId',
-        'Professional.createdAt',
-        'Professional.updatedAt',
+      }
+    })
 
-        'profession.id',
-        'profession.title',
-        'profession.image',
-        'profession.sectorId',
-        'profession.sector.id',
-        'profession.sector.title',
-        'profession.sector.image',
+    const profile = await Profile.findOne({
+      where: { id: professional?.profile.id },
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['id', 'email', 'phone', 'status', 'role', 'createdAt', 'updatedAt'],
 
-        'profile.id',
-        'profile.firstName',
-        'profile.lastName',
-        'profile.fcmToken',
-        'profile.avatar',
-        'profile.verified',
-        'profile.notified',
-        'profile.totalJobs',
-        'profile.totalExpense',
-        'profile.rate',
-        'profile.totalJobsDeclined',
-        'profile.totalJobsPending',
-        'profile.count',
-        'profile.totalJobsOngoing',
-        'profile.totalJobsCompleted',
-        'profile.totalReview',
-        'profile.totalJobsApproved',
-        'profile.totalJobsCanceled',
-        'profile.totalDisputes',
-        'profile.bvn',
-        'profile.bvnVerified',
-        'profile.switch',
-        'profile.store',
-        'profile.position',
-        // 'profile.userId',
-        'profile.createdAt',
-        'profile.updatedAt',
+          include: [
+            {
+              model: Location,
+              as: 'location',
+              attributes: ['id', 'address', 'lga', 'state', 'latitude', 'longitude', 'zipcode']
+            },
+            {
+              model: Review,
+              as: 'professionalReviews',
+              attributes: ['id', 'text', 'professionalUserId', 'clientUserId', 'createdAt', 'updatedAt'],// used only for aggregation
+              include: [
+                {
+                  model: User,
+                  as: 'clientUser',
+                  attributes: ['id', 'email', 'phone', 'status', 'role'],
+                  include: [
+                    {
+                      model: Profile,
+                      as: 'profile',
+                      attributes: ['id', 'firstName', 'lastName', 'birthDate', 'avatar']
+                    }
+                  ]
+                }
+              ]
+            },
 
-        'profile.user.id',
-        'profile.user.email',
-        'profile.user.phone',
-        'profile.user.status',
-        'profile.user.role',
-        'profile.user.createdAt',
-        'profile.user.updatedAt',
-
-        'profile.user.location.id',
-        'profile.user.location.address',
-        'profile.user.location.lga',
-        'profile.user.location.state',
-        'profile.user.location.latitude',
-        'profile.user.location.longitude',
-        'profile.user.location.zipcode',
-        'profile.user.professionalReviews.id',
-        'profile.user.professionalReviews.text',
-        'profile.user.professionalReviews.professionalUserId',
-        'profile.user.professionalReviews.clientUserId',
-        'profile.user.professionalReviews.createdAt',
-        'profile.user.professionalReviews.updatedAt',
-
-        'profile.user.professionalReviews.clientUser.id',
-        'profile.user.professionalReviews.clientUser.email',
-        'profile.user.professionalReviews.clientUser.phone',
-        'profile.user.professionalReviews.clientUser.status',
-        'profile.user.professionalReviews.clientUser.role',
-
-        'profile.user.professionalReviews.clientUser.profile.id',
-        'profile.user.professionalReviews.clientUser.profile.firstName',
-        'profile.user.professionalReviews.clientUser.profile.lastName',
-        'profile.user.professionalReviews.clientUser.profile.birthDate',
-        'profile.user.professionalReviews.clientUser.profile.avatar',
-
-        'profile.education.id',
-        'profile.education.school',
-        'profile.education.degreeType',
-        'profile.education.course',
-        'profile.education.startDate',
-        'profile.education.gradDate',
-        'profile.education.isCurrent',
-        'profile.education.profileId',
-        'profile.education.createdAt',
-        'profile.education.updatedAt',
-
-        'profile.certification.id',
-        'profile.certification.title',
-        'profile.certification.companyIssue',
-        'profile.certification.date',
-        'profile.certification.profileId',
-        'profile.certification.createdAt',
-        'profile.certification.updatedAt',
-
-        'profile.portfolio.id',
-        'profile.portfolio.title',
-        'profile.portfolio.description',
-        'profile.portfolio.duration',
-        'profile.portfolio.date',
-        'profile.portfolio.file',
-        'profile.portfolio.profileId',
-        'profile.portfolio.createdAt',
-        'profile.portfolio.updatedAt',
-
-        'profile.experience.id',
-        'profile.experience.postHeld',
-        'profile.experience.workPlace',
-        'profile.experience.startDate',
-        'profile.experience.endDate',
-        'profile.experience.isCurrent',
-        'profile.experience.description',
-        'profile.experience.profileId',
-        'profile.experience.createdAt',
-        'profile.experience.updatedAt',
+          ]
+        },
+        {
+          model: Education,
+          as: 'education',
+        },
+        {
+          model: Certification,
+          as: 'certification'
+        },
+        {
+          model: Portfolio,
+          as: 'portfolio'
+        },
+        {
+          model: Experience,
+          as: 'experience'
+        }
       ]
     });
 
@@ -412,7 +274,9 @@ export const getProfessionalById = async (req: Request, res: Response) => {
       return handleResponse(res, 404, false, 'Professional not found');
     }
 
-    return successResponse(res, 'success', professional);
+
+
+    return successResponse(res, 'success', { ...professional.toJSON(), profile });
   } catch (error: any) {
     console.log(error)
     return errorResponse(res, 'error', error.message || 'Something went wrong');

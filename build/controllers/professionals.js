@@ -170,6 +170,11 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
             where: { id: professionalId },
             include: [
                 {
+                    model: Models_1.Profile,
+                    as: 'profile',
+                    attributes: ['id']
+                },
+                {
                     model: Models_1.Profession,
                     as: 'profession',
                     include: [
@@ -179,218 +184,84 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
                         }
                     ]
                 },
-                {
-                    model: Models_1.Profile,
-                    as: 'profile',
-                    attributes: [
-                        'id', 'firstName', 'lastName', 'fcmToken', 'avatar', 'verified', 'notified',
-                        'totalJobs', 'totalExpense', 'rate', 'totalJobsDeclined', 'totalJobsPending',
-                        'count', 'totalJobsOngoing', 'totalJobsCompleted', 'totalReview',
-                        'totalJobsApproved', 'totalJobsCanceled', 'totalDisputes', 'bvn',
-                        'bvnVerified', 'switch', 'store', 'position', 'userId', 'createdAt', 'updatedAt'
-                    ],
-                    // where:{
-                    // },
-                    include: [
-                        {
-                            model: Models_1.User,
-                            as: 'user',
-                            attributes: ['id', 'email', 'phone', 'status', 'role', 'createdAt', 'updatedAt'],
-                            // where: {
-                            //   status: UserStatus.ACTIVE
-                            // },
-                            include: [
-                                {
-                                    model: Models_1.Location,
-                                    as: 'location',
-                                    attributes: ['id', 'address', 'lga', 'state', 'latitude', 'longitude', 'zipcode']
-                                },
-                                {
-                                    model: Models_1.Review,
-                                    as: 'professionalReviews',
-                                    attributes: ['id', 'text', 'professionalUserId', 'clientUserId', 'createdAt', 'updatedAt'], // used only for aggregation
-                                    include: [
-                                        {
-                                            model: Models_1.User,
-                                            as: 'clientUser',
-                                            attributes: ['id', 'email', 'phone', 'status', 'role'],
-                                            include: [
-                                                {
-                                                    model: Models_1.Profile,
-                                                    as: 'profile',
-                                                    attributes: ['id', 'firstName', 'lastName', 'birthDate', 'avatar']
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                },
-                            ]
-                        },
-                        {
-                            model: Models_1.Education,
-                            as: 'education',
-                        },
-                        {
-                            model: Models_1.Certification,
-                            as: 'certification'
-                        },
-                        {
-                            model: Models_1.Portfolio,
-                            as: 'portfolio'
-                        },
-                        {
-                            model: Models_1.Experience,
-                            as: 'experience'
-                        }
-                    ]
-                }
             ],
             attributes: {
                 include: [
                     [
                         db_1.default.literal(`(
-              SELECT AVG(value)
-              FROM rating
-              WHERE rating.professionalUserId = Profile.userId
-            )`),
+                                SELECT AVG(value)
+                                FROM rating
+                                WHERE rating.professionalUserId = profile.userId
+                                )`),
                         'avgRating'
                     ],
                     [
                         db_1.default.literal(`(
-              SELECT COUNT(*)
-              FROM rating
-              WHERE rating.professionalUserId = Profile.userId
-            )`),
-                        'numRatings'
+                                SELECT COUNT(*)
+                                FROM rating
+                                WHERE rating.professionalUserId = profile.userId
+                                )`),
+                        'numRating'
                     ]
                 ]
-            },
-            group: [
-                'Professional.id',
-                'Professional.file',
-                'Professional.intro',
-                'Professional.chargeFrom',
-                'Professional.language',
-                'Professional.available',
-                'Professional.workType',
-                'Professional.totalEarning',
-                'Professional.completedAmount',
-                'Professional.pendingAmount',
-                'Professional.rejectedAmount',
-                'Professional.availableWithdrawalAmount',
-                'Professional.regNum',
-                'Professional.yearsOfExp',
-                'Professional.online',
-                'Professional.profileId',
-                'Professional.professionId',
-                'Professional.createdAt',
-                'Professional.updatedAt',
-                'profession.id',
-                'profession.title',
-                'profession.image',
-                'profession.sectorId',
-                'profession.sector.id',
-                'profession.sector.title',
-                'profession.sector.image',
-                'profile.id',
-                'profile.firstName',
-                'profile.lastName',
-                'profile.fcmToken',
-                'profile.avatar',
-                'profile.verified',
-                'profile.notified',
-                'profile.totalJobs',
-                'profile.totalExpense',
-                'profile.rate',
-                'profile.totalJobsDeclined',
-                'profile.totalJobsPending',
-                'profile.count',
-                'profile.totalJobsOngoing',
-                'profile.totalJobsCompleted',
-                'profile.totalReview',
-                'profile.totalJobsApproved',
-                'profile.totalJobsCanceled',
-                'profile.totalDisputes',
-                'profile.bvn',
-                'profile.bvnVerified',
-                'profile.switch',
-                'profile.store',
-                'profile.position',
-                // 'profile.userId',
-                'profile.createdAt',
-                'profile.updatedAt',
-                'profile.user.id',
-                'profile.user.email',
-                'profile.user.phone',
-                'profile.user.status',
-                'profile.user.role',
-                'profile.user.createdAt',
-                'profile.user.updatedAt',
-                'profile.user.location.id',
-                'profile.user.location.address',
-                'profile.user.location.lga',
-                'profile.user.location.state',
-                'profile.user.location.latitude',
-                'profile.user.location.longitude',
-                'profile.user.location.zipcode',
-                'profile.user.professionalReviews.id',
-                'profile.user.professionalReviews.text',
-                'profile.user.professionalReviews.professionalUserId',
-                'profile.user.professionalReviews.clientUserId',
-                'profile.user.professionalReviews.createdAt',
-                'profile.user.professionalReviews.updatedAt',
-                'profile.user.professionalReviews.clientUser.id',
-                'profile.user.professionalReviews.clientUser.email',
-                'profile.user.professionalReviews.clientUser.phone',
-                'profile.user.professionalReviews.clientUser.status',
-                'profile.user.professionalReviews.clientUser.role',
-                'profile.user.professionalReviews.clientUser.profile.id',
-                'profile.user.professionalReviews.clientUser.profile.firstName',
-                'profile.user.professionalReviews.clientUser.profile.lastName',
-                'profile.user.professionalReviews.clientUser.profile.birthDate',
-                'profile.user.professionalReviews.clientUser.profile.avatar',
-                'profile.education.id',
-                'profile.education.school',
-                'profile.education.degreeType',
-                'profile.education.course',
-                'profile.education.startDate',
-                'profile.education.gradDate',
-                'profile.education.isCurrent',
-                'profile.education.profileId',
-                'profile.education.createdAt',
-                'profile.education.updatedAt',
-                'profile.certification.id',
-                'profile.certification.title',
-                'profile.certification.companyIssue',
-                'profile.certification.date',
-                'profile.certification.profileId',
-                'profile.certification.createdAt',
-                'profile.certification.updatedAt',
-                'profile.portfolio.id',
-                'profile.portfolio.title',
-                'profile.portfolio.description',
-                'profile.portfolio.duration',
-                'profile.portfolio.date',
-                'profile.portfolio.file',
-                'profile.portfolio.profileId',
-                'profile.portfolio.createdAt',
-                'profile.portfolio.updatedAt',
-                'profile.experience.id',
-                'profile.experience.postHeld',
-                'profile.experience.workPlace',
-                'profile.experience.startDate',
-                'profile.experience.endDate',
-                'profile.experience.isCurrent',
-                'profile.experience.description',
-                'profile.experience.profileId',
-                'profile.experience.createdAt',
-                'profile.experience.updatedAt',
+            }
+        });
+        const profile = yield Models_1.Profile.findOne({
+            where: { id: professional === null || professional === void 0 ? void 0 : professional.profile.id },
+            include: [
+                {
+                    model: Models_1.User,
+                    as: 'user',
+                    attributes: ['id', 'email', 'phone', 'status', 'role', 'createdAt', 'updatedAt'],
+                    include: [
+                        {
+                            model: Models_1.Location,
+                            as: 'location',
+                            attributes: ['id', 'address', 'lga', 'state', 'latitude', 'longitude', 'zipcode']
+                        },
+                        {
+                            model: Models_1.Review,
+                            as: 'professionalReviews',
+                            attributes: ['id', 'text', 'professionalUserId', 'clientUserId', 'createdAt', 'updatedAt'], // used only for aggregation
+                            include: [
+                                {
+                                    model: Models_1.User,
+                                    as: 'clientUser',
+                                    attributes: ['id', 'email', 'phone', 'status', 'role'],
+                                    include: [
+                                        {
+                                            model: Models_1.Profile,
+                                            as: 'profile',
+                                            attributes: ['id', 'firstName', 'lastName', 'birthDate', 'avatar']
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                    ]
+                },
+                {
+                    model: Models_1.Education,
+                    as: 'education',
+                },
+                {
+                    model: Models_1.Certification,
+                    as: 'certification'
+                },
+                {
+                    model: Models_1.Portfolio,
+                    as: 'portfolio'
+                },
+                {
+                    model: Models_1.Experience,
+                    as: 'experience'
+                }
             ]
         });
         if (!professional) {
             return (0, modules_1.handleResponse)(res, 404, false, 'Professional not found');
         }
-        return (0, modules_1.successResponse)(res, 'success', professional);
+        return (0, modules_1.successResponse)(res, 'success', Object.assign(Object.assign({}, professional.toJSON()), { profile }));
     }
     catch (error) {
         console.log(error);
