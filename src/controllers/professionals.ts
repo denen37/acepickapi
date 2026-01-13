@@ -175,26 +175,6 @@ export const getProfessionalById = async (req: Request, res: Response) => {
 
     const professional = await Professional.findOne({
       where: { id: professionalId },
-      attributes: {
-        include: [
-          [
-            dbsequelize.literal(`(
-              SELECT AVG(value)
-              FROM rating
-              WHERE rating.professionalUserId = Profile.userId
-            )`),
-            'avgRating'
-          ],
-          [
-            dbsequelize.literal(`(
-              SELECT COUNT(*)
-              FROM rating
-              WHERE rating.professionalUserId = Profile.userId
-            )`),
-            'numRatings'
-          ]
-        ]
-      },
       include: [
         {
           model: Profession,
@@ -274,6 +254,26 @@ export const getProfessionalById = async (req: Request, res: Response) => {
           ]
         }
       ],
+      attributes: {
+        include: [
+          [
+            dbsequelize.literal(`(
+              SELECT AVG(value)
+              FROM rating
+              WHERE rating.professionalUserId = Profile.userId
+            )`),
+            'avgRating'
+          ],
+          [
+            dbsequelize.literal(`(
+              SELECT COUNT(*)
+              FROM rating
+              WHERE rating.professionalUserId = Profile.userId
+            )`),
+            'numRatings'
+          ]
+        ]
+      },
       group: [
         'Professional.id',
         'Professional.file',

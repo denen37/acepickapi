@@ -168,26 +168,6 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
         const { professionalId } = req.params;
         const professional = yield Models_1.Professional.findOne({
             where: { id: professionalId },
-            attributes: {
-                include: [
-                    [
-                        db_1.default.literal(`(
-              SELECT AVG(value)
-              FROM rating
-              WHERE rating.professionalUserId = Profile.userId
-            )`),
-                        'avgRating'
-                    ],
-                    [
-                        db_1.default.literal(`(
-              SELECT COUNT(*)
-              FROM rating
-              WHERE rating.professionalUserId = Profile.userId
-            )`),
-                        'numRatings'
-                    ]
-                ]
-            },
             include: [
                 {
                     model: Models_1.Profession,
@@ -265,6 +245,26 @@ const getProfessionalById = (req, res) => __awaiter(void 0, void 0, void 0, func
                     ]
                 }
             ],
+            attributes: {
+                include: [
+                    [
+                        db_1.default.literal(`(
+              SELECT AVG(value)
+              FROM rating
+              WHERE rating.professionalUserId = Profile.userId
+            )`),
+                        'avgRating'
+                    ],
+                    [
+                        db_1.default.literal(`(
+              SELECT COUNT(*)
+              FROM rating
+              WHERE rating.professionalUserId = Profile.userId
+            )`),
+                        'numRatings'
+                    ]
+                ]
+            },
             group: [
                 'Professional.id',
                 'Professional.file',
