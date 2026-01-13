@@ -6,7 +6,7 @@ import { getCooperates } from "../controllers/cooperates";
 import { approveJob, cancelJob, completeJob, createJobOrder, disputeJob, generateInvoice, getJobById, getJobs, getLatestJob, respondToJob, updateInvoice, updateJob, viewInvoice } from "../controllers/Jobs";
 import { UserRole } from "../utils/enum";
 import { allowRoles } from "../middlewares/allowRoles";
-import { findPersonsNearby, sendEmailTest, sendSMSTest, testNotification, testRedis } from "../controllers/test";
+import { findPersonsNearby, sendEmailTest, sendSMSTest, testGetProfessional, testNotification, testRedis } from "../controllers/test";
 import { addLocation, deleteLocation, getLocationById, getMyLocations, updateLocation } from "../controllers/location";
 import { getClient } from "../controllers/client";
 import { addAccount, deleteAccount, getAccounts, getBanks, resolveAccount, updateAccount } from "../controllers/account";
@@ -94,6 +94,7 @@ routes.post('/send-sms', sendSMSTest);
 routes.post('/send-email', sendEmailTest);
 routes.post('/nearest-person', findPersonsNearby);
 routes.get('/redis-test', testRedis);
+routes.get('/get-professional-test/:professionalId', testGetProfessional)
 
 routes.put('/location/:locationId', updateLocation);
 routes.get('/my-locations', getMyLocations);

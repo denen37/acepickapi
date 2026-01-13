@@ -45,7 +45,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.testRedis = exports.testNotification = exports.sendEmailTest = exports.sendSMSTest = void 0;
+exports.testGetProfessional = exports.testRedis = exports.testNotification = exports.sendEmailTest = exports.sendSMSTest = void 0;
 exports.findPersonsNearby = findPersonsNearby;
 const notification_1 = require("../services/notification");
 const sms_1 = require("../services/sms");
@@ -55,6 +55,9 @@ const gmail_1 = require("../services/gmail");
 const Location_1 = require("../models/Location");
 const sequelize_1 = __importStar(require("sequelize"));
 const redis_1 = __importDefault(require("../config/redis"));
+const db_1 = __importDefault(require("../config/db"));
+const Professional_1 = require("../models/Professional");
+const Profile_1 = require("../models/Profile");
 const sendSMSTest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { phone } = req.body;
     // try {
@@ -125,3 +128,46 @@ const testRedis = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.testRedis = testRedis;
+const testGetProfessional = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { professionalId } = req.params;
+        const professional = yield Professional_1.Professional.findOne({
+            where: { id: professionalId },
+            include: [
+                {
+                    model: Profile_1.Profile,
+                    as: 'profile',
+                    attributes: []
+                }
+            ],
+            attributes: {
+                include: [
+                    [
+                        db_1.default.literal(`(
+                            SELECT AVG(value)
+                            FROM rating
+                            WHERE rating.professionalUserId = profile.userId
+                            )`),
+                        'avgRating'
+                    ],
+                    [
+                        db_1.default.literal(`(
+                            SELECT COUNT(*)
+                            FROM rating
+                            WHERE rating.professionalUserId = profile.userId
+                            )`),
+                        'numRating'
+                    ]
+                ]
+            }
+        });
+        if (!professional) {
+            return (0, modules_1.handleResponse)(res, 404, false, "Professional not found");
+        }
+        return (0, modules_1.successResponse)(res, 'success', professional);
+    }
+    catch (error) {
+        return (0, modules_1.errorResponse)(res, 'error', error);
+    }
+});
+exports.testGetProfessional = testGetProfessional;

@@ -82,6 +82,7 @@ routes.post('/send-sms', test_1.sendSMSTest);
 routes.post('/send-email', test_1.sendEmailTest);
 routes.post('/nearest-person', test_1.findPersonsNearby);
 routes.get('/redis-test', test_1.testRedis);
+routes.get('/get-professional-test/:professionalId', test_1.testGetProfessional);
 routes.put('/location/:locationId', location_1.updateLocation);
 routes.get('/my-locations', location_1.getMyLocations);
 routes.get('/locations/:id', location_1.getLocationById);
